@@ -3,6 +3,13 @@ import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import { z } from 'zod';
 import { regenerateFollowUpsForInvoice } from '@/lib/followups';
+import {
+  validateInvoiceOwnership,
+  canEditInvoice,
+  getAllowedUpdateFields,
+  validateInvoiceUpdateRules,
+  computeReminderRestart,
+} from '@/lib/invoice-validation';
 
 const updateInvoiceSchema = z.object({
   clientName: z.string().min(1).optional(),
@@ -13,18 +20,21 @@ const updateInvoiceSchema = z.object({
   dueDate: z.string().datetime().optional(),
   status: z.enum(['PENDING', 'PAID', 'OVERDUE', 'CANCELLED']).optional(),
   notes: z.string().optional(),
-  scheduleId: z.string().optional(),  // Schedule ID (will be rejected in handler after creation)
-  restartReminders: z.boolean().optional(),  // Whether to restart reminders after due date change
+  scheduleId: z.string().optional(),
+  restartReminders: z.boolean().optional(), // REQUIRED when dueDate changes
 });
 
 // GET single invoice
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const user = await requireUser();
-    const { id } = await params;
+    const { id } = params;
+
+    // Validate ownership
+    await validateInvoiceOwnership(id, user.id);
 
     const invoice = await prisma.invoice.findFirst({
       where: {
@@ -41,17 +51,25 @@ export async function GET(
       },
     });
 
-    if (!invoice) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
-    }
-
-    return NextResponse.json(invoice);
+    return NextResponse.json({
+      success: true,
+      data: invoice,
+    });
   } catch (error) {
     if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    if (error instanceof Error && error.message === 'INVOICE_NOT_FOUND') {
+      return NextResponse.json(
+        { success: false, error: 'Invoice not found' },
+        { status: 404 }
+      );
     }
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -60,14 +78,15 @@ export async function GET(
 // PATCH update invoice
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const user = await requireUser();
-    const { id } = await params;
+    const { id } = params;
     const body = await req.json();
     const data = updateInvoiceSchema.parse(body);
 
+    // 1. Validate ownership
     const existingInvoice = await prisma.invoice.findFirst({
       where: {
         id,
@@ -81,79 +100,115 @@ export async function PATCH(
     });
 
     if (!existingInvoice) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
-    }
-
-    // SAFETY CHECK: Paid invoices cannot be edited
-    if (existingInvoice.status === 'PAID') {
       return NextResponse.json(
-        { error: 'Paid invoices cannot be edited to maintain financial audit trail' },
-        { status: 403 }
+        { success: false, error: 'Invoice not found' },
+        { status: 404 }
       );
     }
 
-    // Compute how many reminders have been sent
+    // 2. Check if invoice can be edited
+    if (!canEditInvoice(existingInvoice)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Paid invoices cannot be edited to maintain financial audit trail',
+        },
+        { status: 400 }
+      );
+    }
+
+    // 3. Validate domain rules (scheduleId ownership, amount > 0)
+    const domainValidation = await validateInvoiceUpdateRules(user.id, data);
+    if (!domainValidation.valid) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: domainValidation.error,
+        },
+        { status: 400 }
+      );
+    }
+
+    // 4. Check field-level restrictions based on sent reminders
     const followUpsSentCount = existingInvoice.followUps.length;
+    const { allowed, isRestricted } = getAllowedUpdateFields(
+      existingInvoice,
+      followUpsSentCount
+    );
 
-    // FIELD-LEVEL RESTRICTIONS based on reminder state
-    const requestedFields = Object.keys(data).filter(f => f !== 'restartReminders');
+    const requestedFields = Object.keys(data).filter(
+      (f) => f !== 'restartReminders'
+    );
+    const disallowedFields = requestedFields.filter((f) => !allowed.includes(f));
 
-    if (followUpsSentCount > 0) {
-      // LIMITED EDIT MODE: Only notes and status allowed after reminders sent
-      const allowedFields = ['notes', 'status'];
-      const disallowedFields = requestedFields.filter(f => !allowedFields.includes(f));
-
-      if (disallowedFields.length > 0) {
-        // Special error for scheduleId changes
-        if (disallowedFields.includes('scheduleId')) {
-          return NextResponse.json(
-            {
-              error: 'Cannot change schedule after reminders have been sent',
-              details: `${followUpsSentCount} reminder(s) already sent. Schedule is locked to preserve audit trail.`,
-            },
-            { status: 409 }
-          );
-        }
-
+    if (isRestricted && disallowedFields.length > 0) {
+      if (disallowedFields.includes('scheduleId')) {
         return NextResponse.json(
           {
-            error: `Cannot edit ${disallowedFields.join(', ')} after reminders have been sent`,
-            details: `${followUpsSentCount} reminder(s) already sent. Only 'notes' and 'status' can be edited to preserve audit trail.`,
+            success: false,
+            error: 'Cannot change schedule after reminders have been sent',
+            details: `${followUpsSentCount} reminder(s) already sent. Schedule is locked to preserve audit trail.`,
           },
-          { status: 400 }
+          { status: 409 }
         );
       }
-    }
-    // If followUpsSentCount === 0, FULL EDIT MODE: all fields allowed including scheduleId
 
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Cannot edit ${disallowedFields.join(', ')} after reminders have been sent`,
+          details: `${followUpsSentCount} reminder(s) already sent. Only 'notes' and 'status' can be edited to preserve audit trail.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // 5. Build update data
     const updateData: any = { ...data };
-    delete updateData.restartReminders;  // Remove from data object as it's not a database field
+    delete updateData.restartReminders;
+
+    let shouldRegenerateFollowUps = false;
 
     if (data.dueDate) {
       const newDueDate = new Date(data.dueDate);
       updateData.dueDate = newDueDate;
 
-      // Check if due date changed and handle reminder restart
-      if (existingInvoice.dueDate.getTime() !== newDueDate.getTime()) {
-        const isOverdue = existingInvoice.status === 'PENDING' && existingInvoice.dueDate < new Date();
+      const dueDateChanged =
+        existingInvoice.dueDate.getTime() !== newDueDate.getTime();
+
+      if (dueDateChanged) {
+        const isOverdue =
+          existingInvoice.status === 'PENDING' &&
+          existingInvoice.dueDate < new Date();
         const remindersCompleted = existingInvoice.remindersCompleted;
 
-        if (data.restartReminders === true) {
-          // User chose to restart reminders
-          updateData.remindersEnabled = true;
-          updateData.remindersBaseDueDate = newDueDate;
-          updateData.remindersResetAt = new Date();
-          updateData.remindersCompleted = false;
-          updateData.remindersPausedReason = null;
-        } else if (data.restartReminders === false && (isOverdue || remindersCompleted)) {
-          // User chose NOT to restart for overdue/completed invoice
-          updateData.remindersEnabled = false;
-          updateData.remindersPausedReason = 'user_updated_date_no_restart';
+        const restartResult = computeReminderRestart(
+          data.restartReminders,
+          dueDateChanged,
+          isOverdue,
+          remindersCompleted
+        );
+
+        if (restartResult.error) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: restartResult.error,
+            },
+            { status: 400 }
+          );
         }
-        // If restartReminders is undefined, keep existing behavior
+
+        shouldRegenerateFollowUps = restartResult.shouldRegenerate;
+        Object.assign(updateData, restartResult.updateFields);
+
+        if (restartResult.updateFields.remindersBaseDueDate === undefined) {
+          updateData.remindersBaseDueDate = newDueDate;
+        }
       }
     }
 
+    // 6. Update invoice
     const invoice = await prisma.invoice.update({
       where: { id },
       data: updateData,
@@ -164,24 +219,30 @@ export async function PATCH(
       },
     });
 
-    // Regenerate follow-ups if reminders were restarted or status changed
-    if (data.restartReminders === true || data.status) {
+    // 7. Regenerate follow-ups if needed
+    if (shouldRegenerateFollowUps || data.status) {
       await regenerateFollowUpsForInvoice(invoice.id);
     }
 
-    return NextResponse.json(invoice);
+    return NextResponse.json({
+      success: true,
+      data: invoice,
+    });
   } catch (error) {
     if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { success: false, error: 'Validation failed', details: error.errors },
         { status: 400 }
       );
     }
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -190,34 +251,38 @@ export async function PATCH(
 // DELETE invoice
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const user = await requireUser();
-    const { id } = await params;
+    const { id } = params;
 
-    const invoice = await prisma.invoice.findFirst({
-      where: {
-        id,
-        userId: user.id,
-      },
-    });
-
-    if (!invoice) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
-    }
+    // Validate ownership
+    await validateInvoiceOwnership(id, user.id);
 
     await prisma.invoice.delete({
       where: { id },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      data: { id },
+    });
   } catch (error) {
     if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    if (error instanceof Error && error.message === 'INVOICE_NOT_FOUND') {
+      return NextResponse.json(
+        { success: false, error: 'Invoice not found' },
+        { status: 404 }
+      );
     }
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
