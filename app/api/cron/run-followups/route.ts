@@ -23,7 +23,24 @@ export async function POST(req: NextRequest) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Get pending follow-ups due today
+    // Count total invoices with reminders due (before subscription filter)
+    const totalInvoicesDue = await prisma.invoice.count({
+      where: {
+        status: 'PENDING',
+        remindersEnabled: true,
+        followUps: {
+          some: {
+            status: 'PENDING',
+            scheduledDate: {
+              gte: today,
+              lt: tomorrow,
+            },
+          },
+        },
+      },
+    });
+
+    // Get pending follow-ups due today (filtered by subscription status)
     const followUps = await prisma.followUp.findMany({
       where: {
         status: 'PENDING',
@@ -71,10 +88,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Count unique invoices eligible (after subscription filter)
+    const uniqueInvoiceIds = new Set(followUps.map(f => f.invoiceId));
+
     const results = {
-      total: followUps.length,
+      scanned_invoices: totalInvoicesDue,
+      eligible_invoices: uniqueInvoiceIds.size,
+      total_followups: followUps.length,
       sent: 0,
       skipped: 0,
+      skipped_not_entitled: totalInvoicesDue - uniqueInvoiceIds.size,
+      skipped_rate_limit: 0,
       failed: 0,
     };
 
@@ -103,6 +127,7 @@ export async function POST(req: NextRequest) {
             },
           });
           results.skipped++;
+          results.skipped_rate_limit++;
           continue;
         }
 
