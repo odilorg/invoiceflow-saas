@@ -34,12 +34,38 @@ export async function POST(req: NextRequest) {
         invoice: {
           status: 'PENDING', // Only send for pending invoices
           remindersEnabled: true, // Only send if reminders are enabled
+          user: {
+            // CRITICAL: Only send for users with active subscriptions
+            OR: [
+              // Active subscription
+              {
+                subscription: {
+                  status: {
+                    in: ['ACTIVE', 'TRIALING'],
+                  },
+                  OR: [
+                    { endsAt: null }, // No end date (lifetime)
+                    { endsAt: { gt: new Date() } }, // Or not expired
+                  ],
+                },
+              },
+              // FREE plan users (no subscription required)
+              {
+                planStatus: 'FREE',
+                subscription: null,
+              },
+            ],
+          },
         },
       },
       include: {
         invoice: {
           include: {
-            user: true,
+            user: {
+              include: {
+                subscription: true,
+              },
+            },
           },
         },
       },

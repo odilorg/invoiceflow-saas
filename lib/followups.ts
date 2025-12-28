@@ -119,7 +119,14 @@ export async function generateFollowUps(invoiceId: string, scheduleId?: string) 
 }
 
 export async function regenerateFollowUpsForInvoice(invoiceId: string) {
-  await generateFollowUps(invoiceId);
+  // Get the invoice's current scheduleId
+  const invoice = await prisma.invoice.findUnique({
+    where: { id: invoiceId },
+    select: { scheduleId: true },
+  });
+
+  // Use the invoice's assigned schedule (or default if null)
+  await generateFollowUps(invoiceId, invoice?.scheduleId || undefined);
 }
 
 export async function regenerateAllFollowUps(userId: string) {
@@ -128,9 +135,14 @@ export async function regenerateAllFollowUps(userId: string) {
       userId,
       status: 'PENDING',
     },
+    select: {
+      id: true,
+      scheduleId: true,
+    },
   });
 
   for (const invoice of invoices) {
-    await generateFollowUps(invoice.id);
+    // Use each invoice's assigned schedule
+    await generateFollowUps(invoice.id, invoice.scheduleId || undefined);
   }
 }
