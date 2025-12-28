@@ -1,0 +1,2 @@
+export const FREE_INVOICE_LIMIT = 3;
+export const MAX_FOLLOWUPS_PER_DAY_PER_INVOICE = 1;

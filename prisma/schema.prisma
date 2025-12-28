@@ -1,0 +1,231 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PlanStatus {
+  FREE
+  STARTER
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  EXPIRED
+  UNPAID
+  PAUSED
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum FollowUpStatus {
+  PENDING
+  SENT
+  SKIPPED
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String?
+  planStatus   PlanStatus @default(FREE)
+  lsCustomerId String?   // Lemon Squeezy customer ID
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  invoices     Invoice[]
+  templates    Template[]
+  schedules    Schedule[]
+  sessions     Session[]
+  subscription Subscription?
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  userId          String
+  clientName      String
+  clientEmail     String
+  amount          Float
+  currency        String        @default("USD")
+  invoiceNumber   String
+  dueDate         DateTime
+  status          InvoiceStatus @default(PENDING)
+  notes           String?
+  scheduleId      String?       // The schedule used for reminders
+
+  // Reminder tracking fields
+  lastReminderSentAt      DateTime?     // When the last reminder was sent
+  totalScheduledReminders Int?          // Total number of reminders in the schedule at creation
+  remindersCompleted      Boolean       @default(false)  // Whether all reminders have been sent
+
+  // Reminder control fields for due date changes
+  remindersEnabled        Boolean       @default(true)   // Whether reminders should be sent
+  remindersBaseDueDate    DateTime?     // The base date for calculating reminder schedule
+  remindersResetAt        DateTime?     // When reminders were last reset
+  remindersPausedReason   String?       // Reason why reminders are paused
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schedule        Schedule?     @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  followUps       FollowUp[]
+
+  @@index([userId])
+  @@index([scheduleId])
+  @@index([status])
+  @@index([remindersCompleted])
+  @@index([remindersEnabled])
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  subject     String
+  body        String   // Supports variables: {clientName}, {amount}, {dueDate}, {invoiceNumber}, {daysOverdue}
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scheduleSteps ScheduleStep[]
+
+  @@index([userId])
+}
+
+model Schedule {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  isActive    Boolean  @default(true)
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  steps       ScheduleStep[]
+  invoices    Invoice[]
+
+  @@index([userId])
+  @@index([userId, isDefault]) // For finding default schedule
+  // Note: Unique constraint on default will be enforced via application logic
+}
+
+model ScheduleStep {
+  id          String   @id @default(cuid())
+  scheduleId  String
+  templateId  String
+  dayOffset   Int      // Days relative to due date (0 = due date, 1 = 1 day after, -3 = 3 days before)
+  order       Int      // Execution order
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  schedule    Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  template    Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([scheduleId])
+}
+
+model FollowUp {
+  id               String         @id @default(cuid())
+  invoiceId        String
+  templateId       String?
+  scheduledDate    DateTime
+  status           FollowUpStatus @default(PENDING)
+  sentAt           DateTime?
+  subject          String
+  body             String
+  errorMessage     String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  invoice          Invoice        @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  logs             EmailLog[]
+
+  @@index([invoiceId])
+  @@index([status])
+  @@index([scheduledDate])
+}
+
+model EmailLog {
+  id          String   @id @default(cuid())
+  followUpId  String
+  recipientEmail String
+  subject     String
+  sentAt      DateTime @default(now())
+  success     Boolean
+  errorMessage String?
+
+  followUp    FollowUp @relation(fields: [followUpId], references: [id], onDelete: Cascade)
+
+  @@index([followUpId])
+}
+
+// Billing Models
+model Subscription {
+  id                    String              @id @default(cuid())
+  userId                String              @unique
+  provider              String              @default("lemonsqueezy")
+  providerStoreId       String?
+  providerCustomerId    String?
+  providerSubscriptionId String?            @unique
+  providerOrderId       String?
+  providerVariantId     String?
+  providerPlan          String?             // e.g., "starter_monthly", "pro_yearly"
+  status                SubscriptionStatus
+  renewsAt              DateTime?
+  endsAt                DateTime?
+  trialEndsAt           DateTime?
+  isActive              Boolean             @default(false)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  billingEvents         BillingEvent[]
+
+  @@index([userId])
+  @@index([providerSubscriptionId])
+  @@index([status])
+}
+
+model BillingEvent {
+  id                    String              @id @default(cuid())
+  providerEventId       String              @unique
+  providerEventType     String
+  providerPayload       Json
+  processedAt           DateTime?
+  subscriptionId        String?
+  createdAt             DateTime            @default(now())
+
+  subscription          Subscription?       @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([providerEventId])
+  @@index([subscriptionId])
+}
