@@ -2,18 +2,55 @@ import { prisma } from './db';
 import { Invoice } from '@prisma/client';
 import { ensureDefaultSchedule } from './default-schedule';
 
+/**
+ * Add days to a date using UTC to avoid timezone/DST drift
+ */
+function addDaysUTC(date: Date, days: number): Date {
+  const result = new Date(date);
+  // Normalize to midnight UTC to ensure consistent date math
+  result.setUTCHours(0, 0, 0, 0);
+  result.setUTCDate(result.getUTCDate() + days);
+  return result;
+}
+
+/**
+ * Format amount with currency using Intl.NumberFormat for consistency
+ */
+function formatAmount(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency.toUpperCase(),
+    }).format(amount);
+  } catch {
+    // Fallback if currency code is invalid
+    return `${currency} ${amount.toFixed(2)}`;
+  }
+}
+
+/**
+ * Format date consistently (avoid locale drift)
+ */
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+}
+
 export function renderTemplate(
   template: string,
   variables: Record<string, string | undefined | null>
 ): string {
   let result = template;
   for (const [key, value] of Object.entries(variables)) {
-    // Skip undefined/null values - leave placeholder or remove line
     if (value === undefined || value === null || value === '') {
-      // Remove entire line if it contains only the placeholder
-      const linePattern = new RegExp(`^.*\\{${key}\\}.*$`, 'gm');
-      result = result.replace(linePattern, '');
-      // Or replace with empty string
+      // Only remove line if it contains ONLY the placeholder (ignoring whitespace)
+      const placeholderOnly = new RegExp(`^\\s*\\{${key}\\}\\s*$`, 'gm');
+      result = result.replace(placeholderOnly, '');
+
+      // Otherwise, just replace placeholder with empty string
       result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), '');
     } else {
       result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
@@ -38,11 +75,14 @@ export async function generateFollowUps(invoiceId: string, scheduleId?: string) 
 
   let schedule;
 
-  if (scheduleId) {
-    // Use specified schedule if provided
+  // SAFETY FIX: Use invoice.scheduleId if no scheduleId provided
+  const effectiveScheduleId = scheduleId ?? invoice.scheduleId ?? undefined;
+
+  if (effectiveScheduleId) {
+    // Use specified or invoice's assigned schedule
     schedule = await prisma.schedule.findFirst({
       where: {
-        id: scheduleId,
+        id: effectiveScheduleId,
         userId: invoice.userId,
         isActive: true,
       },
@@ -58,7 +98,7 @@ export async function generateFollowUps(invoiceId: string, scheduleId?: string) 
   }
 
   if (!schedule) {
-    // Ensure a default schedule exists and use it
+    // Only fall back to default if no schedule found
     schedule = await ensureDefaultSchedule(invoice.userId);
 
     // Fetch with steps included
@@ -90,14 +130,15 @@ export async function generateFollowUps(invoiceId: string, scheduleId?: string) 
 
   // Create new follow-ups based on schedule
   const followUps = schedule.steps.map((step) => {
-    const scheduledDate = new Date(invoice.dueDate);
-    scheduledDate.setDate(scheduledDate.getDate() + step.dayOffset);
+    // TIMEZONE-SAFE: Use UTC date math to avoid DST drift
+    const scheduledDate = addDaysUTC(invoice.dueDate, step.dayOffset);
 
+    // NORMALIZED FORMATTING: Use Intl formatters for consistency
     const variables = {
       clientName: invoice.clientName,
-      amount: invoice.amount.toString(),
+      amount: formatAmount(invoice.amount, invoice.currency),
       currency: invoice.currency,
-      dueDate: invoice.dueDate.toLocaleDateString(),
+      dueDate: formatDate(invoice.dueDate),
       invoiceNumber: invoice.invoiceNumber,
       daysOverdue: step.dayOffset > 0 ? step.dayOffset.toString() : '0',
       invoiceLink: invoice.notes || '', // Use notes field as invoice link or add dedicated field
