@@ -52,26 +52,17 @@ export async function POST(req: NextRequest) {
           status: 'PENDING', // Only send for pending invoices
           remindersEnabled: true, // Only send if reminders are enabled
           user: {
-            // CRITICAL: Only send for users with active subscriptions
-            OR: [
-              // Active subscription
-              {
-                subscription: {
-                  status: {
-                    in: ['ACTIVE', 'TRIALING'],
-                  },
-                  OR: [
-                    { endsAt: null }, // No end date (lifetime)
-                    { endsAt: { gt: new Date() } }, // Or not expired
-                  ],
-                },
+            // CRITICAL: Only send for users with PAID active subscriptions
+            // FREE users are NOT eligible for automated cron reminders
+            subscription: {
+              status: {
+                in: ['ACTIVE', 'TRIALING'],
               },
-              // FREE plan users (no subscription required)
-              {
-                planStatus: 'FREE',
-                subscription: null,
-              },
-            ],
+              OR: [
+                { endsAt: null }, // No end date (lifetime)
+                { endsAt: { gt: new Date() } }, // Or not expired
+              ],
+            },
           },
         },
       },
