@@ -1,13 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { upsertSubscription } from '@/lib/billing/subscription-service';
-import { SubscriptionStatus } from '@prisma/client';
+import { SubscriptionStatus, PlanStatus } from '@prisma/client';
 import crypto from 'crypto';
+import { getPlanFromVariantId } from '@/lib/billing/config';
 
+/**
+ * Verify webhook signature with timing-safe comparison
+ * Lemon Squeezy sends signature as hex-encoded HMAC-SHA256
+ */
 function verifySignature(payload: string, signature: string, secret: string): boolean {
+  // Normalize signature - strip any prefix like "sha256=" if present
+  const normalizedSignature = signature.replace(/^sha256=/i, '').toLowerCase();
+
+  // Generate expected signature
   const hmac = crypto.createHmac('sha256', secret);
-  const digest = hmac.update(payload).digest('hex');
-  return signature === digest;
+  const expectedSignature = hmac.update(payload).digest('hex').toLowerCase();
+
+  // Length check before timing-safe compare (prevents DoS)
+  if (normalizedSignature.length !== expectedSignature.length) {
+    return false;
+  }
+
+  // Timing-safe comparison to prevent timing attacks
+  const signatureBuffer = Buffer.from(normalizedSignature, 'hex');
+  const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+
+  try {
+    return crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
+  } catch {
+    // Lengths mismatch or invalid hex - comparison failed
+    return false;
+  }
+}
+
+/**
+ * Generate stable event ID from payload for idempotency
+ * Uses SHA256 hash of raw payload as fallback if event_id missing
+ */
+function getStableEventId(meta: any, payload: string): string {
+  if (meta?.event_id) {
+    return meta.event_id;
+  }
+
+  // Generate stable hash from payload (NOT timestamp!)
+  const hash = crypto.createHash('sha256').update(payload).digest('hex');
+  return `fallback_${hash}`;
+}
+
+/**
+ * Sync user plan status based on subscription state
+ * Single source of truth for plan status computation
+ */
+async function syncUserPlanStatus(userId: string): Promise<void> {
+  const subscription = await prisma.subscription.findUnique({
+    where: { userId },
+  });
+
+  let effectivePlan: PlanStatus = 'FREE';
+
+  if (subscription) {
+    const now = new Date();
+    const isActive = subscription.status === 'ACTIVE' || subscription.status === 'TRIALING';
+    const notExpired = !subscription.endsAt || subscription.endsAt > now;
+
+    if (isActive && notExpired) {
+      // Map variant to plan
+      if (subscription.providerVariantId) {
+        const planInfo = getPlanFromVariantId(subscription.providerVariantId);
+        if (planInfo) {
+          effectivePlan = planInfo.plan as PlanStatus;
+        }
+      }
+
+      // Fallback to providerPlan if variant mapping fails
+      if (effectivePlan === 'FREE' && subscription.providerPlan) {
+        effectivePlan = subscription.providerPlan.includes('pro') ? 'PRO' : 'STARTER';
+      }
+    }
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { planStatus: effectivePlan },
+  });
 }
 
 // Map Lemon Squeezy status to our SubscriptionStatus enum
@@ -48,8 +124,8 @@ export async function POST(req: NextRequest) {
     const event = JSON.parse(payload);
     const { meta, data } = event;
 
-    // Check idempotency - have we processed this event before?
-    const eventId = meta?.event_id || `${meta?.event_name}_${Date.now()}`;
+    // Check idempotency - use stable event ID (hash of payload if no event_id)
+    const eventId = getStableEventId(meta, payload);
     const existingEvent = await prisma.billingEvent.findUnique({
       where: { providerEventId: eventId },
     });
@@ -61,7 +137,7 @@ export async function POST(req: NextRequest) {
 
     console.log('Lemon Squeezy webhook event:', meta?.event_name);
 
-    // Store the event
+    // Store the event for idempotency
     await prisma.billingEvent.create({
       data: {
         providerEventId: eventId,
@@ -123,6 +199,9 @@ export async function POST(req: NextRequest) {
           });
         }
 
+        // Sync user plan status based on subscription + variant
+        await syncUserPlanStatus(userId);
+
         break;
       }
 
@@ -137,21 +216,21 @@ export async function POST(req: NextRequest) {
 
           if (subscription) {
             const status = meta?.event_name === 'subscription_cancelled' ? 'CANCELED' : 'EXPIRED';
+            const endsAt = data?.attributes?.ends_at ? new Date(data.attributes.ends_at) : new Date();
 
+            // Update subscription status
             await prisma.subscription.update({
               where: { id: subscription.id },
               data: {
                 status,
-                isActive: false,
-                endsAt: data?.attributes?.ends_at ? new Date(data.attributes.ends_at) : new Date(),
+                isActive: status === 'EXPIRED' ? false : true, // CANCELED stays active until endsAt
+                endsAt,
               },
             });
 
-            // Update user plan status
-            await prisma.user.update({
-              where: { id: subscription.userId },
-              data: { planStatus: 'FREE' },
-            });
+            // Sync user plan status - will downgrade to FREE only if endsAt has passed
+            // If cancelled but endsAt is in future, user keeps paid status until then
+            await syncUserPlanStatus(subscription.userId);
           }
         }
         break;
@@ -174,6 +253,9 @@ export async function POST(req: NextRequest) {
                 isActive: true,
               },
             });
+
+            // Sync user plan status
+            await syncUserPlanStatus(subscription.userId);
           }
         }
         break;
@@ -195,6 +277,9 @@ export async function POST(req: NextRequest) {
                 isActive: false,
               },
             });
+
+            // Sync user plan status (will downgrade to FREE)
+            await syncUserPlanStatus(subscription.userId);
           }
         }
         break;
@@ -217,18 +302,8 @@ export async function POST(req: NextRequest) {
               },
             });
 
-            // Update user plan status
-            const planInfo = await prisma.subscription.findUnique({
-              where: { id: subscription.id },
-            });
-
-            if (planInfo?.providerPlan) {
-              const planStatus = planInfo.providerPlan.includes('pro') ? 'PRO' : 'STARTER';
-              await prisma.user.update({
-                where: { id: subscription.userId },
-                data: { planStatus },
-              });
-            }
+            // Sync user plan status
+            await syncUserPlanStatus(subscription.userId);
           }
         }
         break;
