@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import crypto from 'crypto';
+import { checkRateLimit, authRateLimit } from '@/lib/rate-limit';
+import { apiSuccess, commonErrors } from '@/lib/api-response';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email(),
@@ -11,6 +13,18 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { email } = forgotPasswordSchema.parse(body);
+
+    // Rate limiting - CRITICAL to prevent email spam
+    const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
+    const identifier = `forgot-password:${clientIP}:${email}`;
+    const rateCheck = await checkRateLimit(authRateLimit, identifier);
+
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        commonErrors.rateLimit(rateCheck.reset),
+        { status: 429 }
+      );
+    }
 
     // Check if user exists
     const user = await prisma.user.findUnique({
@@ -36,21 +50,23 @@ export async function POST(req: NextRequest) {
     }
 
     // Always return success to prevent email enumeration
-    return NextResponse.json({
-      message: 'If an account exists with this email, password reset instructions have been sent.',
-    });
+    return NextResponse.json(
+      apiSuccess({
+        message: 'If an account exists with this email, password reset instructions have been sent.',
+      })
+    );
 
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid email address' },
+        commonErrors.validation(error.errors),
         { status: 400 }
       );
     }
 
-    console.error('Forgot password error:', error);
+    console.error('[FORGOT_PASSWORD_ERROR]', error);
     return NextResponse.json(
-      { error: 'Failed to process request' },
+      commonErrors.internal(),
       { status: 500 }
     );
   }

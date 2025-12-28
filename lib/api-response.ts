@@ -30,11 +30,14 @@ export function apiSuccess<T>(data: T): ApiSuccessResponse<T> {
  * Create an error API response
  */
 export function apiError(error: string, details?: unknown): ApiErrorResponse {
-  return {
+  const response: ApiErrorResponse = {
     success: false,
     error,
-    ...(details && { details }),
   };
+  if (details !== undefined) {
+    response.details = details;
+  }
+  return response;
 }
 
 /**
