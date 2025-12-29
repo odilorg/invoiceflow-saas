@@ -1,4 +1,5 @@
 import React, { ReactNode } from 'react';
+import Badge, { BadgeVariant } from './Badge';
 
 export interface EntityListCardProps {
   /** Primary title of the entity */
@@ -8,7 +9,7 @@ export interface EntityListCardProps {
   /** Status badge configuration */
   badge?: {
     label: string;
-    variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+    variant: BadgeVariant;
   };
   /** Field data displayed in 2-column grid */
   fields?: Array<{
@@ -64,23 +65,6 @@ export default function EntityListCard({
   destructiveAction,
   className = '',
 }: EntityListCardProps) {
-  const getBadgeStyles = (variant: string) => {
-    switch (variant) {
-      case 'success':
-        return 'bg-green-100 text-green-700 border-green-200';
-      case 'warning':
-        return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'danger':
-        return 'bg-red-100 text-red-700 border-red-200';
-      case 'info':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'neutral':
-        return 'bg-slate-100 text-slate-700 border-slate-200';
-      default:
-        return 'bg-slate-100 text-slate-700 border-slate-200';
-    }
-  };
-
   const getButtonStyles = (variant: string = 'primary') => {
     switch (variant) {
       case 'primary':
@@ -109,13 +93,9 @@ export default function EntityListCard({
           )}
         </div>
         {badge && (
-          <span
-            className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border shrink-0 ${getBadgeStyles(
-              badge.variant
-            )}`}
-          >
+          <Badge variant={badge.variant} className="shrink-0">
             {badge.label}
-          </span>
+          </Badge>
         )}
       </div>
 
