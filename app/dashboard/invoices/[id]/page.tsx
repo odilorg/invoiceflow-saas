@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getReminderState, getReminderStatusMessage, isReminderExhausted } from '@/lib/reminder-state';
+import { FormSection, FormField, FormInput, FormSelect, FormTextarea, FormAmountInput, FormDateInput } from '@/components/form';
 
 interface Invoice {
   id: string;
@@ -321,106 +322,105 @@ export default function InvoiceDetailPage() {
               </div>
 
               {editing ? (
-                <form onSubmit={handleUpdate} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Client Name</label>
-                      <input
+                <form onSubmit={handleUpdate} className="space-y-6">
+                  <FormSection title="Invoice Information">
+                    <FormField id="clientName" label="Client Name" required>
+                      <FormInput
+                        id="clientName"
                         type="text"
-                        required
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
                         value={formData.clientName}
                         onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                        autoTrim
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Client Email</label>
-                      <input
+                    </FormField>
+
+                    <FormField id="clientEmail" label="Client Email" required>
+                      <FormInput
+                        id="clientEmail"
                         type="email"
-                        required
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
                         value={formData.clientEmail}
                         onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
+                        autoTrim
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Invoice Number</label>
-                      <input
+                    </FormField>
+
+                    <FormField id="invoiceNumber" label="Invoice Number" required>
+                      <FormInput
+                        id="invoiceNumber"
                         type="text"
-                        required
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
                         value={formData.invoiceNumber}
                         onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
+                        autoTrim
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Amount</label>
-                      <input
-                        type="number"
-                        required
-                        min="0"
-                        step="0.01"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    </FormField>
+
+                    <FormField id="amount" label="Amount" required>
+                      <FormAmountInput
+                        id="amount"
                         value={formData.amount}
                         onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                        currency={formData.currency}
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Currency</label>
-                      <select
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    </FormField>
+
+                    <FormField id="currency" label="Currency" required>
+                      <FormSelect
+                        id="currency"
                         value={formData.currency}
                         onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                      >
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="GBP">GBP</option>
-                        <option value="UZS">UZS</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Due Date</label>
-                      <input
-                        type="date"
-                        required
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                        options={[
+                          { value: 'USD', label: 'USD' },
+                          { value: 'EUR', label: 'EUR' },
+                          { value: 'GBP', label: 'GBP' },
+                          { value: 'UZS', label: 'UZS' },
+                        ]}
+                      />
+                    </FormField>
+
+                    <FormField id="dueDate" label="Due Date" required>
+                      <FormDateInput
+                        id="dueDate"
                         value={formData.dueDate}
                         onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                       />
-                    </div>
-                    <div className="col-span-2">
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
-                      <select
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    </FormField>
+                  </FormSection>
+
+                  <FormSection title="Status & Notes" fullWidth>
+                    <FormField id="status" label="Status" required>
+                      <FormSelect
+                        id="status"
                         value={formData.status}
                         onChange={(e) => setFormData({ ...formData, status: e.target.value as Invoice['status'] })}
-                      >
-                        <option value="PENDING">Pending</option>
-                        <option value="PAID">Paid</option>
-                        <option value="CANCELLED">Cancelled</option>
-                      </select>
-                    </div>
-                    <div className="col-span-2">
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Notes</label>
-                      <textarea
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                        rows={3}
+                        options={[
+                          { value: 'PENDING', label: 'Pending' },
+                          { value: 'PAID', label: 'Paid' },
+                          { value: 'CANCELLED', label: 'Cancelled' },
+                        ]}
+                      />
+                    </FormField>
+
+                    <FormField id="notes" label="Notes">
+                      <FormTextarea
+                        id="notes"
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        rows={3}
                       />
-                    </div>
-                  </div>
+                    </FormField>
+                  </FormSection>
+
                   <div className="flex gap-3">
                     <button
                       type="button"
                       onClick={() => setEditing(false)}
-                      className="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                      className="flex-1 h-11 border border-border text-foreground rounded-lg hover:bg-muted transition-colors font-medium"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                      className="flex-1 h-11 bg-foreground text-background rounded-lg hover:opacity-90 transition-all font-medium"
                     >
                       Save Changes
                     </button>
