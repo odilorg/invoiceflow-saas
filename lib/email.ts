@@ -2,8 +2,10 @@
  * Email utility for sending transactional emails
  *
  * In development: Logs email content to console
- * In production: Sends via email provider (Resend/SendGrid/Nodemailer)
+ * In production: Sends via Brevo (formerly Sendinblue)
  */
+
+import * as brevo from '@getbrevo/brevo';
 
 interface SendEmailParams {
   to: string;
@@ -12,13 +14,20 @@ interface SendEmailParams {
   text?: string;
 }
 
+// Initialize Brevo API client
+const brevoApi = new brevo.TransactionalEmailsApi();
+brevoApi.setApiKey(
+  brevo.TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY as string
+);
+
 /**
- * Send email (with dev fallback to console logging)
+ * Send email via Brevo (with dev fallback to console logging)
  */
 export async function sendEmail({ to, subject, html, text }: SendEmailParams): Promise<boolean> {
   const isDev = process.env.NODE_ENV !== 'production';
 
-  if (isDev || !process.env.EMAIL_PROVIDER_CONFIGURED) {
+  if (isDev) {
     // Development mode: Log to console instead of sending
     console.log('\n========== EMAIL (DEV MODE) ==========');
     console.log(`To: ${to}`);
@@ -29,20 +38,27 @@ export async function sendEmail({ to, subject, html, text }: SendEmailParams): P
     return true;
   }
 
-  // Production mode: Integrate with email provider
-  // TODO: Implement actual email sending via Resend, SendGrid, or Nodemailer
-  // Example with Resend:
-  // const { Resend } = require('resend');
-  // const resend = new Resend(process.env.RESEND_API_KEY);
-  // await resend.emails.send({
-  //   from: process.env.EMAIL_FROM,
-  //   to,
-  //   subject,
-  //   html,
-  // });
+  // Production mode: Send via Brevo
+  try {
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = {
+      name: process.env.BREVO_SENDER_NAME || 'InvoiceFlow',
+      email: process.env.EMAIL_FROM?.match(/<(.+)>/)?.[1] || 'info@jahongir-travel.uz',
+    };
+    sendSmtpEmail.to = [{ email: to }];
+    sendSmtpEmail.subject = subject;
+    sendSmtpEmail.htmlContent = html;
+    if (text) {
+      sendSmtpEmail.textContent = text;
+    }
 
-  console.warn('[EMAIL] Production email sending not configured. Email NOT sent:', { to, subject });
-  return false;
+    await brevoApi.sendTransacEmail(sendSmtpEmail);
+    console.log(`[EMAIL] Sent via Brevo to ${to}: ${subject}`);
+    return true;
+  } catch (error) {
+    console.error('[EMAIL] Failed to send via Brevo:', error);
+    return false;
+  }
 }
 
 /**
