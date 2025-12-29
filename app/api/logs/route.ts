@@ -1,36 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
+import { timeQuery } from '@/lib/performance'; // TEMPORARY: For baseline measurement
 
 // GET all email logs for current user's invoices
 export async function GET(req: NextRequest) {
   try {
     const user = await requireUser();
 
-    const logs = await prisma.emailLog.findMany({
-      where: {
-        followUp: {
-          invoice: {
-            userId: user.id,
+    // TEMPORARY: Measure performance
+    const logs = await timeQuery(
+      'GET /api/logs',
+      'findMany with nested relations',
+      () => prisma.emailLog.findMany({
+        where: {
+          followUp: {
+            invoice: {
+              userId: user.id,
+            },
           },
         },
-      },
-      include: {
-        followUp: {
-          include: {
-            invoice: {
-              select: {
-                invoiceNumber: true,
-                clientName: true,
+        include: {
+          followUp: {
+            include: {
+              invoice: {
+                select: {
+                  invoiceNumber: true,
+                  clientName: true,
+                },
               },
             },
           },
         },
-      },
-      orderBy: {
-        sentAt: 'desc',
-      },
-    });
+        orderBy: {
+          sentAt: 'desc',
+        },
+      })
+    );
 
     return NextResponse.json(logs);
   } catch (error) {

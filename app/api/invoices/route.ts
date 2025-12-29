@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { generateFollowUps } from '@/lib/followups';
 import { ensureDefaultSchedule } from '@/lib/default-schedule';
 import { checkPlanLimitEnhanced } from '@/lib/billing/subscription-service';
+import { timeQuery } from '@/lib/performance'; // TEMPORARY: For baseline measurement
 
 const invoiceSchema = z.object({
   clientName: z.string().min(1),
@@ -22,15 +23,20 @@ export async function GET(req: NextRequest) {
   try {
     const user = await requireUser();
 
-    const invoices = await prisma.invoice.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        followUps: {
-          orderBy: { scheduledDate: 'asc' },
+    // TEMPORARY: Measure performance
+    const invoices = await timeQuery(
+      'GET /api/invoices',
+      'findMany with followUps',
+      () => prisma.invoice.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          followUps: {
+            orderBy: { scheduledDate: 'asc' },
+          },
         },
-      },
-    });
+      })
+    );
 
     return NextResponse.json(invoices);
   } catch (error) {

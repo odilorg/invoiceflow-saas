@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import * as brevo from '@getbrevo/brevo';
 import { MAX_FOLLOWUPS_PER_DAY_PER_INVOICE } from '@/lib/constants';
+import { timeQuery } from '@/lib/performance'; // TEMPORARY: For baseline measurement
 
 // Initialize Brevo API client
 const brevoApi = new brevo.TransactionalEmailsApi();
@@ -41,43 +42,48 @@ export async function POST(req: NextRequest) {
     });
 
     // Get pending follow-ups due today (filtered by subscription status)
-    const followUps = await prisma.followUp.findMany({
-      where: {
-        status: 'PENDING',
-        scheduledDate: {
-          gte: today,
-          lt: tomorrow,
-        },
-        invoice: {
-          status: 'PENDING', // Only send for pending invoices
-          remindersEnabled: true, // Only send if reminders are enabled
-          user: {
-            // CRITICAL: Only send for users with PAID active subscriptions
-            // FREE users are NOT eligible for automated cron reminders
-            subscription: {
-              status: {
-                in: ['ACTIVE', 'TRIALING'],
-              },
-              OR: [
-                { endsAt: null }, // No end date (lifetime)
-                { endsAt: { gt: new Date() } }, // Or not expired
-              ],
-            },
+    // TEMPORARY: Measure performance
+    const followUps = await timeQuery(
+      'POST /api/cron/run-followups',
+      'findMany followUps with invoice+user+subscription',
+      () => prisma.followUp.findMany({
+        where: {
+          status: 'PENDING',
+          scheduledDate: {
+            gte: today,
+            lt: tomorrow,
           },
-        },
-      },
-      include: {
-        invoice: {
-          include: {
+          invoice: {
+            status: 'PENDING', // Only send for pending invoices
+            remindersEnabled: true, // Only send if reminders are enabled
             user: {
-              include: {
-                subscription: true,
+              // CRITICAL: Only send for users with PAID active subscriptions
+              // FREE users are NOT eligible for automated cron reminders
+              subscription: {
+                status: {
+                  in: ['ACTIVE', 'TRIALING'],
+                },
+                OR: [
+                  { endsAt: null }, // No end date (lifetime)
+                  { endsAt: { gt: new Date() } }, // Or not expired
+                ],
               },
             },
           },
         },
-      },
-    });
+        include: {
+          invoice: {
+            include: {
+              user: {
+                include: {
+                  subscription: true,
+                },
+              },
+            },
+          },
+        },
+      })
+    );
 
     // Count unique invoices eligible (after subscription filter)
     const uniqueInvoiceIds = new Set(followUps.map(f => f.invoiceId));

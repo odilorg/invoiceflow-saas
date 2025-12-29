@@ -5,6 +5,7 @@ import { regenerateAllFollowUps } from '@/lib/followups';
 import { withVersionCheck } from '@/lib/api-version-check';
 import { z } from 'zod';
 import { checkPlanLimitEnhanced } from '@/lib/billing/subscription-service';
+import { timeQuery } from '@/lib/performance'; // TEMPORARY: For baseline measurement
 
 const scheduleSchema = z.object({
   name: z.string().min(1, 'Schedule name is required'),
@@ -23,18 +24,23 @@ export async function GET(req: NextRequest) {
   try {
     const user = await requireUser();
 
-    const schedules = await prisma.schedule.findMany({
-      where: { userId: user.id },
-      include: {
-        steps: {
-          include: {
-            template: true,
+    // TEMPORARY: Measure performance
+    const schedules = await timeQuery(
+      'GET /api/schedules',
+      'findMany with steps+templates',
+      () => prisma.schedule.findMany({
+        where: { userId: user.id },
+        include: {
+          steps: {
+            include: {
+              template: true,
+            },
+            orderBy: { order: 'asc' },
           },
-          orderBy: { order: 'asc' },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+      })
+    );
 
     return NextResponse.json(schedules);
   } catch (error) {

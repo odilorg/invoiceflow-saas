@@ -4,6 +4,7 @@ import { requireUser } from '@/lib/auth';
 import { withVersionCheck } from '@/lib/api-version-check';
 import { z } from 'zod';
 import { checkPlanLimitEnhanced } from '@/lib/billing/subscription-service';
+import { timeQuery } from '@/lib/performance'; // TEMPORARY: For baseline measurement
 
 const templateSchema = z.object({
   name: z.string().min(1),
@@ -17,10 +18,15 @@ export async function GET(req: NextRequest) {
   try {
     const user = await requireUser();
 
-    const templates = await prisma.template.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-    });
+    // TEMPORARY: Measure performance
+    const templates = await timeQuery(
+      'GET /api/templates',
+      'findMany',
+      () => prisma.template.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+      })
+    );
 
     return NextResponse.json(templates);
   } catch (error) {
