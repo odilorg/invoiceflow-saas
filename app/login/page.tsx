@@ -36,29 +36,40 @@ export default function LoginPage() {
         return;
       }
 
-      // Get callback URL from query params (set by middleware)
+      // Get callback URL from query params (set by middleware/server layout)
       const callbackUrl = searchParams.get('callbackUrl');
 
       // SECURITY: Sanitize callback URL to prevent open redirect attacks
       // Requirements:
       // 1. Must start with '/' (relative path)
       // 2. Must NOT start with '//' (prevents protocol-relative URLs like //evil.com)
-      // 3. Only allow safe characters (alphanumeric, /, -, _, ?, =, &)
-      // 4. Fallback to /dashboard if invalid
+      // 3. Only allow safe characters (no protocol schemes like http:, javascript:, data:)
+      // 4. Must decode first to prevent encoded bypasses
+      // 5. Fallback to /dashboard if invalid
       let redirectTo = '/dashboard'; // safe default
 
       if (callbackUrl && typeof callbackUrl === 'string') {
-        const trimmed = callbackUrl.trim();
+        try {
+          // Decode URL to prevent encoded bypasses (e.g., %2F%2Fevil.com)
+          const decoded = decodeURIComponent(callbackUrl.trim());
 
-        // Check: starts with '/' but not '//'
-        const isRelativePath = trimmed.startsWith('/') && !trimmed.startsWith('//');
+          // Check: starts with '/' but not '//'
+          const isRelativePath = decoded.startsWith('/') && !decoded.startsWith('//');
 
-        // Check: only contains safe URL characters (no protocol schemes)
-        const safeCharPattern = /^[a-zA-Z0-9\/_\-?=&%]+$/;
-        const hasSafeChars = safeCharPattern.test(trimmed);
+          // Check: only contains safe URL characters (blocks :, <, >, etc.)
+          // This prevents http:, javascript:, data:, and other protocol schemes
+          const safeCharPattern = /^[a-zA-Z0-9\/_\-?=&%]+$/;
+          const hasSafeChars = safeCharPattern.test(decoded);
 
-        if (isRelativePath && hasSafeChars) {
-          redirectTo = trimmed;
+          // Additional check: ensure no backslashes (Windows path bypass)
+          const noBackslashes = !decoded.includes('\\');
+
+          if (isRelativePath && hasSafeChars && noBackslashes) {
+            redirectTo = decoded;
+          }
+        } catch {
+          // Decode failed - use safe default
+          redirectTo = '/dashboard';
         }
       }
 

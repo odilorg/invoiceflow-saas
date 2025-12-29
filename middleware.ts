@@ -26,10 +26,12 @@ export function middleware(request: NextRequest) {
   if (path.startsWith('/dashboard')) {
     const sessionToken = request.cookies.get('session_token')?.value;
 
+    // Compute callbackUrl for ALL dashboard requests (not just redirects)
+    // This allows server layout to reuse it for expired sessions
+    const fullPath = request.nextUrl.pathname + request.nextUrl.search;
+
     if (!sessionToken) {
       // No session cookie - immediate redirect (faster than waiting for server layout)
-      // Preserve full path including query parameters
-      const fullPath = request.nextUrl.pathname + request.nextUrl.search;
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('callbackUrl', fullPath);
 
@@ -40,21 +42,11 @@ export function middleware(request: NextRequest) {
       redirectRes.headers.set('Cache-Control', 'no-store');
       return redirectRes;
     }
-  }
 
-  const response = NextResponse.next();
-
-  // API routes - strict no-cache
-  if (path.startsWith('/api/')) {
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    response.headers.set('Pragma', 'no-cache');
-    response.headers.set('Expires', '0');
-    applySecurityHeaders(response);
-    return response;
-  }
-
-  // Dashboard pages - private, no cache
-  if (path.startsWith('/dashboard')) {
+    // Cookie exists - forward callbackUrl to server layout via custom header
+    // (in case session is expired and server layout needs to redirect)
+    const response = NextResponse.next();
+    response.headers.set('x-callback-url', fullPath);
     response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
@@ -62,7 +54,17 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  return response;
+  // API routes - strict no-cache
+  if (path.startsWith('/api/')) {
+    const response = NextResponse.next();
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    applySecurityHeaders(response);
+    return response;
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
