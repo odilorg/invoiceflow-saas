@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import HelpBox from '@/components/HelpBox';
 import UsageCounter from '@/components/UsageCounter';
 import EntityListCard from '@/components/EntityListCard';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { HELP_CONTENT } from '@/lib/help-content';
 import {
   FormModalShell,
@@ -621,6 +622,7 @@ function TemplateModal({
   const [showPreview, setShowPreview] = useState(false);
   const [lastFocusedField, setLastFocusedField] = useState<'subject' | 'body'>('subject');
   const [invalidVars, setInvalidVars] = useState<string[]>([]);
+  const [showInvalidVarsConfirm, setShowInvalidVarsConfirm] = useState(false);
   const subjectRef = React.useRef<HTMLInputElement>(null);
   const bodyRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -702,11 +704,15 @@ function TemplateModal({
 
     // Check for invalid variables after validation passes
     if (invalidVars.length > 0) {
-      if (!confirm(`Warning: Invalid variables detected: ${invalidVars.join(', ')}. Continue anyway?`)) {
-        return;
-      }
+      setShowInvalidVarsConfirm(true);
+      return;
     }
 
+    submitTemplate();
+  };
+
+  const submitTemplate = async () => {
+    setShowInvalidVarsConfirm(false);
     setLoading(true);
 
     try {
@@ -885,6 +891,19 @@ function TemplateModal({
           disabled={isLoading}
         />
       </div>
+
+      {/* Invalid Variables Confirmation Dialog */}
+      {showInvalidVarsConfirm && (
+        <ConfirmDialog
+          title="Continue with invalid variables?"
+          message={`Warning: Invalid variables detected: ${invalidVars.join(', ')}.\n\nThese variables won't be replaced in emails. Continue anyway?`}
+          type="warning"
+          confirmLabel="Continue Anyway"
+          cancelLabel="Go Back"
+          onConfirm={submitTemplate}
+          onCancel={() => setShowInvalidVarsConfirm(false)}
+        />
+      )}
     </FormModalShell>
   );
 }
