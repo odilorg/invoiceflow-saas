@@ -7,97 +7,83 @@
     /* Border radius */
     --radius: 0.75rem; /* 12px - rounded-xl */
 
-    /* Base colors */
-    --background: 210 20% 98%; /* slate-50 */
-    --foreground: 222 47% 11%; /* slate-900 */
+    /* Base - Neutral, not tinted */
+    --background: 0 0% 100%; /* Pure white for clean SaaS feel */
+    --foreground: 222 22% 15%; /* Soft black for readability */
 
-    /* Card colors */
-    --card: 0 0% 100%; /* white */
-    --card-foreground: 222 47% 11%; /* slate-900 */
+    /* Cards / Surfaces - Slightly lifted via contrast */
+    --card: 0 0% 100%; /* Same as background for flat design */
+    --card-foreground: 222 22% 15%;
 
-    /* Muted colors (for secondary text, backgrounds) */
-    --muted: 210 40% 96%; /* slate-100 */
-    --muted-foreground: 215 16% 47%; /* slate-600 */
+    /* Muted / UI chrome - Neutral gray for helper text and secondary elements */
+    --muted: 220 14% 96%; /* Very light gray for backgrounds */
+    --muted-foreground: 220 9% 45%; /* Mid-gray for secondary text */
 
-    /* Border, input, ring */
-    --border: 214 32% 91%; /* slate-200 */
-    --input: 214 32% 91%; /* slate-200 */
-    --ring: 222 47% 11%; /* slate-900 */
+    /* Borders & inputs - Subtle but visible */
+    --border: 220 13% 90%; /* Light gray borders */
+    --input: 220 13% 90%; /* Match borders for consistency */
+    --ring: 220 60% 50%; /* Blue for focus states */
 
-    /* Primary (main action color - slate-900) */
-    --primary: 222 47% 11%; /* slate-900 */
-    --primary-foreground: 0 0% 100%; /* white */
+    /* Primary - Reserved for actions only (not blue-heavy) */
+    --primary: 222 60% 48%; /* Professional blue for CTAs */
+    --primary-foreground: 0 0% 100%; /* White text on blue */
 
-    /* Secondary (subtle actions - slate-100) */
-    --secondary: 210 40% 96%; /* slate-100 */
-    --secondary-foreground: 222 47% 11%; /* slate-900 */
+    /* Secondary - Subtle actions */
+    --secondary: 220 14% 96%; /* Match muted background */
+    --secondary-foreground: 222 22% 15%;
 
-    /* Destructive/Danger (red) */
-    --destructive: 0 84% 60%; /* red-500 */
-    --destructive-foreground: 0 0% 100%; /* white */
+    /* Status colors - Readable at 15–20% opacity for badges */
+    --success: 142 72% 38%; /* Finance-friendly green */
+    --success-foreground: 0 0% 100%;
 
-    /* Success (green) */
-    --success: 142 71% 45%; /* green-600 */
-    --success-foreground: 0 0% 100%; /* white */
+    --warning: 38 92% 50%; /* Vibrant amber */
+    --warning-foreground: 38 100% 15%; /* Dark text for better contrast */
 
-    /* Warning (amber) */
-    --warning: 38 92% 50%; /* amber-500 */
-    --warning-foreground: 0 0% 100%; /* white */
+    --destructive: 0 72% 50%; /* Clear red for errors */
+    --destructive-foreground: 0 0% 100%;
 
-    /* Info (blue) */
-    --info: 217 91% 60%; /* blue-500 */
-    --info-foreground: 0 0% 100%; /* white */
-
-    /* Accent colors for badges/states */
-    --accent: 210 40% 96%; /* slate-100 */
-    --accent-foreground: 222 47% 11%; /* slate-900 */
+    --info: 210 90% 56%; /* Bright blue for informational states */
+    --info-foreground: 0 0% 100%;
   }
 
   .dark {
-    /* Base colors */
-    --background: 222 47% 11%; /* slate-900 - dark page bg */
-    --foreground: 210 40% 98%; /* slate-50 - light text */
+    /* Base - Dark neutral background */
+    --background: 222 22% 10%; /* Deep neutral dark */
+    --foreground: 210 40% 96%; /* Soft white for text */
 
-    /* Card colors - lighter than background for contrast */
-    --card: 217 33% 17%; /* slate-800 - elevated surface */
-    --card-foreground: 210 40% 98%; /* slate-50 */
+    /* Cards / Surfaces - Elevated from background */
+    --card: 222 22% 13%; /* Slightly lighter than bg for depth */
+    --card-foreground: 210 40% 96%;
 
-    /* Muted colors - for secondary text and backgrounds */
-    --muted: 215 28% 23%; /* slate-700 lightened - interactive elements */
-    --muted-foreground: 215 20% 65%; /* slate-400 - subtle text */
+    /* Muted / UI chrome - Darker grays for dark mode */
+    --muted: 222 18% 18%; /* Dark gray for interactive elements */
+    --muted-foreground: 215 20% 65%; /* Mid-gray for secondary text */
 
-    /* Border - must be visible against both bg and card */
-    --border: 215 20% 30%; /* slate-600 - visible borders */
-    --input: 215 28% 23%; /* slate-700 lightened */
-    --ring: 217 91% 60%; /* blue-500 - focus rings */
+    /* Borders & inputs - Visible against dark backgrounds */
+    --border: 222 18% 22%; /* Lighter than muted for visibility */
+    --input: 222 18% 22%; /* Match borders */
+    --ring: 210 90% 56%; /* Bright blue for focus */
 
-    /* Primary */
-    --primary: 210 40% 98%; /* slate-50 */
-    --primary-foreground: 222 47% 11%; /* slate-900 */
+    /* Primary - Bright blue for actions in dark mode */
+    --primary: 210 90% 56%; /* Brighter blue for dark backgrounds */
+    --primary-foreground: 222 22% 10%; /* Dark text on bright blue */
 
-    /* Secondary */
-    --secondary: 215 28% 23%; /* slate-700 lightened */
-    --secondary-foreground: 210 40% 98%; /* slate-50 */
+    /* Secondary - Subtle actions */
+    --secondary: 222 18% 18%; /* Match muted */
+    --secondary-foreground: 210 40% 96%;
 
-    /* Destructive/Danger - brighter for visibility */
-    --destructive: 0 84% 60%; /* red-500 - same as light mode for consistency */
-    --destructive-foreground: 0 0% 100%; /* white */
+    /* Status colors - Brightened for dark mode visibility */
+    --success: 142 72% 45%; /* Brighter green for contrast */
+    --success-foreground: 222 22% 10%; /* Dark text on bright color */
 
-    /* Success - brighter for visibility */
-    --success: 142 71% 45%; /* green-600 - brighter than light mode dark variant */
-    --success-foreground: 0 0% 100%; /* white */
+    --warning: 38 92% 55%; /* Slightly brighter amber */
+    --warning-foreground: 38 100% 15%; /* Dark text for readability */
 
-    /* Warning - brighter for visibility */
-    --warning: 38 92% 50%; /* amber-500 - same as light mode */
-    --warning-foreground: 222 47% 11%; /* dark text for better contrast */
+    --destructive: 0 72% 60%; /* Brighter red for visibility */
+    --destructive-foreground: 0 0% 100%; /* White text */
 
-    /* Info - good contrast */
-    --info: 217 91% 60%; /* blue-500 */
-    --info-foreground: 0 0% 100%; /* white */
-
-    /* Accent */
-    --accent: 215 28% 23%; /* slate-700 lightened */
-    --accent-foreground: 210 40% 98%; /* slate-50 */
+    --info: 210 90% 60%; /* Bright blue for info states */
+    --info-foreground: 222 22% 10%; /* Dark text on bright blue */
   }
 }
 
