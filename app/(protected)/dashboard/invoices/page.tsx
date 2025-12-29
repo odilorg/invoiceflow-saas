@@ -809,7 +809,7 @@ function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuc
             />
           </FormField>
 
-          <FormField id="currency" label="Currency" error={errors.fieldErrors.currency}>
+          <FormField id="currency" label="Currency" required error={errors.fieldErrors.currency}>
             <FormSelect
               id="currency"
               value={formData.currency}
