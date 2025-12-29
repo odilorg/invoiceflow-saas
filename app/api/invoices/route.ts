@@ -26,12 +26,31 @@ export async function GET(req: NextRequest) {
     // TEMPORARY: Measure performance
     const invoices = await timeQuery(
       'GET /api/invoices',
-      'findMany with followUps',
+      'findMany with followUps (optimized)',
       () => prisma.invoice.findMany({
         where: { userId: user.id },
         orderBy: { createdAt: 'desc' },
-        include: {
+        select: {
+          id: true,
+          clientName: true,
+          clientEmail: true,
+          invoiceNumber: true,
+          amount: true,
+          currency: true,
+          dueDate: true,
+          status: true,
+          notes: true,
+          scheduleId: true,
+          createdAt: true,
+          lastReminderSentAt: true,
+          totalScheduledReminders: true,
+          remindersCompleted: true,
           followUps: {
+            select: {
+              id: true,
+              status: true,
+              scheduledDate: true,
+            },
             orderBy: { scheduledDate: 'asc' },
           },
         },

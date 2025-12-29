@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     // TEMPORARY: Measure performance
     const logs = await timeQuery(
       'GET /api/logs',
-      'findMany with nested relations',
+      'findMany with nested relations (optimized)',
       () => prisma.emailLog.findMany({
         where: {
           followUp: {
@@ -20,9 +20,16 @@ export async function GET(req: NextRequest) {
             },
           },
         },
-        include: {
+        select: {
+          id: true,
+          recipientEmail: true,
+          subject: true,
+          sentAt: true,
+          success: true,
+          errorMessage: true,
           followUp: {
-            include: {
+            select: {
+              id: true,
               invoice: {
                 select: {
                   invoiceNumber: true,

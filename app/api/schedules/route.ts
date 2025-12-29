@@ -27,13 +27,28 @@ export async function GET(req: NextRequest) {
     // TEMPORARY: Measure performance
     const schedules = await timeQuery(
       'GET /api/schedules',
-      'findMany with steps+templates',
+      'findMany with steps+templates (optimized)',
       () => prisma.schedule.findMany({
         where: { userId: user.id },
-        include: {
+        select: {
+          id: true,
+          name: true,
+          isActive: true,
+          isDefault: true,
+          createdAt: true,
+          updatedAt: true,
           steps: {
-            include: {
-              template: true,
+            select: {
+              id: true,
+              templateId: true,
+              dayOffset: true,
+              order: true,
+              template: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
             },
             orderBy: { order: 'asc' },
           },
