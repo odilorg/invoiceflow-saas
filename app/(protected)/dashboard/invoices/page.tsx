@@ -596,6 +596,17 @@ function StatusBadge({ invoice }: { invoice: Invoice }) {
   );
 }
 
+// Convert currency code to symbol for display
+function getCurrencySymbol(code: string): string {
+  const symbols: Record<string, string> = {
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+    UZS: 'сўм',
+  };
+  return symbols[code] || code;
+}
+
 function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -794,7 +805,7 @@ function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuc
               onChange={(e) => handleChange('amount', e.target.value)}
               error={!!errors.fieldErrors.amount}
               disabled={isLoading}
-              currency={formData.currency}
+              currency={getCurrencySymbol(formData.currency)}
             />
           </FormField>
 
@@ -1024,7 +1035,7 @@ function EditInvoiceModal({ invoice, onClose, onSuccess }: { invoice: Invoice; o
               value={formData.amount}
               onChange={(e) => handleChange('amount', e.target.value)}
               disabled={isLimitedEditMode || isLoading}
-              currency={formData.currency}
+              currency={getCurrencySymbol(formData.currency)}
             />
           </FormField>
 
