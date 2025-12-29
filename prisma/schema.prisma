@@ -102,6 +102,10 @@ model Invoice {
   @@index([status])
   @@index([remindersCompleted])
   @@index([remindersEnabled])
+  // Composite indexes for hot paths
+  @@index([userId, createdAt(sort: Desc)])  // GET /api/invoices orderBy createdAt DESC
+  @@index([userId, status])                  // Filtered invoice lists
+  @@index([status, remindersEnabled])        // Cron job: status=PENDING + remindersEnabled=true
 }
 
 model Template {
@@ -118,6 +122,7 @@ model Template {
   scheduleSteps ScheduleStep[]
 
   @@index([userId])
+  @@index([userId, createdAt(sort: Desc)])  // GET /api/templates orderBy createdAt DESC
 }
 
 model Schedule {
@@ -135,6 +140,7 @@ model Schedule {
 
   @@index([userId])
   @@index([userId, isDefault]) // For finding default schedule
+  @@index([userId, createdAt(sort: Desc)])  // GET /api/schedules orderBy createdAt DESC
   // Note: Unique constraint on default will be enforced via application logic
 }
 
@@ -172,6 +178,8 @@ model FollowUp {
   @@index([invoiceId])
   @@index([status])
   @@index([scheduledDate])
+  // Composite index for cron job hot path: status=PENDING + scheduledDate range
+  @@index([status, scheduledDate])  // CRITICAL: Cron query filters by both fields
 }
 
 model EmailLog {
@@ -186,6 +194,8 @@ model EmailLog {
   followUp    FollowUp @relation(fields: [followUpId], references: [id], onDelete: Cascade)
 
   @@index([followUpId])
+  @@index([sentAt(sort: Desc)])  // GET /api/logs orderBy sentAt DESC
+  @@index([followUpId, sentAt])  // Cron rate limit check: count by followUp + date range
 }
 
 // Billing Models
@@ -213,6 +223,7 @@ model Subscription {
   @@index([userId])
   @@index([providerSubscriptionId])
   @@index([status])
+  @@index([status, endsAt])  // Cron job: check active subscriptions + endsAt for expiry
 }
 
 model BillingEvent {

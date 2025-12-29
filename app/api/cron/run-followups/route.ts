@@ -42,10 +42,11 @@ export async function POST(req: NextRequest) {
     });
 
     // Get pending follow-ups due today (filtered by subscription status)
+    // PHASE 3: Add batch processing limit + optimized select
     // TEMPORARY: Measure performance
     const followUps = await timeQuery(
       'POST /api/cron/run-followups',
-      'findMany followUps with invoice+user+subscription',
+      'findMany followUps with invoice+user+subscription (batched)',
       () => prisma.followUp.findMany({
         where: {
           status: 'PENDING',
@@ -71,27 +72,109 @@ export async function POST(req: NextRequest) {
             },
           },
         },
-        include: {
+        select: {
+          id: true,
+          invoiceId: true,
+          subject: true,
+          body: true,
           invoice: {
-            include: {
+            select: {
+              id: true,
+              clientName: true,
+              clientEmail: true,
               user: {
-                include: {
-                  subscription: true,
+                select: {
+                  id: true,
+                  subscription: {
+                    select: {
+                      status: true,
+                      endsAt: true,
+                    },
+                  },
                 },
               },
             },
           },
         },
+        orderBy: {
+          scheduledDate: 'asc', // Process oldest first
+        },
+        take: 500, // PHASE 3: Batch limit - max 500 per run
       })
     );
 
     // Count unique invoices eligible (after subscription filter)
     const uniqueInvoiceIds = new Set(followUps.map(f => f.invoiceId));
 
+    // PHASE 3: Pre-fetch rate limit data to prevent N+1 queries
+    // Get count of emails sent today per invoice (in one query)
+    const emailsSentToday = await prisma.emailLog.groupBy({
+      by: ['followUpId'],
+      where: {
+        sentAt: {
+          gte: today,
+          lt: tomorrow,
+        },
+        success: true,
+        followUp: {
+          invoiceId: {
+            in: Array.from(uniqueInvoiceIds),
+          },
+        },
+      },
+      _count: {
+        id: true,
+      },
+    });
+
+    // Create a map: invoiceId -> count of emails sent today
+    const invoiceSentCountMap = new Map<string, number>();
+    for (const result of emailsSentToday) {
+      const followUp = followUps.find(f => f.id === result.followUpId);
+      if (followUp) {
+        const currentCount = invoiceSentCountMap.get(followUp.invoiceId) || 0;
+        invoiceSentCountMap.set(followUp.invoiceId, currentCount + result._count.id);
+      }
+    }
+
+    // PHASE 3: Pre-fetch invoice followUp counts to prevent N+1 queries
+    const invoiceFollowUpCounts = await prisma.invoice.findMany({
+      where: {
+        id: {
+          in: Array.from(uniqueInvoiceIds),
+        },
+      },
+      select: {
+        id: true,
+        _count: {
+          select: {
+            followUps: true,
+          },
+        },
+        followUps: {
+          where: {
+            status: 'SENT',
+          },
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    // Create maps for quick lookup
+    const totalFollowUpsMap = new Map<string, number>();
+    const sentFollowUpsMap = new Map<string, number>();
+    for (const invoice of invoiceFollowUpCounts) {
+      totalFollowUpsMap.set(invoice.id, invoice._count.followUps);
+      sentFollowUpsMap.set(invoice.id, invoice.followUps.length);
+    }
+
     const results = {
       scanned_invoices: totalInvoicesDue,
       eligible_invoices: uniqueInvoiceIds.size,
       total_followups: followUps.length,
+      batch_limit: 500,
       sent: 0,
       skipped: 0,
       skipped_not_entitled: totalInvoicesDue - uniqueInvoiceIds.size,
@@ -101,19 +184,26 @@ export async function POST(req: NextRequest) {
 
     for (const followUp of followUps) {
       try {
-        // Check if we've already sent a follow-up for this invoice today
-        const sentToday = await prisma.emailLog.count({
+        // PHASE 3: Idempotency check - skip if already processed
+        // This prevents duplicates if cron runs twice
+        const existingLog = await prisma.emailLog.findFirst({
           where: {
-            followUp: {
-              invoiceId: followUp.invoiceId,
-            },
+            followUpId: followUp.id,
             sentAt: {
               gte: today,
               lt: tomorrow,
             },
-            success: true,
           },
         });
+
+        if (existingLog) {
+          // Already processed today, skip silently
+          results.skipped++;
+          continue;
+        }
+
+        // PHASE 3: Use pre-fetched rate limit data (no DB query in loop)
+        const sentToday = invoiceSentCountMap.get(followUp.invoiceId) || 0;
 
         if (sentToday >= MAX_FOLLOWUPS_PER_DAY_PER_INVOICE) {
           await prisma.followUp.update({
@@ -170,17 +260,9 @@ export async function POST(req: NextRequest) {
             },
           });
 
-          // Check if this was the last scheduled reminder
-          const totalFollowUps = await prisma.followUp.count({
-            where: { invoiceId: followUp.invoiceId }
-          });
-
-          const sentFollowUps = await prisma.followUp.count({
-            where: {
-              invoiceId: followUp.invoiceId,
-              status: 'SENT'
-            }
-          });
+          // PHASE 3: Check if this was the last scheduled reminder (use pre-fetched data)
+          const totalFollowUps = totalFollowUpsMap.get(followUp.invoiceId) || 0;
+          const sentFollowUps = (sentFollowUpsMap.get(followUp.invoiceId) || 0) + 1; // +1 for current
 
           // If all follow-ups have been sent and invoice is still unpaid, mark as completed
           if (sentFollowUps >= totalFollowUps) {
