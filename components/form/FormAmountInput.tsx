@@ -66,10 +66,12 @@ export default function FormAmountInput({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let newValue = e.target.value;
 
-    // Remove currency symbol if user typed it
-    if (currency) {
-      newValue = newValue.replace(currency, '').trim();
-    }
+    // Remove any currency symbols/codes that might have been typed or pasted
+    // Strip common currency symbols and codes
+    newValue = newValue
+      .replace(/[$€£¥₹₽₩₪₺₴₸₹]/g, '') // Remove currency symbols
+      .replace(/USD|EUR|GBP|UZS|CNY|JPY|INR|RUB/gi, '') // Remove currency codes
+      .trim();
 
     // Allow empty value
     if (newValue === '') {
@@ -88,7 +90,10 @@ export default function FormAmountInput({
       return; // Don't update
     }
 
-    // Allow only numbers, decimal point, and minus sign
+    // Strip any remaining non-numeric characters except decimal point and minus
+    newValue = newValue.replace(/[^\d.-]/g, '');
+
+    // Allow only numbers, decimal point, and minus sign (final validation)
     const regex = allowNegative ? /^-?\d*\.?\d*$/ : /^\d*\.?\d*$/;
     if (!regex.test(newValue)) {
       return; // Don't update
