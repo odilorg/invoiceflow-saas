@@ -6,6 +6,7 @@ import Link from 'next/link';
 import HelpBox from '@/components/HelpBox';
 import EntityListCard from '@/components/EntityListCard';
 import { HELP_CONTENT } from '@/lib/help-content';
+import { PAGE_X, PAGE_Y, SECTION_GAP, H1, H2, SUBTLE, LABEL, BTN_MIN_H } from '@/lib/ui/tokens';
 
 interface Stats {
   totalInvoices: number;
@@ -101,10 +102,10 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-3 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
-          <p className="text-sm text-slate-600">Loading dashboard...</p>
+          <div className="w-8 h-8 border-3 border-border border-t-foreground rounded-full animate-spin" />
+          <p className={SUBTLE}>Loading dashboard...</p>
         </div>
       </div>
     );
@@ -164,18 +165,18 @@ export default function DashboardPage() {
   const setupPrompt = getSetupPrompt();
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+      <div className="bg-card border-b border-border">
+        <div className={`max-w-6xl mx-auto ${PAGE_X} ${PAGE_Y}`}>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-semibold text-slate-900 mb-1">Dashboard</h1>
-              <p className="text-sm text-slate-600">Overview of your invoices and follow-ups</p>
+              <h1 className={`${H1} text-foreground mb-1`}>Dashboard</h1>
+              <p className={SUBTLE}>Overview of your invoices and follow-ups</p>
             </div>
             <Link
               href="/dashboard/invoices"
-              className="hidden sm:inline-flex min-h-[44px] px-6 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors items-center"
+              className={`hidden sm:inline-flex ${BTN_MIN_H} px-6 py-2.5 bg-foreground text-background text-sm font-medium rounded-lg hover:bg-foreground/90 transition-colors items-center`}
             >
               + New Invoice
             </Link>
@@ -184,7 +185,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+      <div className={`max-w-6xl mx-auto ${PAGE_X} ${PAGE_Y}`}>
         {/* Help Box */}
         <HelpBox
           title={HELP_CONTENT.dashboard.title}
@@ -195,18 +196,18 @@ export default function DashboardPage() {
 
         {/* Setup Prompt - Only ONE visible at a time */}
         {setupPrompt && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="mb-6 bg-info/15 border border-info/20 rounded-xl p-4">
             <div className="flex flex-col sm:flex-row items-start gap-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+              <div className="flex-shrink-0 w-10 h-10 bg-info/25 rounded-lg flex items-center justify-center text-info">
                 {setupPrompt.icon}
               </div>
               <div className="flex-1">
-                <h3 className="text-base font-semibold text-slate-900">{setupPrompt.title}</h3>
-                <p className="text-sm text-slate-600 mt-1">{setupPrompt.description}</p>
+                <h3 className={`${H2} text-foreground`}>{setupPrompt.title}</h3>
+                <p className={`${SUBTLE} mt-1`}>{setupPrompt.description}</p>
               </div>
               <Link
                 href={setupPrompt.href}
-                className="flex-shrink-0 min-h-[44px] px-6 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors inline-flex items-center w-full sm:w-auto justify-center"
+                className={`flex-shrink-0 ${BTN_MIN_H} px-6 py-2.5 bg-foreground text-background text-sm font-medium rounded-lg hover:bg-foreground/90 transition-colors inline-flex items-center w-full sm:w-auto justify-center`}
               >
                 {setupPrompt.action}
               </Link>
@@ -226,8 +227,8 @@ export default function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             }
-            iconBg="bg-red-100"
-            iconColor="text-red-600"
+            iconBg="bg-destructive/15"
+            iconColor="text-destructive"
             className="order-1"
           />
           <StatCard
@@ -240,8 +241,8 @@ export default function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             }
-            iconBg="bg-amber-100"
-            iconColor="text-amber-600"
+            iconBg="bg-warning/15"
+            iconColor="text-warning"
             className="order-2"
           />
           <StatCard
@@ -253,8 +254,8 @@ export default function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             }
-            iconBg="bg-slate-100"
-            iconColor="text-slate-600"
+            iconBg="bg-muted"
+            iconColor="text-muted-foreground"
             className="order-3"
           />
           <StatCard
@@ -266,8 +267,8 @@ export default function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             }
-            iconBg="bg-green-100"
-            iconColor="text-green-600"
+            iconBg="bg-success/15"
+            iconColor="text-success"
             className="order-4"
           />
         </div>
@@ -275,14 +276,14 @@ export default function DashboardPage() {
         {/* Main sections */}
         <div className="grid grid-cols-1 gap-6">
           {/* Overdue Invoices */}
-          <div className="bg-white border border-slate-200 rounded-xl">
-            <div className="px-4 sm:px-6 py-4 border-b border-slate-200">
+          <div className="bg-card border border-border rounded-xl">
+            <div className={`${PAGE_X} py-4 border-b border-border`}>
               <div className="flex items-center justify-between">
-                <h2 className="text-base font-semibold text-slate-900">Overdue Invoices</h2>
+                <h2 className={`${H2} text-foreground`}>Overdue Invoices</h2>
                 {overdueInvoices.length > 0 && (
                   <Link
                     href="/dashboard/invoices"
-                    className="text-sm text-slate-600 hover:text-slate-900 font-medium"
+                    className={`${SUBTLE} hover:text-foreground font-medium`}
                   >
                     View all →
                   </Link>
@@ -290,12 +291,12 @@ export default function DashboardPage() {
               </div>
             </div>
             {overdueInvoices.length === 0 ? (
-              <div className="px-4 sm:px-6 py-12 text-center">
-                <svg className="w-12 h-12 mx-auto text-slate-300 opacity-60 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className={`${PAGE_X} py-12 text-center`}>
+                <svg className="w-12 h-12 mx-auto text-muted-foreground opacity-60 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-base font-semibold text-slate-900">No overdue invoices</p>
-                <p className="text-sm text-slate-600 mt-1">All invoices are up to date</p>
+                <p className={`${H2} text-foreground`}>No overdue invoices</p>
+                <p className={`${SUBTLE} mt-1`}>All invoices are up to date</p>
               </div>
             ) : (
               <div className="p-4 space-y-4">
@@ -335,45 +336,45 @@ export default function DashboardPage() {
 
           {/* Quick Stats Table */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white border border-slate-200 rounded-xl">
-              <div className="px-4 sm:px-6 py-4 border-b border-slate-200">
-                <h2 className="text-base font-semibold text-slate-900">Follow-up Activity</h2>
+            <div className="bg-card border border-border rounded-xl">
+              <div className={`${PAGE_X} py-4 border-b border-border`}>
+                <h2 className={`${H2} text-foreground`}>Follow-up Activity</h2>
               </div>
               <div className="p-4 sm:p-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                       </div>
-                      <span className="text-sm text-slate-600">Reminders sent</span>
+                      <span className={SUBTLE}>Reminders sent</span>
                     </div>
-                    <span className="text-sm font-semibold text-slate-900">{stats?.totalFollowUpsSent || 0}</span>
+                    <span className="text-sm font-semibold text-foreground">{stats?.totalFollowUpsSent || 0}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-8 h-8 bg-info/15 rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
-                      <span className="text-sm text-slate-600">Upcoming follow-ups</span>
+                      <span className={SUBTLE}>Upcoming follow-ups</span>
                     </div>
-                    <span className="text-sm font-semibold text-slate-900">{stats?.upcomingFollowUps || 0}</span>
+                    <span className="text-sm font-semibold text-foreground">{stats?.upcomingFollowUps || 0}</span>
                   </div>
                   {stats?.totalFollowUpsSent === 0 && stats?.upcomingFollowUps === 0 && (
                     <div className="pt-3 pb-1">
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         No emails sent yet. Reminders will appear here once invoices become due.
                       </p>
                     </div>
                   )}
-                  <div className="pt-4 border-t border-slate-200">
+                  <div className="pt-4 border-t border-border">
                     <Link
                       href="/dashboard/activity"
-                      className="min-h-[44px] w-full px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors inline-flex items-center justify-center gap-2"
+                      className={`${BTN_MIN_H} w-full px-4 py-2.5 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors inline-flex items-center justify-center gap-2`}
                     >
                       View activity log
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -387,15 +388,15 @@ export default function DashboardPage() {
 
             {/* Quick Actions - only show for first-time users */}
             {(!stats?.totalInvoices || stats?.totalFollowUpsSent === 0) && (
-              <div className="bg-white border border-slate-200 rounded-xl">
-                <div className="px-4 sm:px-6 py-4 border-b border-slate-200">
-                  <h2 className="text-base font-semibold text-slate-900">Quick Actions</h2>
+              <div className="bg-card border border-border rounded-xl">
+                <div className={`${PAGE_X} py-4 border-b border-border`}>
+                  <h2 className={`${H2} text-foreground`}>Quick Actions</h2>
                 </div>
                 <div className="p-4 sm:p-6">
                   <div className="space-y-3">
                     <Link
                       href="/dashboard/invoices"
-                      className="w-full min-h-[44px] px-4 py-2.5 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors inline-flex items-center gap-3"
+                      className={`w-full ${BTN_MIN_H} px-4 py-2.5 text-sm font-medium text-background bg-foreground hover:bg-foreground/90 rounded-lg transition-colors inline-flex items-center gap-3`}
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -404,7 +405,7 @@ export default function DashboardPage() {
                     </Link>
                     <Link
                       href="/dashboard/templates"
-                      className="w-full min-h-[44px] px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors inline-flex items-center gap-3"
+                      className={`w-full ${BTN_MIN_H} px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border hover:bg-muted rounded-lg transition-colors inline-flex items-center gap-3`}
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -413,7 +414,7 @@ export default function DashboardPage() {
                     </Link>
                     <Link
                       href="/dashboard/schedules"
-                      className="w-full min-h-[44px] px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors inline-flex items-center gap-3"
+                      className={`w-full ${BTN_MIN_H} px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border hover:bg-muted rounded-lg transition-colors inline-flex items-center gap-3`}
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -431,16 +432,16 @@ export default function DashboardPage() {
         {stats?.planStatus === 'FREE' && (
           <a
             href={process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL || '#'}
-            className="mt-6 block bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-6 hover:border-slate-300 transition-colors cursor-pointer"
+            className="mt-6 block bg-muted border border-border rounded-xl p-4 sm:p-6 hover:border-foreground/20 transition-colors cursor-pointer"
           >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h3 className="text-base font-semibold text-slate-900">Free Plan</h3>
-                <p className="text-sm text-slate-600 mt-1">
+                <h3 className={`${H2} text-foreground`}>Free Plan</h3>
+                <p className={`${SUBTLE} mt-1`}>
                   You're using {stats.totalInvoices}/5 invoices. Upgrade to unlock unlimited invoices and advanced features.
                 </p>
               </div>
-              <span className="min-h-[44px] px-6 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg whitespace-nowrap inline-flex items-center">
+              <span className={`${BTN_MIN_H} px-6 py-2.5 bg-foreground text-background text-sm font-medium rounded-lg whitespace-nowrap inline-flex items-center`}>
                 Upgrade
               </span>
             </div>
@@ -454,7 +455,7 @@ export default function DashboardPage() {
           href="/dashboard/invoices"
           aria-label="Create invoice"
           title="Create invoice"
-          className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-slate-800 transition-all z-30"
+          className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-foreground text-background rounded-full flex items-center justify-center shadow-lg hover:bg-foreground/90 transition-all z-30"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -493,31 +494,31 @@ function StatCard({
   const isEmpty = value === 0 || value === '—';
 
   return (
-    <div className={`bg-white border border-slate-200 rounded-xl p-4 transition-opacity ${
+    <div className={`bg-card border border-border rounded-xl p-4 transition-opacity ${
       isEmpty ? 'opacity-70' : ''
     } ${className || ''}`}>
       <div className="flex items-start justify-between mb-3">
-        <p className="text-[11px] uppercase tracking-wide font-medium text-slate-500">{label}</p>
+        <p className={LABEL}>{label}</p>
         {icon && (
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${iconBg || 'bg-slate-100'} ${iconColor || 'text-slate-600'}`}>
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${iconBg || 'bg-muted'} ${iconColor || 'text-muted-foreground'}`}>
             {icon}
           </div>
         )}
       </div>
       <p className={`text-2xl font-semibold ${
-        highlight ? 'text-red-600' : 'text-slate-900'
+        highlight ? 'text-destructive' : 'text-foreground'
       }`}>
         {value}
       </p>
       {trend && (
         <p className={`text-xs mt-1 ${
-          trendNegative ? 'text-red-600' : 'text-slate-600'
+          trendNegative ? 'text-destructive' : 'text-muted-foreground'
         }`}>
           {trend}
         </p>
       )}
       {helper && (
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           {helper}
         </p>
       )}
