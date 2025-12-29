@@ -57,6 +57,7 @@ export default function SchedulesPage() {
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     loadSchedules();
@@ -66,6 +67,11 @@ export default function SchedulesPage() {
   const showSuccess = (message: string) => {
     setSuccessMessage(message);
     setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const showError = (message: string) => {
+    setErrorMessage(message);
+    setTimeout(() => setErrorMessage(''), 5000);
   };
 
   async function loadSchedules() {
@@ -102,7 +108,7 @@ export default function SchedulesPage() {
   const handleDelete = async (id: string, schedule: Schedule) => {
     // Check if this is the default schedule
     if (schedule.isDefault) {
-      alert('Cannot delete the default schedule. Please set another schedule as default first.');
+      showError('Cannot delete the default schedule. Please set another schedule as default first.');
       return;
     }
 
@@ -111,15 +117,15 @@ export default function SchedulesPage() {
     try {
       const res = await fetch(`/api/schedules/${id}`, { method: 'DELETE' });
       if (!res.ok) {
-        const error = await res.json();
-        alert(error.error || 'Failed to delete schedule');
+        const data = await res.json();
+        showError(data.error || 'Failed to delete schedule');
       } else {
         loadSchedules();
         showSuccess('Schedule deleted');
       }
     } catch (error) {
       console.error('Error deleting schedule:', error);
-      alert('Failed to delete schedule');
+      showError('Network error. Please check your connection and try again.');
     }
   };
 
@@ -299,6 +305,15 @@ export default function SchedulesPage() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
           <div className="bg-foreground text-background px-4 py-3 rounded-lg shadow-lg text-sm">
             {successMessage}
+          </div>
+        </div>
+      )}
+
+      {/* Error Toast */}
+      {errorMessage && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+          <div className="bg-destructive text-background px-4 py-3 rounded-lg shadow-lg text-sm max-w-md">
+            {errorMessage}
           </div>
         </div>
       )}

@@ -56,6 +56,7 @@ export default function TemplatesPage() {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     loadData();
@@ -64,6 +65,11 @@ export default function TemplatesPage() {
   const showSuccess = (message: string) => {
     setSuccessMessage(message);
     setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const showError = (message: string) => {
+    setErrorMessage(message);
+    setTimeout(() => setErrorMessage(''), 5000);
   };
 
   async function loadData() {
@@ -147,9 +153,17 @@ export default function TemplatesPage() {
       if (res.ok) {
         loadData();
         showSuccess('Template duplicated');
+      } else {
+        const data = await res.json();
+        if (data.upgradeRequired) {
+          showError('Template limit reached. Upgrade your plan to create more templates.');
+        } else {
+          showError(data.error || 'Failed to duplicate template');
+        }
       }
     } catch (error) {
       console.error('Error duplicating template:', error);
+      showError('Network error. Please check your connection and try again.');
     }
   };
 
@@ -175,9 +189,15 @@ export default function TemplatesPage() {
         loadData();
         setDeleteConfirm(null);
         showSuccess('Template deleted');
+      } else {
+        const data = await res.json();
+        setDeleteConfirm(null);
+        showError(data.error || 'Failed to delete template');
       }
     } catch (error) {
       console.error('Error deleting template:', error);
+      setDeleteConfirm(null);
+      showError('Network error. Please check your connection and try again.');
     }
   };
 
@@ -391,6 +411,15 @@ export default function TemplatesPage() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
           <div className="bg-foreground text-background px-4 py-3 rounded-lg shadow-lg text-sm">
             {successMessage}
+          </div>
+        </div>
+      )}
+
+      {/* Error Toast */}
+      {errorMessage && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+          <div className="bg-destructive text-background px-4 py-3 rounded-lg shadow-lg text-sm max-w-md">
+            {errorMessage}
           </div>
         </div>
       )}

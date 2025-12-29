@@ -58,6 +58,7 @@ export default function InvoicesPage() {
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [markingPaidId, setMarkingPaidId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     loadInvoices();
@@ -100,6 +101,11 @@ export default function InvoicesPage() {
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
+  const showError = (message: string) => {
+    setErrorMessage(message);
+    setTimeout(() => setErrorMessage(''), 5000);
+  };
+
   const filteredInvoices = invoices.filter((invoice) => {
     if (filter === 'all') return true;
     if (filter === 'overdue') {
@@ -119,9 +125,13 @@ export default function InvoicesPage() {
       if (res.ok) {
         loadInvoices();
         showSuccess('Invoice marked as paid');
+      } else {
+        const data = await res.json();
+        showError(data.error || 'Failed to update invoice status');
       }
     } catch (error) {
       console.error('Error updating invoice:', error);
+      showError('Network error. Please check your connection and try again.');
     } finally {
       setMarkingPaidId(null);
     }
@@ -135,9 +145,14 @@ export default function InvoicesPage() {
       });
       if (res.ok) {
         loadInvoices();
+        showSuccess('Invoice deleted');
+      } else {
+        const data = await res.json();
+        showError(data.error || 'Failed to delete invoice');
       }
     } catch (error) {
       console.error('Error deleting invoice:', error);
+      showError('Network error. Please check your connection and try again.');
     }
   };
 
@@ -463,6 +478,15 @@ export default function InvoicesPage() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
           <div className="bg-foreground text-background px-4 py-3 rounded-lg shadow-lg text-sm">
             {successMessage}
+          </div>
+        </div>
+      )}
+
+      {/* Error Toast */}
+      {errorMessage && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+          <div className="bg-destructive text-background px-4 py-3 rounded-lg shadow-lg text-sm max-w-md">
+            {errorMessage}
           </div>
         </div>
       )}
