@@ -14,6 +14,7 @@ import {
   FormSelect,
   FormActions,
   FormErrorBanner,
+  FormCheckbox,
   useFormValidation,
 } from '@/components/form';
 import { validators } from '@/lib/ui/form-errors';
@@ -482,20 +483,14 @@ function ScheduleModal({
             />
           </FormField>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isActive"
-              checked={formData.isActive}
-              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-              className="w-4 h-4 text-foreground border-border rounded focus:ring-ring"
-              disabled={isLoading}
-            />
-            <label htmlFor="isActive" className="text-sm text-foreground">
-              Active
-            </label>
-            <span className="text-xs text-muted-foreground">(Schedule will be used for new invoices)</span>
-          </div>
+          <FormCheckbox
+            id="isActive"
+            label="Active"
+            checked={formData.isActive}
+            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+            hint="Schedule will be used for new invoices"
+            disabled={isLoading}
+          />
         </FormSection>
 
         <FormSection fullWidth>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FormSection, FormField, FormInput, FormSelect } from '@/components/form';
+import { FormSection, FormField, FormInput, FormSelect, FormToggle } from '@/components/form';
 import { H2, SUBTLE, ERROR } from '@/lib/ui/tokens';
 
 interface UserProfile {
@@ -414,26 +414,13 @@ export default function SettingsPage() {
                   />
                 </FormField>
 
-                <div className="flex items-center justify-between px-4 py-3 bg-muted border border-border rounded-lg">
-                  <div>
-                    <label htmlFor="email-notifications" className="text-sm font-medium text-foreground">
-                      Email Notifications
-                    </label>
-                    <p className={`text-xs ${SUBTLE} mt-0.5`}>
-                      Receive updates about your account and invoices
-                    </p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      id="email-notifications"
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={preferences.emailNotifications}
-                      onChange={(e) => setPreferences({ ...preferences, emailNotifications: e.target.checked })}
-                    />
-                    <div className="w-11 h-6 bg-muted-foreground/30 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-foreground"></div>
-                  </label>
-                </div>
+                <FormToggle
+                  id="email-notifications"
+                  label="Email Notifications"
+                  checked={preferences.emailNotifications}
+                  onChange={(e) => setPreferences({ ...preferences, emailNotifications: e.target.checked })}
+                  hint="Receive updates about your account and invoices"
+                />
               </FormSection>
 
               <button

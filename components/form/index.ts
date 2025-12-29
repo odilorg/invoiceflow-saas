@@ -23,6 +23,12 @@ export type { FormSelectProps, FormSelectOption } from './FormSelect';
 export { default as FormDateInput } from './FormDateInput';
 export type { FormDateInputProps } from './FormDateInput';
 
+export { default as FormCheckbox } from './FormCheckbox';
+export type { FormCheckboxProps } from './FormCheckbox';
+
+export { default as FormToggle } from './FormToggle';
+export type { FormToggleProps } from './FormToggle';
+
 export { default as FormModalShell } from './FormModalShell';
 export type { FormModalShellProps } from './FormModalShell';
 
