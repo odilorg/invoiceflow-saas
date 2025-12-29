@@ -4,6 +4,22 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
+  // LIGHTWEIGHT AUTH CHECK: Cookie presence only (no DB query)
+  // Protected routes requiring authentication
+  if (path.startsWith('/dashboard')) {
+    const sessionToken = request.cookies.get('session_token')?.value;
+
+    if (!sessionToken) {
+      // No session cookie - immediate redirect (faster than waiting for server layout)
+      // Preserve full path including query parameters
+      const fullPath = request.nextUrl.pathname + request.nextUrl.search;
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('callbackUrl', fullPath);
+      return NextResponse.redirect(loginUrl);
+    }
+    // Cookie exists - let server layout validate session in DB
+  }
+
   // Only process API and dashboard routes - skip everything else for performance
   if (!path.startsWith('/api/') && !path.startsWith('/dashboard')) {
     // For public pages (home, login, register), allow normal caching

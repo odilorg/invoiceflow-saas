@@ -12,10 +12,14 @@ brevoApi.setApiKey(
 );
 
 export async function POST(req: NextRequest) {
+  const cronStartTime = new Date();
+  console.log(`[CRON] Started at ${cronStartTime.toISOString()}`);
+
   try {
     // Verify cron secret
     const authHeader = req.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      console.log(`[CRON] Unauthorized request at ${new Date().toISOString()}`);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -303,13 +307,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const cronEndTime = new Date();
+    const durationMs = cronEndTime.getTime() - cronStartTime.getTime();
+
+    console.log(`[CRON] Finished at ${cronEndTime.toISOString()}`);
+    console.log(`[CRON] Duration: ${durationMs}ms`);
+    console.log(`[CRON] Items processed: ${results.total_followups} (sent: ${results.sent}, skipped: ${results.skipped}, failed: ${results.failed})`);
+    console.log(`[CRON] Eligible invoices: ${results.eligible_invoices} / ${results.scanned_invoices} (${results.skipped_not_entitled} not entitled)`);
+
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
+      duration_ms: durationMs,
       results,
     });
   } catch (error) {
-    console.error('Cron job failed:', error);
+    const cronErrorTime = new Date();
+    console.error(`[CRON] Failed at ${cronErrorTime.toISOString()}:`, error);
     return NextResponse.json(
       {
         error: 'Internal server error',

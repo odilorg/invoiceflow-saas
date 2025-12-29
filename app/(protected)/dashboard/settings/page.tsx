@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FormSection, FormField, FormInput, FormSelect, FormToggle } from '@/components/form';
 import { H2, SUBTLE, ERROR } from '@/lib/ui/tokens';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { ThemeSelector } from '@/components/theme-selector';
 
 interface UserProfile {
   id: string;
@@ -368,8 +368,7 @@ export default function SettingsPage() {
               <FormSection fullWidth>
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-foreground">Appearance</label>
-                  <p className="text-xs text-muted-foreground mb-2">Choose your preferred theme</p>
-                  <ThemeToggle />
+                  <ThemeSelector />
                 </div>
 
                 <FormField id="currency" label="Default Currency">

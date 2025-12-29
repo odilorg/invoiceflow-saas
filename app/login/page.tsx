@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -35,7 +36,33 @@ export default function LoginPage() {
         return;
       }
 
-      router.push('/dashboard');
+      // Get callback URL from query params (set by middleware)
+      const callbackUrl = searchParams.get('callbackUrl');
+
+      // SECURITY: Sanitize callback URL to prevent open redirect attacks
+      // Requirements:
+      // 1. Must start with '/' (relative path)
+      // 2. Must NOT start with '//' (prevents protocol-relative URLs like //evil.com)
+      // 3. Only allow safe characters (alphanumeric, /, -, _, ?, =, &)
+      // 4. Fallback to /dashboard if invalid
+      let redirectTo = '/dashboard'; // safe default
+
+      if (callbackUrl && typeof callbackUrl === 'string') {
+        const trimmed = callbackUrl.trim();
+
+        // Check: starts with '/' but not '//'
+        const isRelativePath = trimmed.startsWith('/') && !trimmed.startsWith('//');
+
+        // Check: only contains safe URL characters (no protocol schemes)
+        const safeCharPattern = /^[a-zA-Z0-9\/_\-?=&%]+$/;
+        const hasSafeChars = safeCharPattern.test(trimmed);
+
+        if (isRelativePath && hasSafeChars) {
+          redirectTo = trimmed;
+        }
+      }
+
+      router.push(redirectTo);
     } catch (err) {
       setError('An error occurred');
     } finally {

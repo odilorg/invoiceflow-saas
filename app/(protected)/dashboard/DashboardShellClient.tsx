@@ -1,57 +1,40 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { VersionCheck } from '@/components/version-check';
+import { HeaderThemeToggle } from '@/components/header-theme-toggle';
 
-export default function DashboardLayout({
-  children,
-}: {
+interface DashboardShellClientProps {
+  user: {
+    id: string;
+    email: string;
+    name: string | null;
+  };
+  planStatus: 'FREE' | 'PAID';
   children: React.ReactNode;
-}) {
+}
+
+/**
+ * Dashboard UI Shell (Client Component)
+ *
+ * Handles all interactive UI: sidebar toggle, navigation highlighting, logout
+ * Auth is already verified by server layout - this only renders UI
+ */
+export function DashboardShellClient({
+  user,
+  planStatus,
+  children,
+}: DashboardShellClientProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
-  const [planStatus, setPlanStatus] = useState<'FREE' | 'PAID'>('FREE');
-  const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const authRes = await fetch('/api/auth/me');
-        if (!authRes.ok) {
-          router.push('/login');
-          return;
-        }
-        const userData = await authRes.json();
-        setUser(userData);
-        setPlanStatus(userData.planStatus || 'FREE');
-      } catch (error) {
-        router.push('/login');
-      } finally {
-        setLoading(false);
-      }
-    }
-    checkAuth();
-  }, [router]);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/');
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-3 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
-          <p className="text-sm text-slate-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Navigation structure following user workflow
   const navigationGroups = [
@@ -137,27 +120,27 @@ export default function DashboardLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-50">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-50">
         <div className="h-full px-4 flex items-center justify-between">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 -ml-2 text-slate-600 hover:text-slate-900"
+            className="p-2 -ml-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-slate-900 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-7 h-7 bg-slate-900 dark:bg-slate-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-white dark:text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <span className="text-base font-semibold text-slate-900">InvoiceFlow</span>
+            <span className="text-base font-semibold text-slate-900 dark:text-slate-100">InvoiceFlow</span>
           </div>
-          <div className="w-10" /> {/* Spacer for balance */}
+          <HeaderThemeToggle />
         </div>
       </div>
 
@@ -171,35 +154,36 @@ export default function DashboardLayout({
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 z-50 transform transition-transform duration-200 ease-in-out ${
+        className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-50 transform transition-transform duration-200 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}
       >
         {/* Logo - Desktop only */}
-        <div className="hidden lg:flex h-16 items-center px-6 border-b border-slate-200">
+        <div className="hidden lg:flex h-16 items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-slate-900 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-7 h-7 bg-slate-900 dark:bg-slate-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-white dark:text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <span className="text-base font-semibold text-slate-900">InvoiceFlow</span>
+            <span className="text-base font-semibold text-slate-900 dark:text-slate-100">InvoiceFlow</span>
           </div>
+          <HeaderThemeToggle />
         </div>
 
         {/* Mobile close button */}
-        <div className="lg:hidden h-16 flex items-center justify-between px-4 border-b border-slate-200">
+        <div className="lg:hidden h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-slate-900 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-7 h-7 bg-slate-900 dark:bg-slate-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-white dark:text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <span className="text-base font-semibold text-slate-900">InvoiceFlow</span>
+            <span className="text-base font-semibold text-slate-900 dark:text-slate-100">InvoiceFlow</span>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="p-2 text-slate-600 hover:text-slate-900"
+            className="p-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -230,8 +214,8 @@ export default function DashboardLayout({
                       onClick={() => setSidebarOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive
-                          ? 'bg-slate-900 text-white'
-                          : 'text-slate-700 hover:bg-slate-100'
+                          ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
+                          : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
                       }`}
                     >
                       {item.icon}
@@ -245,15 +229,15 @@ export default function DashboardLayout({
         </nav>
 
         {/* Bottom section */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-slate-200">
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-slate-200 dark:border-slate-800">
           {/* Plan status */}
-          <div className="mb-3 px-3 py-2 bg-slate-50 rounded-md">
+          <div className="mb-3 px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-md">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium text-slate-600">Plan</span>
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Plan</span>
               <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
                 planStatus === 'PAID'
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-slate-200 text-slate-700'
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                  : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
               }`}>
                 {planStatus}
               </span>
@@ -261,7 +245,7 @@ export default function DashboardLayout({
             {planStatus === 'FREE' && (
               <a
                 href={process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL || '#'}
-                className="text-xs text-slate-600 hover:text-slate-900 underline"
+                className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 underline"
               >
                 Upgrade to Pro
               </a>
@@ -269,20 +253,20 @@ export default function DashboardLayout({
           </div>
 
           {/* User menu */}
-          <div className="px-3 py-2 bg-slate-50 rounded-md">
+          <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-md">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 bg-slate-300 rounded-full flex items-center justify-center">
-                <span className="text-xs font-semibold text-slate-700">
+              <div className="w-7 h-7 bg-slate-300 dark:bg-slate-700 rounded-full flex items-center justify-center">
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   {user?.email?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-slate-900 truncate">{user?.email}</p>
+                <p className="text-xs font-medium text-slate-900 dark:text-slate-100 truncate">{user?.email}</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="w-full text-left text-xs text-slate-600 hover:text-slate-900 transition-colors"
+              className="w-full text-left text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
             >
               Sign out
             </button>
