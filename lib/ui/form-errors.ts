@@ -157,7 +157,11 @@ export function validateForm<T extends Record<string, any>>(
     }
   }
 
+  // Set generic error message if there are field errors
+  const hasFieldErrors = Object.keys(fieldErrors).length > 0;
+
   return {
+    serverError: hasFieldErrors ? 'Please fix the errors below before submitting.' : undefined,
     fieldErrors,
   };
 }
