@@ -163,7 +163,7 @@ export default function DashboardPage() {
   const setupPrompt = getSetupPrompt();
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-24">
       {/* Header */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
@@ -220,6 +220,13 @@ export default function DashboardPage() {
             label="Overdue"
             value={stats?.overdueInvoices || 0}
             highlight={!!stats?.overdueInvoices}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+            iconBg="bg-red-100"
+            iconColor="text-red-600"
             className="order-1"
           />
           <StatCard
@@ -227,18 +234,39 @@ export default function DashboardPage() {
             value={stats?.pendingInvoices || 0}
             trend={stats?.overdueInvoices ? `${stats.overdueInvoices} overdue` : undefined}
             trendNegative={!!stats?.overdueInvoices}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            }
+            iconBg="bg-amber-100"
+            iconColor="text-amber-600"
             className="order-2"
           />
           <StatCard
             label="Total Outstanding"
-            value={`$${totalOutstanding.toLocaleString()}`}
+            value={totalOutstanding === 0 ? '—' : `$${totalOutstanding.toLocaleString()}`}
             isAmount
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+            iconBg="bg-slate-100"
+            iconColor="text-slate-600"
             className="order-3"
           />
           <StatCard
             label="Paid This Month"
             value={stats?.paidInvoices || 0}
             helper="Last 30 days"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+            iconBg="bg-green-100"
+            iconColor="text-green-600"
             className="order-4"
           />
         </div>
@@ -311,14 +339,28 @@ export default function DashboardPage() {
               <div className="px-4 sm:px-6 py-4 border-b border-slate-200">
                 <h2 className="text-base font-semibold text-slate-900">Follow-up Activity</h2>
               </div>
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Emails sent</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <span className="text-sm text-slate-600">Reminders sent</span>
+                    </div>
                     <span className="text-sm font-semibold text-slate-900">{stats?.totalFollowUpsSent || 0}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Upcoming follow-ups</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <span className="text-sm text-slate-600">Upcoming follow-ups</span>
+                    </div>
                     <span className="text-sm font-semibold text-slate-900">{stats?.upcomingFollowUps || 0}</span>
                   </div>
                   {stats?.totalFollowUpsSent === 0 && stats?.upcomingFollowUps === 0 && (
@@ -331,9 +373,12 @@ export default function DashboardPage() {
                   <div className="pt-4 border-t border-slate-200">
                     <Link
                       href="/dashboard/activity"
-                      className="text-sm text-slate-600 hover:text-slate-900"
+                      className="min-h-[44px] w-full px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors inline-flex items-center justify-center gap-2"
                     >
-                      View activity log →
+                      View activity log
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
                     </Link>
                   </div>
                 </div>
@@ -350,20 +395,29 @@ export default function DashboardPage() {
                   <div className="space-y-3">
                     <Link
                       href="/dashboard/invoices"
-                      className="block min-h-[44px] px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors inline-flex items-center"
+                      className="w-full min-h-[44px] px-4 py-2.5 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors inline-flex items-center gap-3"
                     >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
                       Manage invoices
                     </Link>
                     <Link
                       href="/dashboard/templates"
-                      className="block min-h-[44px] px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors inline-flex items-center"
+                      className="w-full min-h-[44px] px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors inline-flex items-center gap-3"
                     >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
                       Edit templates
                     </Link>
                     <Link
                       href="/dashboard/schedules"
-                      className="block min-h-[44px] px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors inline-flex items-center"
+                      className="w-full min-h-[44px] px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors inline-flex items-center gap-3"
                     >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                       Configure schedule
                     </Link>
                   </div>
@@ -398,6 +452,8 @@ export default function DashboardPage() {
       {showFab && (
         <Link
           href="/dashboard/invoices"
+          aria-label="Create invoice"
+          title="Create invoice"
           className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-slate-800 transition-all z-30"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -417,6 +473,9 @@ function StatCard({
   highlight,
   isAmount,
   helper,
+  icon,
+  iconBg,
+  iconColor,
   className,
 }: {
   label: string;
@@ -426,16 +485,26 @@ function StatCard({
   highlight?: boolean;
   isAmount?: boolean;
   helper?: string;
+  icon?: React.ReactNode;
+  iconBg?: string;
+  iconColor?: string;
   className?: string;
 }) {
-  const isEmpty = value === 0 || value === '$0';
+  const isEmpty = value === 0 || value === '—';
 
   return (
     <div className={`bg-white border border-slate-200 rounded-xl p-4 transition-opacity ${
       isEmpty ? 'opacity-70' : ''
     } ${className || ''}`}>
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className={`text-2xl font-semibold mt-2 ${
+      <div className="flex items-start justify-between mb-3">
+        <p className="text-[11px] uppercase tracking-wide font-medium text-slate-500">{label}</p>
+        {icon && (
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${iconBg || 'bg-slate-100'} ${iconColor || 'text-slate-600'}`}>
+            {icon}
+          </div>
+        )}
+      </div>
+      <p className={`text-2xl font-semibold ${
         highlight ? 'text-red-600' : 'text-slate-900'
       }`}>
         {value}
