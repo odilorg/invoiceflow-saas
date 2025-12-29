@@ -56,6 +56,7 @@ export default function InvoicesPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [usage, setUsage] = useState<UsageStats | null>(null);
+  const [markingPaidId, setMarkingPaidId] = useState<string | null>(null);
 
   useEffect(() => {
     loadInvoices();
@@ -102,6 +103,7 @@ export default function InvoicesPage() {
   });
 
   const handleMarkAsPaid = async (id: string) => {
+    setMarkingPaidId(id);
     try {
       const res = await fetch(`/api/invoices/${id}`, {
         method: 'PATCH',
@@ -113,6 +115,8 @@ export default function InvoicesPage() {
       }
     } catch (error) {
       console.error('Error updating invoice:', error);
+    } finally {
+      setMarkingPaidId(null);
     }
   };
 
@@ -222,14 +226,29 @@ export default function InvoicesPage() {
           <svg className="w-12 h-12 lg:w-16 lg:h-16 mx-auto text-muted-foreground mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <h3 className="text-base font-semibold text-foreground mb-1">No invoices here yet.</h3>
-          <p className="text-sm text-muted-foreground mb-4">Create your first invoice to start automatic follow-ups.</p>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-5 py-2.5 bg-foreground text-background text-sm rounded-lg hover:opacity-90 transition-colors font-medium"
-          >
-            Create invoice
-          </button>
+          {invoices.length === 0 ? (
+            <>
+              <h3 className="text-base font-semibold text-foreground mb-1">No invoices yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">Create your first invoice to start sending automatic reminders.</p>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-5 py-2.5 bg-foreground text-background text-sm rounded-lg hover:opacity-90 transition-colors font-medium"
+              >
+                Create Invoice
+              </button>
+            </>
+          ) : (
+            <>
+              <h3 className="text-base font-semibold text-foreground mb-1">No {filter} invoices</h3>
+              <p className="text-sm text-muted-foreground mb-4">Try selecting a different filter or create a new invoice.</p>
+              <button
+                onClick={() => setFilter('all')}
+                className="px-5 py-2.5 bg-card text-foreground border border-border text-sm rounded-lg hover:bg-muted transition-colors font-medium"
+              >
+                Show All Invoices
+              </button>
+            </>
+          )}
         </div>
       ) : (
         <>
@@ -358,9 +377,20 @@ export default function InvoicesPage() {
                         {invoice.status === 'PENDING' && (
                           <button
                             onClick={() => handleMarkAsPaid(invoice.id)}
-                            className="px-3 py-1.5 text-sm text-white bg-success hover:opacity-90 rounded transition-colors font-medium"
+                            disabled={markingPaidId === invoice.id}
+                            className="px-3 py-1.5 text-sm text-white bg-success hover:opacity-90 rounded transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
                           >
-                            Mark Paid
+                            {markingPaidId === invoice.id ? (
+                              <>
+                                <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Updating...
+                              </>
+                            ) : (
+                              'Mark Paid'
+                            )}
                           </button>
                         )}
                         <button
