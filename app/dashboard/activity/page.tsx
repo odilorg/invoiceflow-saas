@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import HelpBox from '@/components/HelpBox';
+import EntityListCard from '@/components/EntityListCard';
 import { HELP_CONTENT, EMPTY_STATE_CONTENT } from '@/lib/help-content';
 
 interface EmailLog {
@@ -373,51 +374,62 @@ export default function ActivityPage() {
         </div>
       ) : (
         <>
-          {/* Mobile Card Layout */}
-          <div className="lg:hidden space-y-3">
+          {/* Mobile Card Layout - EntityListCard */}
+          <div className="lg:hidden space-y-4">
             {filteredLogs.map((log) => (
-              <div key={log.id} className="bg-white border border-slate-200 rounded-lg p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs text-slate-500 mb-1">
-                      {new Date(log.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • {new Date(log.sentAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                    <div className="font-medium text-slate-900 mb-1 truncate">{log.recipientEmail}</div>
-                  </div>
-                  {log.success ? (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-700 shrink-0 ml-2">
-                      Sent
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700 shrink-0 ml-2">
-                      Failed
-                    </span>
-                  )}
-                </div>
-                <div className="text-sm text-slate-600 mb-2 line-clamp-1">{log.subject}</div>
-                {log.followUp && (
-                  <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                    <span className="font-mono">{log.followUp.invoice.invoiceNumber}</span>
-                    <span>•</span>
-                    <span className="truncate">{log.followUp.invoice.clientName}</span>
-                    {log.followUp.template && (
-                      <>
-                        <span>•</span>
-                        <span className="truncate">{log.followUp.template.name}</span>
-                      </>
-                    )}
-                  </div>
-                )}
-                {!log.success && log.errorMessage && (
-                  <div className="text-xs text-red-600 bg-red-50 p-2 rounded mb-2 line-clamp-2">{log.errorMessage}</div>
-                )}
-                <button
-                  onClick={() => setDetailsModal(log)}
-                  className="min-h-[44px] w-full mt-2 px-4 py-2 text-sm text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors font-medium"
-                >
-                  View Details
-                </button>
-              </div>
+              <EntityListCard
+                key={log.id}
+                title={log.recipientEmail}
+                subtitle={log.subject}
+                badge={{
+                  label: log.success ? 'Sent' : 'Failed',
+                  variant: log.success ? 'success' : 'danger',
+                }}
+                fields={[
+                  {
+                    label: 'Sent At',
+                    value: new Date(log.sentAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }),
+                  },
+                  ...(log.followUp ? [
+                    {
+                      label: 'Invoice',
+                      value: (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-mono text-xs">{log.followUp.invoice.invoiceNumber}</span>
+                          <span className="text-xs text-slate-600">{log.followUp.invoice.clientName}</span>
+                        </div>
+                      ),
+                    },
+                  ] : []),
+                  ...(log.followUp?.template ? [
+                    {
+                      label: 'Template',
+                      value: log.followUp.template.name,
+                    },
+                  ] : []),
+                  ...(!log.success && log.errorMessage ? [
+                    {
+                      label: 'Error',
+                      value: (
+                        <span className="text-xs text-red-600 line-clamp-2">
+                          {log.errorMessage}
+                        </span>
+                      ),
+                    },
+                  ] : []),
+                ]}
+                primaryAction={{
+                  label: 'View Details',
+                  onClick: () => setDetailsModal(log),
+                  variant: 'secondary',
+                }}
+              />
             ))}
           </div>
 

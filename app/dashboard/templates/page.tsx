@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import HelpBox from '@/components/HelpBox';
 import UsageCounter from '@/components/UsageCounter';
+import EntityListCard from '@/components/EntityListCard';
 import { HELP_CONTENT } from '@/lib/help-content';
 
 interface Template {
@@ -247,129 +248,69 @@ export default function TemplatesPage() {
             const activeUsage = usage.filter(u => u.isActive);
 
             return (
-              <div key={template.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-slate-300 transition-colors">
-                {/* Header with tone indicator */}
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-lg">{toneInfo.emoji}</span>
-                      <h3 className="text-lg font-bold text-slate-900">{template.name}</h3>
-                      {template.isDefault && (
-                        <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
-                          Default
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-slate-500 italic">{toneInfo.description}</p>
-                  </div>
-
-                  {/* Three-dot menu */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setMenuOpen(menuOpen === template.id ? null : template.id)}
-                      className="p-2 hover:bg-slate-100 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-                      aria-label="Template actions"
-                    >
-                      <svg className="w-5 h-5 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
-
-                    {menuOpen === template.id && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-10"
-                          onClick={() => setMenuOpen(null)}
-                        />
-                        <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-20">
-                          <button
-                            onClick={() => {
-                              setPreviewTemplate(template);
-                              setMenuOpen(null);
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            Preview
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingTemplate(template);
-                              setMenuOpen(null);
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => {
-                              handleDuplicate(template);
-                              setMenuOpen(null);
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                            Duplicate
-                          </button>
-                          <button
-                            onClick={() => {
-                              handleDelete(template);
-                              setMenuOpen(null);
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-slate-100"
-                            disabled={template.isDefault}
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            {template.isDefault ? 'Cannot delete (Default)' : 'Delete'}
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Usage context */}
-                <div className="mb-3">
-                  {usage.length === 0 ? (
-                    <p className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200">
-                      ⚠️ Not used in any schedule
-                    </p>
-                  ) : (
-                    <div className="space-y-1">
-                      {usage.map((u, i) => (
-                        <p key={i} className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded border border-green-200">
-                          ✓ Used on: Day {u.dayOffset} {u.dayOffset === 0 ? '(Due Date)' : u.dayOffset > 0 ? '(Overdue)' : '(Before Due)'} in {u.scheduleName}
-                        </p>
-                      ))}
-                      {activeUsage.length > 0 && (
-                        <p className="text-xs text-slate-600">
-                          Active in {activeUsage.length} schedule{activeUsage.length !== 1 ? 's' : ''}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Content preview */}
-                <div className="mb-3 pb-3 border-b border-slate-100">
-                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Subject</p>
-                  <p className="text-sm text-slate-600 line-clamp-2">{template.subject}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Body Preview</p>
-                  <p className="text-sm text-slate-500 line-clamp-3">{template.body}</p>
-                </div>
-              </div>
+              <EntityListCard
+                key={template.id}
+                title={`${toneInfo.emoji} ${template.name}`}
+                subtitle={toneInfo.description}
+                badge={
+                  template.isDefault
+                    ? { label: 'Default', variant: 'info' }
+                    : usage.length === 0
+                    ? { label: 'Not in use', variant: 'warning' }
+                    : { label: `${activeUsage.length} schedule${activeUsage.length !== 1 ? 's' : ''}`, variant: 'success' }
+                }
+                fields={[
+                  {
+                    label: 'Subject',
+                    value: (
+                      <span className="text-sm text-slate-900 line-clamp-2">
+                        {template.subject}
+                      </span>
+                    ),
+                  },
+                  {
+                    label: 'Body Preview',
+                    value: (
+                      <span className="text-sm text-slate-600 line-clamp-2">
+                        {template.body}
+                      </span>
+                    ),
+                  },
+                ]}
+                primaryAction={{
+                  label: 'Preview Template',
+                  onClick: () => setPreviewTemplate(template),
+                  variant: 'secondary',
+                }}
+                secondaryActions={[
+                  {
+                    label: 'Edit',
+                    onClick: () => setEditingTemplate(template),
+                  },
+                  {
+                    label: 'Duplicate',
+                    onClick: () => handleDuplicate(template),
+                  },
+                ]}
+                destructiveAction={
+                  !template.isDefault
+                    ? {
+                        icon: (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        ),
+                        onClick: () => handleDelete(template),
+                        ariaLabel: 'Delete template',
+                      }
+                    : undefined
+                }
+              />
             );
           })}
         </div>

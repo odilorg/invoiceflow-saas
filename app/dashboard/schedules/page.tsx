@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import HelpBox from '@/components/HelpBox';
 import UsageCounter from '@/components/UsageCounter';
+import EntityListCard from '@/components/EntityListCard';
 import { HELP_CONTENT } from '@/lib/help-content';
 
 interface Schedule {
@@ -172,87 +173,71 @@ export default function SchedulesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {schedules.map((schedule) => (
-            <div key={schedule.id} className="bg-white border border-slate-200 rounded-lg p-5 hover:border-slate-300 transition-colors">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-base font-semibold text-slate-900 mb-2">{schedule.name}</h3>
-                  <div className="flex gap-2 flex-wrap">
-                    {schedule.isDefault && (
-                      <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
-                        Default
-                      </span>
-                    )}
-                    {schedule.isActive ? (
-                      <span
-                        className="inline-block px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded cursor-help"
-                        title="Available to assign to invoices"
-                      >
-                        Available
-                      </span>
-                    ) : (
-                      <span
-                        className="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 text-xs font-medium rounded cursor-help"
-                        title="Not available for new invoices"
-                      >
-                        Unavailable
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
+          {schedules.map((schedule) => {
+            const sortedSteps = schedule.steps
+              ? [...schedule.steps].sort((a, b) => a.dayOffset - b.dayOffset)
+              : [];
 
-              <div className="space-y-2 mb-4 pb-4 border-b border-slate-100">
-                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Timeline</p>
-                {schedule.steps && schedule.steps.length > 0 ? (
-                  schedule.steps
-                    .sort((a, b) => a.dayOffset - b.dayOffset)
-                    .map((step, index) => (
-                      <div key={step.id} className="flex items-center gap-3 text-sm">
-                        <div className="w-7 h-7 bg-slate-100 text-slate-700 rounded-full flex items-center justify-center text-xs font-semibold shrink-0">
-                          {index + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-slate-900 font-medium">
-                            {step.dayOffset === 0
-                              ? 'On due date'
-                              : `${step.dayOffset} day${step.dayOffset !== 1 ? 's' : ''} after`}
+            return (
+              <EntityListCard
+                key={schedule.id}
+                title={schedule.name}
+                subtitle={
+                  sortedSteps.length > 0
+                    ? `${sortedSteps.length} reminder${sortedSteps.length !== 1 ? 's' : ''} configured`
+                    : 'No reminders configured'
+                }
+                badge={{
+                  label: schedule.isDefault ? 'Default' : schedule.isActive ? 'Available' : 'Unavailable',
+                  variant: schedule.isDefault ? 'info' : schedule.isActive ? 'success' : 'neutral',
+                }}
+                fields={
+                  sortedSteps.length > 0
+                    ? sortedSteps.map((step, index) => ({
+                        label: `Step ${index + 1}`,
+                        value: (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-sm font-medium">
+                              {step.dayOffset === 0
+                                ? 'On due date'
+                                : `${step.dayOffset} day${step.dayOffset !== 1 ? 's' : ''} after`}
+                            </span>
+                            {step.template && (
+                              <span className="text-xs text-slate-600 truncate">
+                                {step.template.name}
+                              </span>
+                            )}
                           </div>
-                          {step.template && (
-                            <div className="text-xs text-slate-500 truncate">
-                              {step.template.name}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                ) : (
-                  <p className="text-sm text-slate-500">No steps configured</p>
-                )}
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setEditingSchedule(schedule)}
-                  className="flex-1 px-3 py-2 text-sm text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors font-medium"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(schedule.id, schedule)}
-                  className={`px-3 py-2 text-sm rounded-lg transition-colors font-medium ${
-                    schedule.isDefault
-                      ? 'text-slate-400 bg-slate-50 cursor-not-allowed'
-                      : 'text-red-600 hover:bg-red-50'
-                  }`}
-                  disabled={schedule.isDefault}
-                  title={schedule.isDefault ? 'Cannot delete default schedule' : 'Delete schedule'}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+                        ),
+                      }))
+                    : []
+                }
+                primaryAction={{
+                  label: 'Edit Schedule',
+                  onClick: () => setEditingSchedule(schedule),
+                  variant: 'secondary',
+                }}
+                destructiveAction={
+                  !schedule.isDefault
+                    ? {
+                        icon: (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        ),
+                        onClick: () => handleDelete(schedule.id, schedule),
+                        ariaLabel: 'Delete schedule',
+                      }
+                    : undefined
+                }
+              />
+            );
+          })}
         </div>
       )}
 
