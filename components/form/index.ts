@@ -19,3 +19,12 @@ export type { FormSelectProps, FormSelectOption } from './FormSelect';
 
 export { default as FormDateInput } from './FormDateInput';
 export type { FormDateInputProps } from './FormDateInput';
+
+export { default as FormModalShell } from './FormModalShell';
+export type { FormModalShellProps } from './FormModalShell';
+
+export { default as FormSection } from './FormSection';
+export type { FormSectionProps } from './FormSection';
+
+export { default as FormActions } from './FormActions';
+export type { FormActionsProps } from './FormActions';
