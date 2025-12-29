@@ -166,15 +166,15 @@ export default function DashboardPage() {
     <div className="min-h-screen">
       {/* Header */}
       <div className="bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-6 py-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
-              <p className="text-sm text-slate-600 mt-1">Overview of your invoices and follow-ups</p>
+              <h1 className="text-xl font-semibold text-slate-900 mb-1">Dashboard</h1>
+              <p className="text-sm text-slate-600">Overview of your invoices and follow-ups</p>
             </div>
             <Link
               href="/dashboard/invoices"
-              className="hidden sm:inline-flex px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
+              className="hidden sm:inline-flex min-h-[44px] px-6 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors items-center"
             >
               + New Invoice
             </Link>
@@ -183,7 +183,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-6 py-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
         {/* Help Box */}
         <HelpBox
           title={HELP_CONTENT.dashboard.title}
@@ -194,18 +194,18 @@ export default function DashboardPage() {
 
         {/* Setup Prompt - Only ONE visible at a time */}
         {setupPrompt && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-5">
-            <div className="flex items-start gap-4">
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="flex flex-col sm:flex-row items-start gap-4">
               <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
                 {setupPrompt.icon}
               </div>
               <div className="flex-1">
-                <h3 className="text-sm font-semibold text-slate-900">{setupPrompt.title}</h3>
+                <h3 className="text-base font-semibold text-slate-900">{setupPrompt.title}</h3>
                 <p className="text-sm text-slate-600 mt-1">{setupPrompt.description}</p>
               </div>
               <Link
                 href={setupPrompt.href}
-                className="flex-shrink-0 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
+                className="flex-shrink-0 min-h-[44px] px-6 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors inline-flex items-center w-full sm:w-auto justify-center"
               >
                 {setupPrompt.action}
               </Link>
@@ -246,14 +246,14 @@ export default function DashboardPage() {
         {/* Main sections */}
         <div className="grid grid-cols-1 gap-6">
           {/* Overdue Invoices */}
-          <div className="bg-white border border-slate-200 rounded-lg">
-            <div className="px-6 py-4 border-b border-slate-200">
+          <div className="bg-white border border-slate-200 rounded-xl">
+            <div className="px-4 sm:px-6 py-4 border-b border-slate-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-semibold text-slate-900">Overdue Invoices</h2>
                 {overdueInvoices.length > 0 && (
                   <Link
                     href="/dashboard/invoices"
-                    className="text-sm text-slate-600 hover:text-slate-900"
+                    className="text-sm text-slate-600 hover:text-slate-900 font-medium"
                   >
                     View all →
                   </Link>
@@ -262,11 +262,11 @@ export default function DashboardPage() {
             </div>
             <div className="divide-y divide-slate-200">
               {overdueInvoices.length === 0 ? (
-                <div className="px-6 py-12 text-center">
-                  <svg className="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="px-4 sm:px-6 py-12 text-center">
+                  <svg className="w-12 h-12 mx-auto text-slate-300 opacity-60 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="text-sm font-medium text-slate-900">No overdue invoices</p>
+                  <p className="text-base font-semibold text-slate-900">No overdue invoices</p>
                   <p className="text-sm text-slate-600 mt-1">All invoices are up to date</p>
                 </div>
               ) : (
@@ -307,8 +307,8 @@ export default function DashboardPage() {
 
           {/* Quick Stats Table */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white border border-slate-200 rounded-lg">
-              <div className="px-6 py-4 border-b border-slate-200">
+            <div className="bg-white border border-slate-200 rounded-xl">
+              <div className="px-4 sm:px-6 py-4 border-b border-slate-200">
                 <h2 className="text-base font-semibold text-slate-900">Follow-up Activity</h2>
               </div>
               <div className="p-6">
@@ -342,27 +342,27 @@ export default function DashboardPage() {
 
             {/* Quick Actions - only show for first-time users */}
             {(!stats?.totalInvoices || stats?.totalFollowUpsSent === 0) && (
-              <div className="bg-white border border-slate-200 rounded-lg">
-                <div className="px-6 py-4 border-b border-slate-200">
+              <div className="bg-white border border-slate-200 rounded-xl">
+                <div className="px-4 sm:px-6 py-4 border-b border-slate-200">
                   <h2 className="text-base font-semibold text-slate-900">Quick Actions</h2>
                 </div>
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <div className="space-y-3">
                     <Link
                       href="/dashboard/invoices"
-                      className="block px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 rounded-md hover:bg-slate-100 transition-colors"
+                      className="block min-h-[44px] px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors inline-flex items-center"
                     >
                       Manage invoices
                     </Link>
                     <Link
                       href="/dashboard/templates"
-                      className="block px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 rounded-md hover:bg-slate-100 transition-colors"
+                      className="block min-h-[44px] px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors inline-flex items-center"
                     >
                       Edit templates
                     </Link>
                     <Link
                       href="/dashboard/schedules"
-                      className="block px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 rounded-md hover:bg-slate-100 transition-colors"
+                      className="block min-h-[44px] px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors inline-flex items-center"
                     >
                       Configure schedule
                     </Link>
@@ -377,16 +377,16 @@ export default function DashboardPage() {
         {stats?.planStatus === 'FREE' && (
           <a
             href={process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL || '#'}
-            className="mt-6 block bg-slate-50 border border-slate-200 rounded-lg p-6 hover:border-slate-300 transition-colors cursor-pointer"
+            className="mt-6 block bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-6 hover:border-slate-300 transition-colors cursor-pointer"
           >
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h3 className="text-sm font-semibold text-slate-900">Free Plan</h3>
+                <h3 className="text-base font-semibold text-slate-900">Free Plan</h3>
                 <p className="text-sm text-slate-600 mt-1">
                   You're using {stats.totalInvoices}/5 invoices. Upgrade to unlock unlimited invoices and advanced features.
                 </p>
               </div>
-              <span className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md whitespace-nowrap">
+              <span className="min-h-[44px] px-6 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg whitespace-nowrap inline-flex items-center">
                 Upgrade
               </span>
             </div>
@@ -428,9 +428,13 @@ function StatCard({
   helper?: string;
   className?: string;
 }) {
+  const isEmpty = value === 0 || value === '$0';
+
   return (
-    <div className={`bg-white border border-slate-200 rounded-lg p-5 ${className || ''}`}>
-      <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">{label}</p>
+    <div className={`bg-white border border-slate-200 rounded-xl p-4 transition-opacity ${
+      isEmpty ? 'opacity-70' : ''
+    } ${className || ''}`}>
+      <p className="text-sm font-medium text-slate-500">{label}</p>
       <p className={`text-2xl font-semibold mt-2 ${
         highlight ? 'text-red-600' : 'text-slate-900'
       }`}>

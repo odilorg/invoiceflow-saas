@@ -183,8 +183,8 @@ export default function ActivityPage() {
   return (
     <div className="min-h-screen bg-slate-50 p-4 lg:p-8">
       {/* Header */}
-      <div className="mb-4">
-        <h1 className="text-2xl lg:text-3xl font-semibold text-slate-900 mb-2">Email Activity</h1>
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold text-slate-900 mb-1">Email Activity</h1>
         <p className="text-sm text-slate-600">View all sent follow-up emails and their status</p>
       </div>
 
@@ -217,66 +217,72 @@ export default function ActivityPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 lg:gap-4 mb-6">
-        {/* Total */}
-        <div
-          className={`bg-white border border-slate-200 rounded-lg p-3 lg:p-4 transition-opacity ${
-            isEmpty ? 'opacity-50' : ''
-          }`}
-        >
-          <div className="flex flex-col gap-2">
-            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 lg:w-5 lg:h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
+      <div className="space-y-3 mb-6">
+        <div className="grid grid-cols-3 gap-3 lg:gap-4">
+          {/* Total */}
+          <div
+            className={`bg-white border border-slate-200 rounded-xl p-4 transition-opacity ${
+              isEmpty ? 'opacity-70' : ''
+            }`}
+          >
+            <div className="flex flex-col gap-2">
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Total</p>
+                <p className="text-2xl font-semibold text-slate-900">{activityStats.total}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-slate-500">Total</p>
-              <p className="text-xl lg:text-2xl font-semibold text-slate-900">{activityStats.total}</p>
-              <p className="text-xs text-slate-400 mt-0.5">All follow-up emails</p>
+          </div>
+
+          {/* Success */}
+          <div
+            className={`bg-white border border-slate-200 rounded-xl p-4 transition-opacity ${
+              isEmpty ? 'opacity-70' : ''
+            }`}
+          >
+            <div className="flex flex-col gap-2">
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Success</p>
+                <p className="text-2xl font-semibold text-slate-900">{activityStats.success}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Failed */}
+          <div
+            className={`bg-white border border-slate-200 rounded-xl p-4 transition-opacity ${
+              isEmpty ? 'opacity-70' : ''
+            }`}
+          >
+            <div className="flex flex-col gap-2">
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Failed</p>
+                <p className="text-2xl font-semibold text-slate-900">{activityStats.failed}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Success */}
-        <div
-          className={`bg-white border border-slate-200 rounded-lg p-3 lg:p-4 transition-opacity ${
-            isEmpty ? 'opacity-50' : ''
-          }`}
-        >
-          <div className="flex flex-col gap-2">
-            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 lg:w-5 lg:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500">Success</p>
-              <p className="text-xl lg:text-2xl font-semibold text-slate-900">{activityStats.success}</p>
-              <p className="text-xs text-slate-400 mt-0.5">Delivered successfully</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Failed */}
-        <div
-          className={`bg-white border border-slate-200 rounded-lg p-3 lg:p-4 transition-opacity ${
-            isEmpty ? 'opacity-50' : ''
-          }`}
-        >
-          <div className="flex flex-col gap-2">
-            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 lg:w-5 lg:h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500">Failed</p>
-              <p className="text-xl lg:text-2xl font-semibold text-slate-900">{activityStats.failed}</p>
-              <p className="text-xs text-slate-400 mt-0.5">Could not be delivered</p>
-            </div>
-          </div>
-        </div>
+        {/* Helper text when all stats are zero */}
+        {isEmpty && (
+          <p className="text-xs text-slate-500 text-center">
+            Stats update after first reminder is sent
+          </p>
+        )}
       </div>
 
       {/* Activity Log */}
@@ -284,39 +290,38 @@ export default function ActivityPage() {
         <div>
           {/* Next Reminder Indicator */}
           {nextReminder && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="text-sm font-semibold text-blue-900 mb-1">Next Reminder</h4>
-                  <p className="text-sm text-blue-800">
-                    <span className="font-mono">{nextReminder.invoice.invoiceNumber}</span>
-                    {' — '}
-                    <span className="font-medium">
-                      {formatRelativeTime(new Date(nextReminder.followUp.scheduledDate))}
-                    </span>
-                    {' '}
-                    {new Date(nextReminder.followUp.scheduledDate).getTime() - new Date().getTime() <= 0
-                      ? '(ready to send)'
-                      : `(${new Date(nextReminder.followUp.scheduledDate).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })})`}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1 flex-1">
+                  <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">Upcoming reminder</p>
+                  <p className="text-base font-semibold text-blue-900">
+                    {nextReminder.invoice.clientName}
                   </p>
-                  <p className="text-xs text-blue-700 mt-1">
-                    To: {nextReminder.invoice.clientName}
+                  <p className="text-sm text-blue-700">
+                    Invoice: <span className="font-mono">{nextReminder.invoice.invoiceNumber}</span>
+                  </p>
+                  <p className="text-sm text-blue-600">
+                    {formatRelativeTime(new Date(nextReminder.followUp.scheduledDate))}
+                    {' · '}
+                    {new Date(nextReminder.followUp.scheduledDate).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
                   </p>
                 </div>
-                <svg className="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg shrink-0">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
               </div>
             </div>
           )}
 
-          <div className="bg-white rounded-lg p-6 lg:p-8 text-center border border-slate-200">
-            <svg className="w-16 h-16 lg:w-20 lg:h-20 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white rounded-xl p-6 lg:p-8 text-center border border-slate-200">
+            <svg className="w-20 h-20 mx-auto text-slate-300 opacity-60 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
 
@@ -329,7 +334,7 @@ export default function ActivityPage() {
 
               {/* Contextual hint when unpaid invoices exist */}
               {unpaidInvoicesCount > 0 && isEmpty && (
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 mt-3">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 mt-3">
                   <p className="text-sm text-slate-700">
                     You have {unpaidInvoicesCount} unpaid invoice{unpaidInvoicesCount > 1 ? 's' : ''}, but no reminders have been sent yet.
                     The first reminder will be sent on the invoice due date.
@@ -338,7 +343,7 @@ export default function ActivityPage() {
               )}
 
               {!hasActiveSchedule && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4">
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-4">
                   <svg className="w-5 h-5 text-amber-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
