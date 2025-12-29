@@ -6,6 +6,16 @@ import HelpBox from '@/components/HelpBox';
 import UsageCounter from '@/components/UsageCounter';
 import EntityListCard from '@/components/EntityListCard';
 import { HELP_CONTENT } from '@/lib/help-content';
+import {
+  FormModalShell,
+  FormSection,
+  FormField,
+  FormInput,
+  FormTextarea,
+  FormActions,
+  FormErrorBanner,
+  useFormValidation,
+} from '@/components/form';
 
 interface Template {
   id: string;
@@ -541,7 +551,7 @@ function DeleteConfirmModal({
   );
 }
 
-// Template Modal (Edit/Create) - keeping existing implementation with validation
+// Template Modal (Edit/Create) - migrated to unified form system
 function TemplateModal({
   template,
   onClose,
@@ -558,14 +568,14 @@ function TemplateModal({
     body: template?.body || '',
     isDefault: template?.isDefault || false,
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [upgradeRequired, setUpgradeRequired] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [lastFocusedField, setLastFocusedField] = useState<'subject' | 'body'>('subject');
   const [invalidVars, setInvalidVars] = useState<string[]>([]);
   const subjectRef = React.useRef<HTMLInputElement>(null);
   const bodyRef = React.useRef<HTMLTextAreaElement>(null);
+
+  const { errors, isLoading, setLoading, handleApiError, clearAllErrors } = useFormValidation();
 
   const variables = [
     { name: 'clientName', example: 'John Doe' },
@@ -626,18 +636,16 @@ function TemplateModal({
     return preview;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     if (invalidVars.length > 0) {
       if (!confirm(`Warning: Invalid variables detected: ${invalidVars.join(', ')}. Continue anyway?`)) {
         return;
       }
     }
 
-    setLoading(true);
-    setError('');
+    clearAllErrors();
     setUpgradeRequired(false);
+    setLoading(true);
 
     try {
       const url = template ? `/api/templates/${template.id}` : '/api/templates';
@@ -652,7 +660,7 @@ function TemplateModal({
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Failed to save template');
+        handleApiError(data);
         if (data.upgradeRequired) {
           setUpgradeRequired(true);
         }
@@ -661,122 +669,113 @@ function TemplateModal({
 
       onSuccess();
     } catch (err) {
-      setError('An error occurred');
+      handleApiError(err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg max-w-3xl w-full my-8">
-        <div className="p-6 border-b border-slate-200">
-          <h2 className="text-xl font-semibold text-slate-900">
-            {template ? 'Edit Template' : 'Create Template'}
-          </h2>
-          <p className="text-xs text-slate-500 mt-1.5">
-            Click variable tokens below to insert them into subject or body
+    <FormModalShell
+      title={template ? 'Edit Template' : 'Create Template'}
+      description="Click variable tokens below to insert them into subject or body"
+      onClose={onClose}
+      stickyFooter
+    >
+      {/* Error Banner */}
+      <FormErrorBanner
+        message={errors.serverError}
+        upgradeMessage={upgradeRequired ? 'Upgrade your plan to create more templates and unlock additional features.' : undefined}
+      />
+
+      {/* Upgrade Button */}
+      {upgradeRequired && (
+        <div className="flex justify-end mb-4">
+          <button
+            type="button"
+            onClick={() => router.push('/dashboard/billing')}
+            className="px-4 py-2 bg-foreground text-background text-sm font-medium rounded-lg hover:bg-foreground/90 transition-colors"
+          >
+            View Plans
+          </button>
+        </div>
+      )}
+
+      {/* Invalid Variables Warning */}
+      {invalidVars.length > 0 && (
+        <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 mb-4">
+          <p className="text-sm text-warning font-semibold mb-1">
+            ⚠️ Invalid variables detected:
+          </p>
+          <p className="text-xs text-warning/80">
+            {invalidVars.map(v => `{${v}}`).join(', ')} - these will not be replaced in emails
+          </p>
+        </div>
+      )}
+
+      <div className="space-y-6">
+        {/* Variable Tokens */}
+        <div className="bg-muted/50 border border-border rounded-lg p-4">
+          <label className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
+            Click to Insert Variable
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {variables.map(({ name, example }) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => insertVariable(name)}
+                className="px-2.5 py-1.5 bg-background border border-border text-foreground rounded text-xs font-mono hover:bg-muted hover:border-ring transition-colors min-h-[36px]"
+                title={`Example: ${example}`}
+              >
+                {`{${name}}`}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            💡 Focus the Subject or Body field first, then click a variable to insert it at cursor position
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[calc(90vh-200px)] overflow-y-auto">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  <p className="font-medium mb-1">{error}</p>
-                  {upgradeRequired && (
-                    <p className="text-red-600 text-xs">
-                      Upgrade your plan to create more templates and unlock additional features.
-                    </p>
-                  )}
-                </div>
-                {upgradeRequired && (
-                  <button
-                    type="button"
-                    onClick={() => router.push('/dashboard/billing')}
-                    className="px-4 py-2 bg-slate-900 text-white text-xs font-medium rounded-lg hover:bg-slate-800 transition-colors whitespace-nowrap"
-                  >
-                    View Plans
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {invalidVars.length > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-              <p className="text-sm text-amber-800 font-semibold mb-1">
-                ⚠️ Invalid variables detected:
-              </p>
-              <p className="text-xs text-amber-700">
-                {invalidVars.map(v => `{${v}}`).join(', ')} - these will not be replaced in emails
-              </p>
-            </div>
-          )}
-
-          {/* Variable Tokens */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
-              Click to Insert Variable
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {variables.map(({ name, example }) => (
-                <button
-                  key={name}
-                  type="button"
-                  onClick={() => insertVariable(name)}
-                  className="px-2.5 py-1.5 bg-white border border-slate-300 text-slate-700 rounded text-xs font-mono hover:bg-slate-100 hover:border-slate-400 transition-colors min-h-[36px]"
-                  title={`Example: ${example}`}
-                >
-                  {`{${name}}`}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-slate-500 mt-2">
-              💡 Focus the Subject or Body field first, then click a variable to insert it at cursor position
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Template Name *</label>
-            <input
+        <FormSection fullWidth>
+          <FormField id="name" label="Template Name" required hint="Give your template a descriptive name">
+            <FormInput
+              id="name"
               type="text"
-              required
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm min-h-[44px]"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              disabled={isLoading}
               placeholder="e.g., Friendly Reminder"
+              autoTrim
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Subject Line *</label>
-            <input
-              ref={subjectRef}
+          <FormField id="subject" label="Subject Line" required hint="Email subject line with variables">
+            <FormInput
+              id="subject"
               type="text"
-              required
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm min-h-[44px]"
               value={formData.subject}
               onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
               onFocus={() => setLastFocusedField('subject')}
+              disabled={isLoading}
               placeholder="e.g., Reminder: Invoice {invoiceNumber} due soon"
+              ref={subjectRef}
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Email Body *</label>
-            <textarea
-              ref={bodyRef}
-              required
-              rows={8}
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent font-mono text-sm"
+          <FormField id="body" label="Email Body" required hint="Email content with variables (use monospace font)">
+            <FormTextarea
+              id="body"
               value={formData.body}
               onChange={(e) => setFormData({ ...formData, body: e.target.value })}
               onFocus={() => setLastFocusedField('body')}
+              disabled={isLoading}
               placeholder="Hi {clientName},&#10;&#10;This is a friendly reminder that invoice {invoiceNumber} for {currency} {amount} is due on {dueDate}.&#10;&#10;Best regards"
+              rows={10}
+              ref={bodyRef}
+              className="font-mono"
             />
-          </div>
+          </FormField>
 
           {/* Preview Toggle */}
           {(formData.subject || formData.body) && (
@@ -784,52 +783,42 @@ function TemplateModal({
               <button
                 type="button"
                 onClick={() => setShowPreview(!showPreview)}
-                className="text-sm text-slate-600 hover:text-slate-900 flex items-center gap-2 min-h-[36px]"
+                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 min-h-[36px]"
               >
                 {showPreview ? '▼' : '▶'} Preview with sample data
               </button>
 
               {showPreview && (
-                <div className="mt-3 p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
-                  <p className="text-xs text-slate-500 italic">
+                <div className="mt-3 p-4 bg-muted/50 border border-border rounded-lg space-y-3">
+                  <p className="text-xs text-muted-foreground italic">
                     Variables replaced with sample data (preview only)
                   </p>
                   {formData.subject && (
                     <div>
-                      <p className="text-xs font-semibold text-slate-600 mb-1">Subject:</p>
-                      <p className="text-sm text-slate-900">{renderPreview(formData.subject)}</p>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">Subject:</p>
+                      <p className="text-sm text-foreground">{renderPreview(formData.subject)}</p>
                     </div>
                   )}
                   {formData.body && (
                     <div>
-                      <p className="text-xs font-semibold text-slate-600 mb-1">Body:</p>
-                      <p className="text-sm text-slate-700 whitespace-pre-wrap">{renderPreview(formData.body)}</p>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">Body:</p>
+                      <p className="text-sm text-foreground/90 whitespace-pre-wrap">{renderPreview(formData.body)}</p>
                     </div>
                   )}
                 </div>
               )}
             </div>
           )}
-        </form>
+        </FormSection>
 
-        <div className="p-6 border-t border-slate-200 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors min-h-[44px]"
-            disabled={loading}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50 min-h-[44px]"
-          >
-            {loading ? 'Saving...' : template ? 'Update Template' : 'Create Template'}
-          </button>
-        </div>
+        <FormActions
+          onCancel={onClose}
+          onSubmit={handleSubmit}
+          submitLabel={template ? 'Update Template' : 'Create Template'}
+          loading={isLoading}
+          disabled={isLoading}
+        />
       </div>
-    </div>
+    </FormModalShell>
   );
 }

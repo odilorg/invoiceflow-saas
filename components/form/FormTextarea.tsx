@@ -45,7 +45,7 @@ export interface FormTextareaProps extends Omit<React.TextareaHTMLAttributes<HTM
  * />
  * ```
  */
-export default function FormTextarea({
+const FormTextarea = React.forwardRef<HTMLTextAreaElement, FormTextareaProps>(({
   id,
   value,
   onChange,
@@ -56,7 +56,7 @@ export default function FormTextarea({
   rows = 4,
   className = '',
   ...props
-}: FormTextareaProps) {
+}, ref) => {
   const baseClasses = `
     w-full
     px-3
@@ -81,6 +81,7 @@ export default function FormTextarea({
 
   return (
     <textarea
+      ref={ref}
       id={id}
       value={value}
       onChange={onChange}
@@ -92,4 +93,8 @@ export default function FormTextarea({
       {...props}
     />
   );
-}
+});
+
+FormTextarea.displayName = 'FormTextarea';
+
+export default FormTextarea;

@@ -51,7 +51,7 @@ export interface FormInputProps extends Omit<React.InputHTMLAttributes<HTMLInput
  * />
  * ```
  */
-export default function FormInput({
+const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(({
   id,
   type = 'text',
   value,
@@ -65,7 +65,7 @@ export default function FormInput({
   autoTrim = false,
   className = '',
   ...props
-}: FormInputProps) {
+}, ref) => {
   // Auto-detect inputMode based on type if not provided
   const getInputMode = (): 'none' | 'text' | 'decimal' | 'numeric' | 'tel' | 'search' | 'email' | 'url' | undefined => {
     if (inputMode) return inputMode;
@@ -143,6 +143,7 @@ export default function FormInput({
 
   return (
     <input
+      ref={ref}
       id={id}
       type={type}
       value={value}
@@ -157,4 +158,8 @@ export default function FormInput({
       {...props}
     />
   );
-}
+});
+
+FormInput.displayName = 'FormInput';
+
+export default FormInput;
