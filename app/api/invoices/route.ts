@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
+import { withErrorHandler, handleApiError } from '@/lib/api-error-handler';
 import { z } from 'zod';
 import { generateFollowUps } from '@/lib/followups';
 import { ensureDefaultSchedule } from '@/lib/default-schedule';
@@ -19,9 +20,8 @@ const invoiceSchema = z.object({
 });
 
 // GET all invoices for current user
-export async function GET(req: NextRequest) {
-  try {
-    const user = await requireUser();
+export const GET = withErrorHandler(async (req: NextRequest) => {
+  const user = await requireUser();
 
     // TEMPORARY: Measure performance
     const invoices = await timeQuery(
@@ -58,16 +58,7 @@ export async function GET(req: NextRequest) {
     );
 
     return NextResponse.json(invoices);
-  } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+});
 
 // POST create new invoice
 export async function POST(req: NextRequest) {
@@ -119,18 +110,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(invoice, { status: 201 });
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Validation failed', details: error.errors },
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
