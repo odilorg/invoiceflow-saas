@@ -132,7 +132,7 @@ export function computeReminderRestart(
       shouldRegenerate: false,
       updateFields: {},
       error:
-        'restartReminders flag is required when changing dueDate. Set to true to regenerate reminders, or false to keep existing state.',
+        'Due date cannot be changed at this time. Please try editing the invoice again, or contact support if the issue persists.',
     };
   }
 

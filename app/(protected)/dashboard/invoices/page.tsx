@@ -937,6 +937,8 @@ function EditInvoiceModal({ invoice, onClose, onSuccess }: { invoice: Invoice; o
         if (formData.currency !== invoice.currency) updatePayload.currency = formData.currency;
         if (formData.dueDate !== new Date(invoice.dueDate).toISOString().split('T')[0]) {
           updatePayload.dueDate = new Date(formData.dueDate).toISOString();
+          // Automatically restart reminders when due date changes
+          updatePayload.restartReminders = true;
         }
         if (formData.notes !== (invoice.notes || '')) updatePayload.notes = formData.notes;
         if (formData.scheduleId !== (invoice.scheduleId || '')) updatePayload.scheduleId = formData.scheduleId;
