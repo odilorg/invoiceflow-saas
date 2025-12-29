@@ -56,11 +56,17 @@ export default function SchedulesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
   const [usage, setUsage] = useState<UsageStats | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string>('');
 
   useEffect(() => {
     loadSchedules();
     loadUsage();
   }, []);
+
+  const showSuccess = (message: string) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
 
   async function loadSchedules() {
     try {
@@ -109,6 +115,7 @@ export default function SchedulesPage() {
         alert(error.error || 'Failed to delete schedule');
       } else {
         loadSchedules();
+        showSuccess('Schedule deleted');
       }
     } catch (error) {
       console.error('Error deleting schedule:', error);
@@ -270,6 +277,7 @@ export default function SchedulesPage() {
           onSuccess={() => {
             setShowCreateModal(false);
             loadSchedules();
+            showSuccess('Schedule created');
           }}
         />
       )}
@@ -281,8 +289,18 @@ export default function SchedulesPage() {
           onSuccess={() => {
             setEditingSchedule(null);
             loadSchedules();
+            showSuccess('Schedule updated');
           }}
         />
+      )}
+
+      {/* Success Toast */}
+      {successMessage && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+          <div className="bg-foreground text-background px-4 py-3 rounded-lg shadow-lg text-sm">
+            {successMessage}
+          </div>
+        </div>
       )}
     </div>
   );

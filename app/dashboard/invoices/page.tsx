@@ -57,6 +57,7 @@ export default function InvoicesPage() {
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [markingPaidId, setMarkingPaidId] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string>('');
 
   useEffect(() => {
     loadInvoices();
@@ -94,6 +95,11 @@ export default function InvoicesPage() {
     }
   }
 
+  const showSuccess = (message: string) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
   const filteredInvoices = invoices.filter((invoice) => {
     if (filter === 'all') return true;
     if (filter === 'overdue') {
@@ -112,6 +118,7 @@ export default function InvoicesPage() {
       });
       if (res.ok) {
         loadInvoices();
+        showSuccess('Invoice marked as paid');
       }
     } catch (error) {
       console.error('Error updating invoice:', error);
@@ -429,6 +436,7 @@ export default function InvoicesPage() {
           onSuccess={() => {
             setShowCreateModal(false);
             loadInvoices();
+            showSuccess('Invoice created');
           }}
         />
       )}
@@ -445,8 +453,18 @@ export default function InvoicesPage() {
             setShowEditModal(false);
             setEditingInvoice(null);
             loadInvoices();
+            showSuccess('Invoice updated');
           }}
         />
+      )}
+
+      {/* Success Toast */}
+      {successMessage && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+          <div className="bg-foreground text-background px-4 py-3 rounded-lg shadow-lg text-sm">
+            {successMessage}
+          </div>
+        </div>
       )}
     </div>
   );

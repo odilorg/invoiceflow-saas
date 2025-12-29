@@ -55,10 +55,16 @@ export default function TemplatesPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ template: Template; scheduleCount: number } | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [usage, setUsage] = useState<UsageStats | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string>('');
 
   useEffect(() => {
     loadData();
   }, []);
+
+  const showSuccess = (message: string) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
 
   async function loadData() {
     try {
@@ -140,6 +146,7 @@ export default function TemplatesPage() {
 
       if (res.ok) {
         loadData();
+        showSuccess('Template duplicated');
       }
     } catch (error) {
       console.error('Error duplicating template:', error);
@@ -167,6 +174,7 @@ export default function TemplatesPage() {
       if (res.ok) {
         loadData();
         setDeleteConfirm(null);
+        showSuccess('Template deleted');
       }
     } catch (error) {
       console.error('Error deleting template:', error);
@@ -345,6 +353,7 @@ export default function TemplatesPage() {
           onSuccess={() => {
             setShowCreateModal(false);
             loadData();
+            showSuccess('Template created');
           }}
         />
       )}
@@ -356,6 +365,7 @@ export default function TemplatesPage() {
           onSuccess={() => {
             setEditingTemplate(null);
             loadData();
+            showSuccess('Template updated');
           }}
         />
       )}
@@ -374,6 +384,15 @@ export default function TemplatesPage() {
           onConfirm={confirmDelete}
           onCancel={() => setDeleteConfirm(null)}
         />
+      )}
+
+      {/* Success Toast */}
+      {successMessage && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+          <div className="bg-foreground text-background px-4 py-3 rounded-lg shadow-lg text-sm">
+            {successMessage}
+          </div>
+        </div>
       )}
     </div>
   );
