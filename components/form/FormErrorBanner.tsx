@@ -1,4 +1,7 @@
+'use client';
+
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 export interface FormErrorBannerProps {
   /** Error message to display */
@@ -30,6 +33,8 @@ export default function FormErrorBanner({
   upgradeMessage,
   className = '',
 }: FormErrorBannerProps) {
+  const router = useRouter();
+
   if (!message) return null;
 
   return (
@@ -72,6 +77,19 @@ export default function FormErrorBanner({
             </p>
           )}
         </div>
+
+        {/* Upgrade Button (inline) */}
+        {upgradeMessage && (
+          <div className="flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => router.push('/dashboard/billing')}
+              className="px-4 py-2 bg-foreground text-background text-sm font-medium rounded-lg hover:bg-foreground/90 transition-colors"
+            >
+              View Plans
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

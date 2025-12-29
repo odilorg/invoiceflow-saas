@@ -63,6 +63,26 @@ export default function ActivityPage() {
 
   useEffect(() => {
     loadData();
+
+    // Reload data when page becomes visible (e.g., navigating back from another page)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadData();
+      }
+    };
+
+    // Reload data when window regains focus (client-side navigation)
+    const handleFocus = () => {
+      loadData();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   async function loadData() {
@@ -116,31 +136,29 @@ export default function ActivityPage() {
   const isEmpty = logs.length === 0;
   const unpaidInvoicesCount = (stats?.pendingInvoices || 0) + (stats?.overdueInvoices || 0);
 
-  // Find next reminder
-  const getNextReminder = () => {
-    if (!invoices || invoices.length === 0) return null;
+  // Find all upcoming reminders
+  const getUpcomingReminders = () => {
+    if (!invoices || invoices.length === 0) return [];
 
     const unpaidInvoices = invoices.filter(inv => inv.status === 'PENDING' || inv.status === 'OVERDUE');
-    let nextReminder: { invoice: Invoice; followUp: any } | null = null;
-    let earliestDate: Date | null = null;
+    const upcomingReminders: { invoice: Invoice; followUp: any }[] = [];
 
     for (const invoice of unpaidInvoices) {
       const pendingFollowUps = invoice.followUps?.filter(f => f.status === 'PENDING') || [];
       if (pendingFollowUps.length > 0) {
         const nextFollowUp = pendingFollowUps[0]; // Already sorted by scheduledDate
-        const followUpDate = new Date(nextFollowUp.scheduledDate);
-
-        if (!earliestDate || followUpDate < earliestDate) {
-          earliestDate = followUpDate;
-          nextReminder = { invoice, followUp: nextFollowUp };
-        }
+        upcomingReminders.push({ invoice, followUp: nextFollowUp });
       }
     }
 
-    return nextReminder;
+    // Sort by scheduled date (earliest first)
+    return upcomingReminders.sort((a, b) =>
+      new Date(a.followUp.scheduledDate).getTime() - new Date(b.followUp.scheduledDate).getTime()
+    );
   };
 
-  const nextReminder = getNextReminder();
+  const upcomingReminders = getUpcomingReminders();
+  const nextReminder = upcomingReminders.length > 0 ? upcomingReminders[0] : null;
 
   // Format relative time
   const formatRelativeTime = (date: Date) => {
@@ -290,35 +308,41 @@ export default function ActivityPage() {
       {/* Activity Log */}
       {filteredLogs.length === 0 ? (
         <div>
-          {/* Next Reminder Indicator */}
-          {nextReminder && (
-            <div className="bg-info/10 border border-info/20 rounded-xl p-4 mb-6">
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1 flex-1">
-                  <p className="text-xs font-medium text-info uppercase tracking-wide">Upcoming reminder</p>
-                  <p className="text-base font-semibold text-foreground">
-                    {nextReminder.invoice.clientName}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Invoice: <span className="font-mono">{nextReminder.invoice.invoiceNumber}</span>
-                  </p>
-                  <p className="text-sm text-info">
-                    {formatRelativeTime(new Date(nextReminder.followUp.scheduledDate))}
-                    {' · '}
-                    {new Date(nextReminder.followUp.scheduledDate).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
+          {/* Upcoming Reminders */}
+          {upcomingReminders.length > 0 && (
+            <div className="space-y-3 mb-6">
+              <p className="text-xs font-medium text-info uppercase tracking-wide">
+                Upcoming Reminder{upcomingReminders.length > 1 ? 's' : ''} ({upcomingReminders.length})
+              </p>
+              {upcomingReminders.map((reminder, index) => (
+                <div key={reminder.invoice.id} className="bg-info/10 border border-info/20 rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1 flex-1">
+                      <p className="text-base font-semibold text-foreground">
+                        {reminder.invoice.clientName}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Invoice: <span className="font-mono">{reminder.invoice.invoiceNumber}</span>
+                      </p>
+                      <p className="text-sm text-info">
+                        {new Date(reminder.followUp.scheduledDate).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                        {' · '}
+                        {formatRelativeTime(new Date(reminder.followUp.scheduledDate))}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-center w-10 h-10 bg-info/20 rounded-lg shrink-0">
+                      <svg className="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-center w-10 h-10 bg-info/20 rounded-lg shrink-0">
-                  <svg className="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-              </div>
+              ))}
             </div>
           )}
 

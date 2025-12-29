@@ -72,6 +72,12 @@ export async function POST(req: NextRequest) {
                 user_id: user.id,
               },
             },
+            checkout_options: {
+              button_color: '#000000',
+            },
+            product_options: {
+              redirect_url: `${BILLING_CONFIG.urls.app}/dashboard?payment=success`,
+            },
           },
           relationships: {
             store: {

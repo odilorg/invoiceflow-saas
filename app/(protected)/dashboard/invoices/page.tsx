@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import HelpBox from '@/components/HelpBox';
 import UsageCounter from '@/components/UsageCounter';
 import EntityListCard from '@/components/EntityListCard';
@@ -50,6 +50,7 @@ interface UsageStats {
 
 export default function InvoicesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
@@ -65,6 +66,13 @@ export default function InvoicesPage() {
   useEffect(() => {
     loadInvoices();
     loadUsage();
+
+    // Auto-open create modal if ?create=true in URL
+    if (searchParams.get('create') === 'true') {
+      setShowCreateModal(true);
+      // Clean up URL parameter
+      router.replace('/dashboard/invoices');
+    }
   }, []);
 
   async function loadInvoices() {
@@ -112,6 +120,10 @@ export default function InvoicesPage() {
     if (filter === 'all') return true;
     if (filter === 'overdue') {
       return invoice.status === 'PENDING' && new Date(invoice.dueDate) < new Date();
+    }
+    if (filter === 'pending') {
+      // Exclude overdue invoices from pending filter
+      return invoice.status === 'PENDING' && new Date(invoice.dueDate) >= new Date();
     }
     return invoice.status === filter.toUpperCase();
   });
@@ -742,19 +754,6 @@ function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuc
         message={errors.serverError}
         upgradeMessage={upgradeRequired ? 'Upgrade your plan to create more invoices and unlock additional features.' : undefined}
       />
-
-      {/* Upgrade Button */}
-      {upgradeRequired && (
-        <div className="flex justify-end mb-4">
-          <button
-            type="button"
-            onClick={() => router.push('/dashboard/billing')}
-            className="px-4 py-2 bg-foreground text-background text-sm font-medium rounded-lg hover:bg-foreground/90 transition-colors"
-          >
-            View Plans
-          </button>
-        </div>
-      )}
 
       {/* Form Sections */}
       <div className="space-y-6">
