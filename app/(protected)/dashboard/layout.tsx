@@ -29,16 +29,15 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
-  // Fetch subscription data to determine plan status
-  const subscription = await prisma.subscription.findUnique({
-    where: { userId: user.id },
+  // Get user's actual plan status from database
+  const userWithPlan = await prisma.user.findUnique({
+    where: { id: user.id },
     select: {
-      status: true,
-      isActive: true,
+      planStatus: true,
     },
   });
 
-  const planStatus: 'FREE' | 'PAID' = subscription?.isActive ? 'PAID' : 'FREE';
+  const planStatus = userWithPlan?.planStatus || 'FREE';
 
   // Pass user + planStatus to client component for UI rendering
   return (

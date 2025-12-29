@@ -756,19 +756,6 @@ function TemplateModal({
         upgradeMessage={upgradeRequired ? 'Upgrade your plan to create more templates and unlock additional features.' : undefined}
       />
 
-      {/* Upgrade Button */}
-      {upgradeRequired && (
-        <div className="flex justify-end mb-4">
-          <button
-            type="button"
-            onClick={() => router.push('/dashboard/billing')}
-            className="px-4 py-2 bg-foreground text-background text-sm font-medium rounded-lg hover:bg-foreground/90 transition-colors"
-          >
-            View Plans
-          </button>
-        </div>
-      )}
-
       {/* Invalid Variables Warning */}
       {invalidVars.length > 0 && (
         <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 mb-4">

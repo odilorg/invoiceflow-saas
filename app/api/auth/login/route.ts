@@ -37,7 +37,7 @@ const DUMMY_PASSWORD_HASH = '$2a$10$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, password } = loginSchema.parse(body);
+    const { email, password, rememberMe } = loginSchema.parse(body);
 
     // Normalize email (lowercase + trim)
     const emailNormalized = email.toLowerCase().trim();
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create session (sets httpOnly cookie with secure token)
-    await createSession(user.id);
+    await createSession(user.id, rememberMe);
 
     // Return minimal user data (avoid leaking sensitive fields)
     return NextResponse.json(

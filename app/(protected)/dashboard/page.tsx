@@ -15,7 +15,7 @@ interface Stats {
   overdueInvoices: number;
   totalFollowUpsSent: number;
   upcomingFollowUps: number;
-  planStatus: 'FREE' | 'PAID';
+  planStatus: 'FREE' | 'STARTER' | 'PRO';
 }
 
 interface OverdueInvoice {
@@ -452,7 +452,7 @@ export default function DashboardPage() {
       {/* Mobile FAB - hidden at top, shows when scrolled past summary */}
       {showFab && (
         <Link
-          href="/dashboard/invoices"
+          href="/dashboard/invoices?create=true"
           aria-label="Create invoice"
           title="Create invoice"
           className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-foreground text-background rounded-full flex items-center justify-center shadow-lg hover:bg-foreground/90 transition-all z-30"

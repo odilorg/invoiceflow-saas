@@ -12,7 +12,7 @@ interface DashboardShellClientProps {
     email: string;
     name: string | null;
   };
-  planStatus: 'FREE' | 'PAID';
+  planStatus: 'FREE' | 'STARTER' | 'PRO';
   children: React.ReactNode;
 }
 
@@ -235,16 +235,18 @@ export function DashboardShellClient({
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Plan</span>
               <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
-                planStatus === 'PAID'
+                planStatus === 'PRO'
+                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
+                  : planStatus === 'STARTER'
                   ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
                   : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
               }`}>
-                {planStatus}
+                {planStatus === 'STARTER' ? 'Starter' : planStatus === 'PRO' ? 'Pro' : 'Free'}
               </span>
             </div>
             {planStatus === 'FREE' && (
               <a
-                href={process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL || '#'}
+                href="/dashboard/billing"
                 className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 underline"
               >
                 Upgrade to Pro

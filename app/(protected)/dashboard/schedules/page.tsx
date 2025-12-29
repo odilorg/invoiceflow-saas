@@ -297,6 +297,7 @@ export default function SchedulesPage() {
 
       {editingSchedule && (
         <ScheduleModal
+          key={editingSchedule.id}
           schedule={editingSchedule}
           onClose={() => setEditingSchedule(null)}
           onSuccess={() => {
@@ -399,6 +400,22 @@ function ScheduleModal({
   useEffect(() => {
     loadTemplates();
   }, []);
+
+  // Sync form state when schedule prop changes (defensive measure)
+  useEffect(() => {
+    if (schedule) {
+      setFormData({
+        name: schedule.name,
+        isActive: schedule.isActive,
+      });
+      setSteps(
+        schedule.steps?.map((s) => ({
+          dayOffset: s.dayOffset.toString(),
+          templateId: s.templateId
+        })) || [{ dayOffset: '0', templateId: '' }]
+      );
+    }
+  }, [schedule]);
 
   async function loadTemplates() {
     try {
@@ -538,19 +555,6 @@ function ScheduleModal({
         message={errors.serverError}
         upgradeMessage={upgradeRequired ? 'Upgrade your plan to create more schedules and unlock additional features.' : undefined}
       />
-
-      {/* Upgrade Button */}
-      {upgradeRequired && (
-        <div className="flex justify-end mb-4">
-          <button
-            type="button"
-            onClick={() => router.push('/dashboard/billing')}
-            className="px-4 py-2 bg-foreground text-background text-sm font-medium rounded-lg hover:bg-foreground/90 transition-colors"
-          >
-            View Plans
-          </button>
-        </div>
-      )}
 
       <div className="space-y-6">
         <FormSection fullWidth>
