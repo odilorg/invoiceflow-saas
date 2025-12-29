@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import HelpBox from '@/components/HelpBox';
 import EntityListCard from '@/components/EntityListCard';
+import Badge from '@/components/Badge';
 import { HELP_CONTENT, EMPTY_STATE_CONTENT } from '@/lib/help-content';
 
 interface EmailLog {
@@ -169,24 +170,24 @@ export default function ActivityPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="flex flex-col items-center">
-          <svg className="animate-spin h-10 w-10 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin h-10 w-10 text-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p className="mt-3 text-sm text-slate-600">Loading activity...</p>
+          <p className="mt-3 text-sm text-muted-foreground">Loading activity...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 lg:p-8">
+    <div className="min-h-screen bg-background p-4 lg:p-8">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-slate-900 mb-1">Email Activity</h1>
-        <p className="text-sm text-slate-600">View all sent follow-up emails and their status</p>
+        <h1 className="text-xl font-semibold text-foreground mb-1">Email Activity</h1>
+        <p className="text-sm text-muted-foreground">View all sent follow-up emails and their status</p>
       </div>
 
       {/* Help Box */}
@@ -206,10 +207,10 @@ export default function ActivityPage() {
             disabled={isEmpty}
             className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap min-h-[44px] ${
               isEmpty
-                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                ? 'bg-muted text-muted-foreground cursor-not-allowed'
                 : filter === f
-                ? 'bg-slate-900 text-white'
-                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                ? 'bg-foreground text-background'
+                : 'bg-card text-foreground hover:bg-muted border border-border'
             }`}
           >
             {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -222,57 +223,57 @@ export default function ActivityPage() {
         <div className="grid grid-cols-3 gap-3 lg:gap-4">
           {/* Total */}
           <div
-            className={`bg-white border border-slate-200 rounded-xl p-4 transition-opacity ${
+            className={`bg-card border border-border rounded-xl p-4 transition-opacity ${
               isEmpty ? 'opacity-70' : ''
             }`}
           >
             <div className="flex flex-col gap-2">
-              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-muted rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500">Total</p>
-                <p className="text-2xl font-semibold text-slate-900">{activityStats.total}</p>
+                <p className="text-sm font-medium text-muted-foreground">Total</p>
+                <p className="text-2xl font-semibold text-foreground">{activityStats.total}</p>
               </div>
             </div>
           </div>
 
           {/* Success */}
           <div
-            className={`bg-white border border-slate-200 rounded-xl p-4 transition-opacity ${
+            className={`bg-card border border-border rounded-xl p-4 transition-opacity ${
               isEmpty ? 'opacity-70' : ''
             }`}
           >
             <div className="flex flex-col gap-2">
-              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-success/10 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500">Success</p>
-                <p className="text-2xl font-semibold text-slate-900">{activityStats.success}</p>
+                <p className="text-sm font-medium text-muted-foreground">Success</p>
+                <p className="text-2xl font-semibold text-foreground">{activityStats.success}</p>
               </div>
             </div>
           </div>
 
           {/* Failed */}
           <div
-            className={`bg-white border border-slate-200 rounded-xl p-4 transition-opacity ${
+            className={`bg-card border border-border rounded-xl p-4 transition-opacity ${
               isEmpty ? 'opacity-70' : ''
             }`}
           >
             <div className="flex flex-col gap-2">
-              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-destructive/10 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500">Failed</p>
-                <p className="text-2xl font-semibold text-slate-900">{activityStats.failed}</p>
+                <p className="text-sm font-medium text-muted-foreground">Failed</p>
+                <p className="text-2xl font-semibold text-foreground">{activityStats.failed}</p>
               </div>
             </div>
           </div>
@@ -280,7 +281,7 @@ export default function ActivityPage() {
 
         {/* Helper text when all stats are zero */}
         {isEmpty && (
-          <p className="text-xs text-slate-500 text-center">
+          <p className="text-xs text-muted-foreground text-center">
             Stats update after first reminder is sent
           </p>
         )}
@@ -291,17 +292,17 @@ export default function ActivityPage() {
         <div>
           {/* Next Reminder Indicator */}
           {nextReminder && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+            <div className="bg-info/10 border border-info/20 rounded-xl p-4 mb-6">
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1 flex-1">
-                  <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">Upcoming reminder</p>
-                  <p className="text-base font-semibold text-blue-900">
+                  <p className="text-xs font-medium text-info uppercase tracking-wide">Upcoming reminder</p>
+                  <p className="text-base font-semibold text-foreground">
                     {nextReminder.invoice.clientName}
                   </p>
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-muted-foreground">
                     Invoice: <span className="font-mono">{nextReminder.invoice.invoiceNumber}</span>
                   </p>
-                  <p className="text-sm text-blue-600">
+                  <p className="text-sm text-info">
                     {formatRelativeTime(new Date(nextReminder.followUp.scheduledDate))}
                     {' · '}
                     {new Date(nextReminder.followUp.scheduledDate).toLocaleDateString('en-US', {
@@ -312,8 +313,8 @@ export default function ActivityPage() {
                     })}
                   </p>
                 </div>
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg shrink-0">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center justify-center w-10 h-10 bg-info/20 rounded-lg shrink-0">
+                  <svg className="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
@@ -321,22 +322,22 @@ export default function ActivityPage() {
             </div>
           )}
 
-          <div className="bg-white rounded-xl p-6 lg:p-8 text-center border border-slate-200">
-            <svg className="w-20 h-20 mx-auto text-slate-300 opacity-60 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-card rounded-xl p-6 lg:p-8 text-center border border-border">
+            <svg className="w-20 h-20 mx-auto text-muted-foreground opacity-60 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
 
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">No email activity yet</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-2">No email activity yet</h3>
 
             <div className="max-w-md mx-auto space-y-3 mb-6">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 Reminders are sent automatically on invoice due dates and overdue steps.
               </p>
 
               {/* Contextual hint when unpaid invoices exist */}
               {unpaidInvoicesCount > 0 && isEmpty && (
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 mt-3">
-                  <p className="text-sm text-slate-700">
+                <div className="bg-muted border border-border rounded-xl p-3 mt-3">
+                  <p className="text-sm text-foreground">
                     You have {unpaidInvoicesCount} unpaid invoice{unpaidInvoicesCount > 1 ? 's' : ''}, but no reminders have been sent yet.
                     The first reminder will be sent on the invoice due date.
                   </p>
@@ -344,11 +345,11 @@ export default function ActivityPage() {
               )}
 
               {!hasActiveSchedule && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-4">
-                  <svg className="w-5 h-5 text-amber-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-warning/10 border border-warning/20 rounded-xl p-3 mt-4">
+                  <svg className="w-5 h-5 text-warning mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
-                  <p className="text-sm text-amber-800 font-semibold">
+                  <p className="text-sm text-warning font-semibold">
                     {EMPTY_STATE_CONTENT.emailActivity.warning}
                   </p>
                 </div>
@@ -362,8 +363,8 @@ export default function ActivityPage() {
                   href={action.href}
                   className={`min-h-[44px] px-6 py-2.5 text-sm font-medium rounded-lg transition-colors w-full sm:w-auto inline-flex items-center justify-center ${
                     index === 0
-                      ? 'bg-slate-900 text-white hover:bg-slate-800'
-                      : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                      ? 'bg-foreground text-background hover:opacity-90'
+                      : 'bg-card border border-border text-foreground hover:bg-muted'
                   }`}
                 >
                   {action.label}
@@ -402,7 +403,7 @@ export default function ActivityPage() {
                       value: (
                         <div className="flex flex-col gap-0.5">
                           <span className="font-mono text-xs">{log.followUp.invoice.invoiceNumber}</span>
-                          <span className="text-xs text-slate-600">{log.followUp.invoice.clientName}</span>
+                          <span className="text-xs text-muted-foreground">{log.followUp.invoice.clientName}</span>
                         </div>
                       ),
                     },
@@ -417,7 +418,7 @@ export default function ActivityPage() {
                     {
                       label: 'Error',
                       value: (
-                        <span className="text-xs text-red-600 line-clamp-2">
+                        <span className="text-xs text-destructive line-clamp-2">
                           {log.errorMessage}
                         </span>
                       ),
@@ -434,71 +435,67 @@ export default function ActivityPage() {
           </div>
 
           {/* Desktop Table Layout */}
-          <div className="hidden lg:block bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <div className="hidden lg:block bg-card border border-border rounded-lg overflow-hidden">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-muted border-b border-border">
                 <tr>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Date</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Recipient</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Subject</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Invoice</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Template</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-foreground uppercase tracking-wider">Date</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-foreground uppercase tracking-wider">Recipient</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-foreground uppercase tracking-wider">Subject</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-foreground uppercase tracking-wider">Invoice</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-foreground uppercase tracking-wider">Template</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-foreground uppercase tracking-wider">Status</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-border">
                 {filteredLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={log.id} className="hover:bg-muted transition-colors">
                     <td className="px-6 py-4">
-                      <span className="text-sm text-slate-900">
+                      <span className="text-sm text-foreground">
                         {new Date(log.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                       <br />
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-muted-foreground">
                         {new Date(log.sentAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-slate-900">{log.recipientEmail}</span>
+                      <span className="text-sm text-foreground">{log.recipientEmail}</span>
                     </td>
                     <td className="px-6 py-4 max-w-xs">
-                      <span className="text-sm text-slate-900 line-clamp-2">{log.subject}</span>
+                      <span className="text-sm text-foreground line-clamp-2">{log.subject}</span>
                     </td>
                     <td className="px-6 py-4">
                       {log.followUp ? (
                         <div>
-                          <span className="text-sm font-mono text-slate-900">
+                          <span className="text-sm font-mono text-foreground">
                             {log.followUp.invoice.invoiceNumber}
                           </span>
                           <br />
-                          <span className="text-xs text-slate-500">
+                          <span className="text-xs text-muted-foreground">
                             {log.followUp.invoice.clientName}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-sm text-slate-500">-</span>
+                        <span className="text-sm text-muted-foreground">-</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
                       {log.followUp?.template ? (
-                        <span className="text-sm text-slate-700">{log.followUp.template.name}</span>
+                        <span className="text-sm text-foreground">{log.followUp.template.name}</span>
                       ) : (
-                        <span className="text-sm text-slate-500">-</span>
+                        <span className="text-sm text-muted-foreground">-</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
                       {log.success ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                          Sent
-                        </span>
+                        <Badge variant="success">Sent</Badge>
                       ) : (
                         <div>
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
-                            Failed
-                          </span>
+                          <Badge variant="danger">Failed</Badge>
                           {log.errorMessage && (
-                            <p className="text-xs text-red-600 mt-1 line-clamp-1">{log.errorMessage}</p>
+                            <p className="text-xs text-destructive mt-1 line-clamp-1">{log.errorMessage}</p>
                           )}
                         </div>
                       )}
@@ -506,7 +503,7 @@ export default function ActivityPage() {
                     <td className="px-6 py-4">
                       <button
                         onClick={() => setDetailsModal(log)}
-                        className="text-sm text-slate-700 hover:text-slate-900 font-medium"
+                        className="text-sm text-foreground hover:opacity-80 font-medium"
                       >
                         View Details
                       </button>
@@ -522,12 +519,12 @@ export default function ActivityPage() {
       {/* Details Modal */}
       {detailsModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-200">
+          <div className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-border">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-slate-900">Email Details</h2>
-                  <p className="text-sm text-slate-500 mt-1">
+                  <h2 className="text-xl font-semibold text-foreground">Email Details</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
                     {new Date(detailsModal.sentAt).toLocaleString('en-US', {
                       month: 'short',
                       day: 'numeric',
@@ -539,9 +536,9 @@ export default function ActivityPage() {
                 </div>
                 <button
                   onClick={() => setDetailsModal(null)}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-muted rounded-lg transition-colors"
                 >
-                  <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -551,20 +548,16 @@ export default function ActivityPage() {
             <div className="p-6 space-y-4">
               {/* Status */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Status</label>
                 {detailsModal.success ? (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700">
-                    ✓ Sent Successfully
-                  </span>
+                  <Badge variant="success">✓ Sent Successfully</Badge>
                 ) : (
                   <div>
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-700">
-                      ✗ Failed
-                    </span>
+                    <Badge variant="danger">✗ Failed</Badge>
                     {detailsModal.errorMessage && (
-                      <div className="mt-3 bg-red-50 border border-red-200 rounded-lg p-3">
-                        <p className="text-sm font-medium text-red-900 mb-1">Error Details</p>
-                        <p className="text-sm text-red-700">{detailsModal.errorMessage}</p>
+                      <div className="mt-3 bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                        <p className="text-sm font-medium text-destructive mb-1">Error Details</p>
+                        <p className="text-sm text-destructive">{detailsModal.errorMessage}</p>
                       </div>
                     )}
                   </div>
@@ -573,15 +566,15 @@ export default function ActivityPage() {
 
               {/* Recipient */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Recipient</label>
-                <p className="text-sm text-slate-900">{detailsModal.recipientEmail}</p>
+                <label className="block text-sm font-medium text-foreground mb-1">Recipient</label>
+                <p className="text-sm text-foreground">{detailsModal.recipientEmail}</p>
               </div>
 
               {/* Invoice */}
               {detailsModal.followUp && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Invoice</label>
-                  <p className="text-sm text-slate-900">
+                  <label className="block text-sm font-medium text-foreground mb-1">Invoice</label>
+                  <p className="text-sm text-foreground">
                     <span className="font-mono">{detailsModal.followUp.invoice.invoiceNumber}</span> • {detailsModal.followUp.invoice.clientName}
                   </p>
                 </div>
@@ -590,32 +583,32 @@ export default function ActivityPage() {
               {/* Template */}
               {detailsModal.followUp?.template && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Template Used</label>
-                  <p className="text-sm text-slate-900">{detailsModal.followUp.template.name}</p>
+                  <label className="block text-sm font-medium text-foreground mb-1">Template Used</label>
+                  <p className="text-sm text-foreground">{detailsModal.followUp.template.name}</p>
                 </div>
               )}
 
               {/* Subject */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
-                <p className="text-sm text-slate-900">{detailsModal.subject}</p>
+                <label className="block text-sm font-medium text-foreground mb-1">Subject</label>
+                <p className="text-sm text-foreground">{detailsModal.subject}</p>
               </div>
 
               {/* Body */}
               {detailsModal.body && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email Body</label>
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-900 whitespace-pre-wrap">
+                  <label className="block text-sm font-medium text-foreground mb-1">Email Body</label>
+                  <div className="bg-muted border border-border rounded-lg p-4 text-sm text-foreground whitespace-pre-wrap">
                     {detailsModal.body}
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="p-6 border-t border-slate-200">
+            <div className="p-6 border-t border-border">
               <button
                 onClick={() => setDetailsModal(null)}
-                className="w-full min-h-[44px] px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
+                className="w-full min-h-[44px] px-4 py-2 bg-foreground text-background rounded-lg hover:opacity-90 transition-all font-medium"
               >
                 Close
               </button>
@@ -627,7 +620,7 @@ export default function ActivityPage() {
       {/* Toast notification */}
       {showToast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
-          <div className="bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg text-sm">
+          <div className="bg-foreground text-background px-4 py-3 rounded-lg shadow-lg text-sm">
             No emails yet to filter
           </div>
         </div>
