@@ -2,6 +2,105 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    /* Border radius */
+    --radius: 0.75rem; /* 12px - rounded-xl */
+
+    /* Base colors */
+    --background: 210 20% 98%; /* slate-50 */
+    --foreground: 222 47% 11%; /* slate-900 */
+
+    /* Card colors */
+    --card: 0 0% 100%; /* white */
+    --card-foreground: 222 47% 11%; /* slate-900 */
+
+    /* Muted colors (for secondary text, backgrounds) */
+    --muted: 210 40% 96%; /* slate-100 */
+    --muted-foreground: 215 16% 47%; /* slate-600 */
+
+    /* Border, input, ring */
+    --border: 214 32% 91%; /* slate-200 */
+    --input: 214 32% 91%; /* slate-200 */
+    --ring: 222 47% 11%; /* slate-900 */
+
+    /* Primary (main action color - slate-900) */
+    --primary: 222 47% 11%; /* slate-900 */
+    --primary-foreground: 0 0% 100%; /* white */
+
+    /* Secondary (subtle actions - slate-100) */
+    --secondary: 210 40% 96%; /* slate-100 */
+    --secondary-foreground: 222 47% 11%; /* slate-900 */
+
+    /* Destructive/Danger (red) */
+    --destructive: 0 84% 60%; /* red-500 */
+    --destructive-foreground: 0 0% 100%; /* white */
+
+    /* Success (green) */
+    --success: 142 71% 45%; /* green-600 */
+    --success-foreground: 0 0% 100%; /* white */
+
+    /* Warning (amber) */
+    --warning: 38 92% 50%; /* amber-500 */
+    --warning-foreground: 0 0% 100%; /* white */
+
+    /* Info (blue) */
+    --info: 217 91% 60%; /* blue-500 */
+    --info-foreground: 0 0% 100%; /* white */
+
+    /* Accent colors for badges/states */
+    --accent: 210 40% 96%; /* slate-100 */
+    --accent-foreground: 222 47% 11%; /* slate-900 */
+  }
+
+  .dark {
+    /* Base colors */
+    --background: 222 47% 11%; /* slate-900 */
+    --foreground: 210 40% 98%; /* slate-50 */
+
+    /* Card colors */
+    --card: 217 33% 17%; /* slate-800 */
+    --card-foreground: 210 40% 98%; /* slate-50 */
+
+    /* Muted colors */
+    --muted: 215 28% 17%; /* slate-700 */
+    --muted-foreground: 215 20% 65%; /* slate-400 */
+
+    /* Border, input, ring */
+    --border: 215 28% 17%; /* slate-700 */
+    --input: 215 28% 17%; /* slate-700 */
+    --ring: 210 40% 98%; /* slate-50 */
+
+    /* Primary */
+    --primary: 210 40% 98%; /* slate-50 */
+    --primary-foreground: 222 47% 11%; /* slate-900 */
+
+    /* Secondary */
+    --secondary: 215 28% 17%; /* slate-700 */
+    --secondary-foreground: 210 40% 98%; /* slate-50 */
+
+    /* Destructive/Danger */
+    --destructive: 0 63% 31%; /* red-800 */
+    --destructive-foreground: 0 0% 100%; /* white */
+
+    /* Success */
+    --success: 142 70% 35%; /* green-700 */
+    --success-foreground: 0 0% 100%; /* white */
+
+    /* Warning */
+    --warning: 32 95% 44%; /* amber-600 */
+    --warning-foreground: 0 0% 100%; /* white */
+
+    /* Info */
+    --info: 213 94% 50%; /* blue-600 */
+    --info-foreground: 0 0% 100%; /* white */
+
+    /* Accent */
+    --accent: 215 28% 17%; /* slate-700 */
+    --accent-foreground: 210 40% 98%; /* slate-50 */
+  }
+}
+
 @layer utilities {
   @keyframes blob {
     0% {
