@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import HelpBox from '@/components/HelpBox';
 import UsageCounter from '@/components/UsageCounter';
+import EntityListCard from '@/components/EntityListCard';
 import { HELP_CONTENT } from '@/lib/help-content';
 import { getReminderState, getReminderStateDisplay } from '@/lib/reminder-state';
 
@@ -113,6 +114,24 @@ export default function InvoicesPage() {
     }
   };
 
+  // Helper to get badge variant from invoice status
+  const getBadgeVariant = (invoice: Invoice): 'success' | 'warning' | 'danger' | 'neutral' => {
+    const isOverdue = invoice.status === 'PENDING' && new Date(invoice.dueDate) < new Date();
+    if (isOverdue) return 'danger';
+    if (invoice.status === 'PAID') return 'success';
+    if (invoice.status === 'PENDING') return 'warning';
+    return 'neutral';
+  };
+
+  const getBadgeLabel = (invoice: Invoice): string => {
+    const isOverdue = invoice.status === 'PENDING' && new Date(invoice.dueDate) < new Date();
+    if (isOverdue) {
+      const daysOverdue = Math.floor((new Date().getTime() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24));
+      return `OVERDUE (${daysOverdue}d)`;
+    }
+    return invoice.status;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
@@ -198,81 +217,61 @@ export default function InvoicesPage() {
         </div>
       ) : (
         <>
-          {/* Mobile Card Layout - Entire card tappable */}
-          <div className="lg:hidden space-y-3 pb-24">
+          {/* Mobile Card Layout - EntityListCard */}
+          <div className="lg:hidden space-y-4 pb-24">
             {filteredInvoices.map((invoice) => (
-              <div key={invoice.id} className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-                {/* Tappable card content */}
-                <div
-                  onClick={() => router.push(`/dashboard/invoices/${invoice.id}`)}
-                  className="p-4 cursor-pointer hover:bg-slate-50 transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-sm font-medium text-slate-900">{invoice.invoiceNumber}</span>
-                        <StatusBadge invoice={invoice} />
-                      </div>
-                      <div className="font-medium text-slate-900">{invoice.clientName}</div>
-                      <div className="text-sm text-slate-500">{invoice.clientEmail}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                    <div>
-                      <div className="text-xs text-slate-500 mb-1">Amount</div>
-                      <div className="font-semibold text-slate-900">
-                        {invoice.currency} {invoice.amount.toLocaleString()}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs text-slate-500 mb-1">Due Date</div>
-                      <div className="text-sm text-slate-700">
-                        {new Date(invoice.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action buttons - explicit actions */}
-                <div className="flex items-center gap-2 px-4 pb-4 border-t border-slate-100">
-                  {invoice.status !== 'PAID' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingInvoice(invoice);
-                        setShowEditModal(true);
-                      }}
-                      className="flex-1 px-3 py-2 text-sm text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors font-medium"
-                    >
-                      Edit
-                    </button>
-                  )}
-                  {invoice.status === 'PENDING' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMarkAsPaid(invoice.id);
-                      }}
-                      className="flex-1 px-3 py-2 text-sm text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors font-medium"
-                    >
-                      Mark Paid
-                    </button>
-                  )}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(invoice.id);
-                    }}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Delete invoice"
-                  >
+              <EntityListCard
+                key={invoice.id}
+                title={invoice.invoiceNumber}
+                subtitle={`${invoice.clientName} • ${invoice.clientEmail}`}
+                badge={{
+                  label: getBadgeLabel(invoice),
+                  variant: getBadgeVariant(invoice),
+                }}
+                fields={[
+                  {
+                    label: 'Amount',
+                    value: `${invoice.currency} ${invoice.amount.toLocaleString()}`,
+                  },
+                  {
+                    label: 'Due Date',
+                    value: new Date(invoice.dueDate).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    }),
+                  },
+                ]}
+                primaryAction={{
+                  label: 'View Details',
+                  onClick: () => router.push(`/dashboard/invoices/${invoice.id}`),
+                  variant: 'secondary',
+                }}
+                secondaryActions={[
+                  {
+                    label: 'Edit',
+                    onClick: () => {
+                      setEditingInvoice(invoice);
+                      setShowEditModal(true);
+                    },
+                    hidden: invoice.status === 'PAID',
+                  },
+                  {
+                    label: 'Mark Paid',
+                    onClick: () => handleMarkAsPaid(invoice.id),
+                    hidden: invoice.status !== 'PENDING',
+                  },
+                ]}
+                destructiveAction={{
+                  icon: (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                  </button>
-                </div>
-              </div>
+                  ),
+                  onClick: () => handleDelete(invoice.id),
+                  ariaLabel: 'Delete invoice',
+                }}
+              />
             ))}
           </div>
 

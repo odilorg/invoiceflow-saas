@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import HelpBox from '@/components/HelpBox';
+import EntityListCard from '@/components/EntityListCard';
 import { HELP_CONTENT } from '@/lib/help-content';
 
 interface Stats {
@@ -288,49 +289,48 @@ export default function DashboardPage() {
                 )}
               </div>
             </div>
-            <div className="divide-y divide-slate-200">
-              {overdueInvoices.length === 0 ? (
-                <div className="px-4 sm:px-6 py-12 text-center">
-                  <svg className="w-12 h-12 mx-auto text-slate-300 opacity-60 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p className="text-base font-semibold text-slate-900">No overdue invoices</p>
-                  <p className="text-sm text-slate-600 mt-1">All invoices are up to date</p>
-                </div>
-              ) : (
-                overdueInvoices.map((invoice) => (
-                  <Link
+            {overdueInvoices.length === 0 ? (
+              <div className="px-4 sm:px-6 py-12 text-center">
+                <svg className="w-12 h-12 mx-auto text-slate-300 opacity-60 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-base font-semibold text-slate-900">No overdue invoices</p>
+                <p className="text-sm text-slate-600 mt-1">All invoices are up to date</p>
+              </div>
+            ) : (
+              <div className="p-4 space-y-4">
+                {overdueInvoices.map((invoice) => (
+                  <EntityListCard
                     key={invoice.id}
-                    href={`/dashboard/invoices/${invoice.id}`}
-                    className="block px-6 py-4 hover:bg-slate-50 transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-sm font-medium text-slate-900">
-                            {invoice.invoiceNumber}
-                          </span>
-                          <span className="text-sm text-slate-600">{invoice.clientName}</span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-red-600 font-medium">
-                            {invoice.daysPastDue} days overdue
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            Due {new Date(invoice.dueDate).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-slate-900">
-                          {invoice.currency} {invoice.amount.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
+                    title={`${invoice.invoiceNumber}`}
+                    subtitle={invoice.clientName}
+                    badge={{
+                      label: `${invoice.daysPastDue} days overdue`,
+                      variant: 'danger',
+                    }}
+                    fields={[
+                      {
+                        label: 'Amount',
+                        value: `${invoice.currency} ${invoice.amount.toLocaleString()}`,
+                      },
+                      {
+                        label: 'Due Date',
+                        value: new Date(invoice.dueDate).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        }),
+                      },
+                    ]}
+                    primaryAction={{
+                      label: 'View Details',
+                      onClick: () => router.push(`/dashboard/invoices/${invoice.id}`),
+                      variant: 'secondary',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Quick Stats Table */}
