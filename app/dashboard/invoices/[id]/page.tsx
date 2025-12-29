@@ -265,14 +265,14 @@ export default function InvoiceDetailPage() {
         totalScheduledReminders: invoice.totalScheduledReminders
       }) && (
         <div className="max-w-7xl mx-auto px-6 mt-6">
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="bg-warning/10 border border-warning/20 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-warning mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <div className="flex-1">
-                <h3 className="text-sm font-semibold text-amber-900 mb-1">Reminders completed</h3>
-                <p className="text-sm text-amber-800">
+                <h3 className="text-sm font-semibold text-warning mb-1">Reminders completed</h3>
+                <p className="text-sm text-warning">
                   {getReminderStatusMessage({
                     ...invoice,
                     remindersCompleted: invoice.remindersCompleted || false,
@@ -287,7 +287,7 @@ export default function InvoiceDetailPage() {
                         navigator.clipboard.writeText(invoice.notes || '');
                         // You could add a toast notification here
                       }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-amber-300 text-amber-800 text-sm rounded-lg hover:bg-amber-100 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-warning/20 text-warning text-sm rounded-lg hover:bg-warning/20 transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -297,7 +297,7 @@ export default function InvoiceDetailPage() {
                   )}
                   <Link
                     href={`/dashboard/activity?invoice=${invoice.id}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-amber-300 text-amber-800 text-sm rounded-lg hover:bg-amber-100 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-warning/20 text-warning text-sm rounded-lg hover:bg-warning/20 transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -514,12 +514,12 @@ export default function InvoiceDetailPage() {
                 Previous email activity will remain in the log.
               </p>
               {new Date(formData.dueDate) < new Date() && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
+                <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 mt-3">
                   <div className="flex items-start gap-2">
-                    <svg className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
-                    <p className="text-xs text-amber-800">
+                    <p className="text-xs text-warning">
                       <strong>Warning:</strong> New due date is in the past. Reminders may send immediately if you restart.
                     </p>
                   </div>

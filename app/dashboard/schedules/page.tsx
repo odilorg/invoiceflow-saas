@@ -118,27 +118,27 @@ export default function SchedulesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="flex flex-col items-center">
-          <svg className="animate-spin h-10 w-10 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin h-10 w-10 text-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p className="mt-3 text-sm text-slate-600">Loading schedules...</p>
+          <p className="mt-3 text-sm text-muted-foreground">Loading schedules...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 lg:p-8">
+    <div className="min-h-screen bg-background p-4 lg:p-8">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl lg:text-3xl font-semibold text-slate-900">Follow-up Schedules</h1>
+          <h1 className="text-2xl lg:text-3xl font-semibold text-foreground">Follow-up Schedules</h1>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
+            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-foreground text-background text-sm font-medium rounded-lg hover:opacity-90 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -147,8 +147,8 @@ export default function SchedulesPage() {
           </button>
         </div>
         <div className="space-y-1">
-          <p className="text-sm text-slate-900 font-medium">Default schedule is used automatically for new invoices.</p>
-          <p className="text-sm text-slate-600">You can still select a different schedule per invoice.</p>
+          <p className="text-sm text-foreground font-medium">Default schedule is used automatically for new invoices.</p>
+          <p className="text-sm text-muted-foreground">You can still select a different schedule per invoice.</p>
         </div>
       </div>
 
@@ -161,7 +161,7 @@ export default function SchedulesPage() {
 
       {/* Usage Counter */}
       {usage && (
-        <div className="mb-4 bg-white border border-slate-200 rounded-lg p-4">
+        <div className="mb-4 bg-card border border-border rounded-lg p-4">
           <UsageCounter
             used={usage.schedules.used}
             limit={usage.schedules.limit}
@@ -171,15 +171,15 @@ export default function SchedulesPage() {
       )}
 
       {schedules.length === 0 ? (
-        <div className="bg-white rounded-lg p-8 lg:p-12 text-center border border-slate-200">
-          <svg className="w-12 h-12 lg:w-16 lg:h-16 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-card rounded-lg p-8 lg:p-12 text-center border border-border">
+          <svg className="w-12 h-12 lg:w-16 lg:h-16 mx-auto text-muted-foreground mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <h3 className="text-base font-semibold text-slate-900 mb-1">No schedules found</h3>
-          <p className="text-sm text-slate-600 mb-4">Create your first schedule to automate follow-ups</p>
+          <h3 className="text-base font-semibold text-foreground mb-1">No schedules found</h3>
+          <p className="text-sm text-muted-foreground mb-4">Create your first schedule to automate follow-ups</p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-5 py-2.5 bg-slate-900 text-white text-sm rounded-lg hover:bg-slate-800 transition-colors font-medium"
+            className="px-5 py-2.5 bg-foreground text-background text-sm rounded-lg hover:opacity-90 transition-colors font-medium"
           >
             Create Schedule
           </button>
@@ -216,7 +216,7 @@ export default function SchedulesPage() {
                                 : `${step.dayOffset} day${step.dayOffset !== 1 ? 's' : ''} after`}
                             </span>
                             {step.template && (
-                              <span className="text-xs text-slate-600 truncate">
+                              <span className="text-xs text-muted-foreground truncate">
                                 {step.template.name}
                               </span>
                             )}
@@ -257,7 +257,7 @@ export default function SchedulesPage() {
       {/* Mobile FAB */}
       <button
         onClick={() => setShowCreateModal(true)}
-        className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-slate-800 transition-colors z-30"
+        className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-foreground text-background rounded-full flex items-center justify-center shadow-lg hover:opacity-90 transition-colors z-30"
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
