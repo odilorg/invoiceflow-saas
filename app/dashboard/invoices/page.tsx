@@ -150,27 +150,27 @@ export default function InvoicesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="flex flex-col items-center">
-          <svg className="animate-spin h-10 w-10 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin h-10 w-10 text-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p className="mt-3 text-sm text-slate-600">Loading invoices...</p>
+          <p className="mt-3 text-sm text-muted-foreground">Loading invoices...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 lg:p-8">
+    <div className="min-h-screen bg-background p-4 lg:p-8">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl lg:text-3xl font-semibold text-slate-900">Invoices</h1>
+          <h1 className="text-2xl lg:text-3xl font-semibold text-foreground">Invoices</h1>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
+            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-foreground text-background text-sm font-medium rounded-lg hover:opacity-90 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -178,7 +178,7 @@ export default function InvoicesPage() {
             Create Invoice
           </button>
         </div>
-        <p className="text-sm text-slate-600">Manage and track all your invoices</p>
+        <p className="text-sm text-muted-foreground">Manage and track all your invoices</p>
       </div>
 
       {/* Help Box */}
@@ -190,7 +190,7 @@ export default function InvoicesPage() {
 
       {/* Usage Counter */}
       {usage && (
-        <div className="mb-4 bg-white border border-slate-200 rounded-lg p-4">
+        <div className="mb-4 bg-card border border-border rounded-lg p-4">
           <UsageCounter
             used={usage.invoices.used}
             limit={usage.invoices.limit}
@@ -207,8 +207,8 @@ export default function InvoicesPage() {
             onClick={() => setFilter(f)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
               filter === f
-                ? 'bg-slate-900 text-white'
-                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                ? 'bg-foreground text-background'
+                : 'bg-card text-foreground hover:bg-muted border border-border'
             }`}
           >
             {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -218,15 +218,15 @@ export default function InvoicesPage() {
 
       {/* Invoice List */}
       {filteredInvoices.length === 0 ? (
-        <div className="bg-white rounded-lg p-8 lg:p-12 text-center border border-slate-200">
-          <svg className="w-12 h-12 lg:w-16 lg:h-16 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-card rounded-lg p-8 lg:p-12 text-center border border-border">
+          <svg className="w-12 h-12 lg:w-16 lg:h-16 mx-auto text-muted-foreground mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <h3 className="text-base font-semibold text-slate-900 mb-1">No invoices here yet.</h3>
-          <p className="text-sm text-slate-600 mb-4">Create your first invoice to start automatic follow-ups.</p>
+          <h3 className="text-base font-semibold text-foreground mb-1">No invoices here yet.</h3>
+          <p className="text-sm text-muted-foreground mb-4">Create your first invoice to start automatic follow-ups.</p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-5 py-2.5 bg-slate-900 text-white text-sm rounded-lg hover:bg-slate-800 transition-colors font-medium"
+            className="px-5 py-2.5 bg-foreground text-background text-sm rounded-lg hover:opacity-90 transition-colors font-medium"
           >
             Create invoice
           </button>
@@ -292,38 +292,38 @@ export default function InvoicesPage() {
           </div>
 
           {/* Desktop Table Layout */}
-          <div className="hidden lg:block bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <div className="hidden lg:block bg-card border border-border rounded-lg overflow-hidden">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-background border-b border-border">
                 <tr>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Invoice #</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Client</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Amount</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Due Date</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Follow-ups</th>
-                  <th className="text-right px-6 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-foreground uppercase tracking-wider">Invoice #</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-foreground uppercase tracking-wider">Client</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-foreground uppercase tracking-wider">Amount</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-foreground uppercase tracking-wider">Due Date</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-foreground uppercase tracking-wider">Status</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-foreground uppercase tracking-wider">Follow-ups</th>
+                  <th className="text-right px-6 py-3 text-xs font-semibold text-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-border">
                 {filteredInvoices.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={invoice.id} className="hover:bg-background transition-colors">
                     <td className="px-6 py-4">
-                      <span className="font-mono text-sm text-slate-900">{invoice.invoiceNumber}</span>
+                      <span className="font-mono text-sm text-foreground">{invoice.invoiceNumber}</span>
                     </td>
                     <td className="px-6 py-4">
                       <div>
-                        <div className="font-medium text-slate-900">{invoice.clientName}</div>
-                        <div className="text-sm text-slate-500">{invoice.clientEmail}</div>
+                        <div className="font-medium text-foreground">{invoice.clientName}</div>
+                        <div className="text-sm text-muted-foreground">{invoice.clientEmail}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-semibold text-slate-900">
+                      <span className="font-semibold text-foreground">
                         {invoice.currency} {invoice.amount.toLocaleString()}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-slate-600">
+                      <span className="text-sm text-muted-foreground">
                         {new Date(invoice.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     </td>
@@ -331,7 +331,7 @@ export default function InvoicesPage() {
                       <StatusBadge invoice={invoice} />
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-slate-600">
+                      <span className="text-sm text-muted-foreground">
                         {invoice.followUps?.filter((f: any) => f.status === 'SENT').length || 0} /
                         {invoice.followUps?.length || 0} sent
                       </span>
@@ -340,7 +340,7 @@ export default function InvoicesPage() {
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => router.push(`/dashboard/invoices/${invoice.id}`)}
-                          className="px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 rounded transition-colors font-medium"
+                          className="px-3 py-1.5 text-sm text-foreground hover:bg-muted rounded transition-colors font-medium"
                         >
                           View
                         </button>
@@ -350,7 +350,7 @@ export default function InvoicesPage() {
                               setEditingInvoice(invoice);
                               setShowEditModal(true);
                             }}
-                            className="px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 rounded transition-colors font-medium"
+                            className="px-3 py-1.5 text-sm text-foreground hover:bg-muted rounded transition-colors font-medium"
                           >
                             Edit
                           </button>
@@ -358,14 +358,14 @@ export default function InvoicesPage() {
                         {invoice.status === 'PENDING' && (
                           <button
                             onClick={() => handleMarkAsPaid(invoice.id)}
-                            className="px-3 py-1.5 text-sm text-white bg-green-600 hover:bg-green-700 rounded transition-colors font-medium"
+                            className="px-3 py-1.5 text-sm text-white bg-success hover:opacity-90 rounded transition-colors font-medium"
                           >
                             Mark Paid
                           </button>
                         )}
                         <button
                           onClick={() => handleDelete(invoice.id)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-colors"
                           title="Delete invoice"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -385,7 +385,7 @@ export default function InvoicesPage() {
       {/* Mobile FAB */}
       <button
         onClick={() => setShowCreateModal(true)}
-        className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-slate-800 transition-colors z-30"
+        className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-foreground text-background rounded-full flex items-center justify-center shadow-lg hover:opacity-90 transition-colors z-30"
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -428,10 +428,10 @@ function StatusBadge({ invoice }: { invoice: Invoice }) {
   const actualStatus = isOverdue ? 'OVERDUE' : status;
 
   const colors = {
-    PENDING: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
-    PAID: 'bg-green-50 text-green-700 border border-green-200',
-    OVERDUE: 'bg-red-50 text-red-700 border border-red-200',
-    CANCELLED: 'bg-slate-50 text-slate-700 border border-slate-200',
+    PENDING: 'bg-warning/10 text-warning border border-warning/20',
+    PAID: 'bg-success/10 text-success border border-success/20',
+    OVERDUE: 'bg-destructive/10 text-destructive border border-destructive/20',
+    CANCELLED: 'bg-background text-foreground border border-border',
   };
 
   // Calculate days overdue
@@ -457,13 +457,13 @@ function StatusBadge({ invoice }: { invoice: Invoice }) {
           {actualStatus}
         </span>
         {reminderState === 'COMPLETED' && (
-          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-warning/10 text-warning border border-warning/20">
             Reminders done
           </span>
         )}
       </div>
       {isOverdue && daysOverdue > 0 && (
-        <span className="text-xs text-red-600 font-medium">
+        <span className="text-xs text-destructive font-medium">
           {daysOverdue} {daysOverdue === 1 ? 'day' : 'days'} overdue
           {reminderState === 'COMPLETED' && ' • No more reminders'}
         </span>
