@@ -3,10 +3,10 @@ import { requireUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { getUsageStats } from '@/lib/billing/subscription-service';
 import { BILLING_CONFIG } from '@/lib/billing/config';
+import { withErrorHandler } from '@/lib/api-error-handler';
 
-export async function GET(req: NextRequest) {
-  try {
-    const user = await requireUser();
+export const GET = withErrorHandler(async (req: NextRequest) => {
+  const user = await requireUser();
 
     // Get user with subscription
     const userData = await prisma.user.findUnique({
@@ -71,16 +71,4 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json(response);
-
-  } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    console.error('Billing status error:', error);
-    return NextResponse.json(
-      { error: 'Failed to get billing status' },
-      { status: 500 }
-    );
-  }
-}
+});

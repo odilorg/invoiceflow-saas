@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/api-error-handler';
 import { withVersionCheck } from '@/lib/api-version-check';
 import { z } from 'zod';
 import { checkPlanLimitEnhanced } from '@/lib/billing/subscription-service';

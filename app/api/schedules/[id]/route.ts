@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/api-error-handler';
 import { regenerateAllFollowUps } from '@/lib/followups';
 import { canDeleteSchedule, canDeactivateSchedule, setScheduleAsDefault } from '@/lib/default-schedule';
 import { z } from 'zod';

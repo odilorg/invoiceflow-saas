@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/api-error-handler';
 import { timeQuery } from '@/lib/performance'; // TEMPORARY: For baseline measurement
 
 // GET all email logs for current user's invoices

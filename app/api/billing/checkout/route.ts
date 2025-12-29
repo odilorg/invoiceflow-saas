@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/api-error-handler';
 import { BILLING_CONFIG, getVariantId } from '@/lib/billing/config';
 import { z } from 'zod';
 
