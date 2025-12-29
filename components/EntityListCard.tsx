@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import Badge, { BadgeVariant } from './Badge';
+import { CARD_PAD, H2, SUBTLE, LABEL, VALUE, BTN_MIN_H } from '@/lib/ui/tokens';
 
 export interface EntityListCardProps {
   /** Primary title of the entity */
@@ -68,26 +69,26 @@ export default function EntityListCard({
   const getButtonStyles = (variant: string = 'primary') => {
     switch (variant) {
       case 'primary':
-        return 'bg-slate-900 text-white hover:bg-slate-800';
+        return 'bg-foreground text-background hover:bg-foreground/90';
       case 'secondary':
-        return 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50';
+        return 'bg-card border border-border text-foreground hover:bg-muted';
       case 'ghost':
-        return 'bg-slate-50 text-slate-700 hover:bg-slate-100';
+        return 'bg-muted text-foreground hover:bg-muted/80';
       default:
-        return 'bg-slate-900 text-white hover:bg-slate-800';
+        return 'bg-foreground text-background hover:bg-foreground/90';
     }
   };
 
   return (
-    <div className={`bg-white border border-slate-200 rounded-xl p-4 ${className}`}>
+    <div className={`bg-card border border-border rounded-xl ${CARD_PAD} ${className}`}>
       {/* Header: Title + Badge */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-semibold text-slate-900 truncate">
+          <h3 className={`${H2} text-foreground truncate`}>
             {title}
           </h3>
           {subtitle && (
-            <p className="text-sm text-slate-600 mt-1">
+            <p className={`${SUBTLE} mt-1`}>
               {subtitle}
             </p>
           )}
@@ -104,10 +105,10 @@ export default function EntityListCard({
         <div className="grid grid-cols-2 gap-x-4 gap-y-3 mb-4">
           {fields.map((field, index) => (
             <div key={index} className="min-w-0">
-              <p className="text-[11px] uppercase tracking-wide font-medium text-slate-500 mb-1">
+              <p className={`${LABEL} mb-1`}>
                 {field.label}
               </p>
-              <div className="text-sm font-medium text-slate-900">
+              <div className={`${VALUE} text-foreground`}>
                 {field.value}
               </div>
             </div>
@@ -117,13 +118,13 @@ export default function EntityListCard({
 
       {/* Actions Section */}
       {(primaryAction || secondaryActions || destructiveAction) && (
-        <div className="space-y-2 pt-3 border-t border-slate-200">
+        <div className="space-y-2 pt-3 border-t border-border">
           {/* Primary Action (full-width) */}
           {primaryAction && (
             <button
               onClick={primaryAction.onClick}
               disabled={primaryAction.disabled}
-              className={`w-full min-h-[44px] px-4 py-2.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${getButtonStyles(
+              className={`w-full ${BTN_MIN_H} px-4 py-2.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${getButtonStyles(
                 primaryAction.variant
               )}`}
             >
@@ -140,7 +141,7 @@ export default function EntityListCard({
                   <button
                     key={index}
                     onClick={action.onClick}
-                    className="min-h-[44px] px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+                    className={`${BTN_MIN_H} px-4 py-2.5 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors`}
                   >
                     {action.label}
                   </button>
@@ -150,11 +151,11 @@ export default function EntityListCard({
 
           {/* Destructive Action (visually separated) */}
           {destructiveAction && (
-            <div className="pt-2 border-t border-slate-200">
+            <div className="pt-2 border-t border-border">
               <button
                 onClick={destructiveAction.onClick}
                 aria-label={destructiveAction.ariaLabel}
-                className="min-h-[44px] w-full px-4 py-2.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors inline-flex items-center justify-center gap-2"
+                className={`${BTN_MIN_H} w-full px-4 py-2.5 text-sm font-medium text-destructive-foreground bg-destructive/15 hover:bg-destructive/25 rounded-lg transition-colors inline-flex items-center justify-center gap-2`}
               >
                 {destructiveAction.icon}
                 <span>{destructiveAction.ariaLabel}</span>
