@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 const SESSION_COOKIE = 'session_token';
 const SESSION_DURATION_LONG = 30 * 24 * 60 * 60 * 1000; // 30 days (remember me)
-const SESSION_DURATION_SHORT = 24 * 60 * 60 * 1000; // 24 hours (session only)
+const SESSION_DURATION_SHORT = 7 * 24 * 60 * 60 * 1000; // 7 days (session only)
 
 /**
  * Custom error for unauthorized access.
@@ -40,7 +40,7 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
  * Generates a cryptographically secure token (64 hex chars).
  * Stores tokenHash in database, returns plaintext token for cookie.
  * @param userId - User ID
- * @param rememberMe - If true, session lasts 30 days; if false, 24 hours
+ * @param rememberMe - If true, session lasts 30 days; if false, 7 days
  */
 export async function createSession(userId: string, rememberMe: boolean = true): Promise<string> {
   // Generate secure random token (32 bytes = 64 hex chars)

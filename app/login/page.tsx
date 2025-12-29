@@ -212,7 +212,7 @@ export default function LoginPage() {
                   className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 cursor-pointer"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-700 cursor-pointer select-none">
-                  Keep me signed in for 30 days
+                  Keep me signed in for 30 days on this device
                 </label>
               </div>
             </div>
