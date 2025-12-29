@@ -16,6 +16,7 @@ import {
   FormErrorBanner,
   useFormValidation,
 } from '@/components/form';
+import { validators } from '@/lib/ui/form-errors';
 
 interface Template {
   id: string;
@@ -623,7 +624,7 @@ function TemplateModal({
   const subjectRef = React.useRef<HTMLInputElement>(null);
   const bodyRef = React.useRef<HTMLTextAreaElement>(null);
 
-  const { errors, isLoading, setLoading, handleApiError, clearAllErrors } = useFormValidation();
+  const { errors, isLoading, setLoading, validateOnSubmit, handleApiError, clearAllErrors } = useFormValidation();
 
   const variables = [
     { name: 'clientName', example: 'John Doe' },
@@ -685,14 +686,27 @@ function TemplateModal({
   };
 
   const handleSubmit = async () => {
+    clearAllErrors();
+    setUpgradeRequired(false);
+
+    // Client-side validation
+    const validationSchema = {
+      name: [validators.required('Template name')],
+      subject: [validators.required('Subject line')],
+      body: [validators.required('Email body')],
+      isDefault: [], // No validation needed for checkbox
+    };
+
+    const validationErrors = validateOnSubmit(formData, validationSchema);
+    if (Object.keys(validationErrors.fieldErrors).length > 0) return;
+
+    // Check for invalid variables after validation passes
     if (invalidVars.length > 0) {
       if (!confirm(`Warning: Invalid variables detected: ${invalidVars.join(', ')}. Continue anyway?`)) {
         return;
       }
     }
 
-    clearAllErrors();
-    setUpgradeRequired(false);
     setLoading(true);
 
     try {
@@ -786,12 +800,13 @@ function TemplateModal({
         </div>
 
         <FormSection fullWidth>
-          <FormField id="name" label="Template Name" required hint="Give your template a descriptive name">
+          <FormField id="name" label="Template Name" required error={errors.fieldErrors.name} hint="Give your template a descriptive name">
             <FormInput
               id="name"
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              error={!!errors.fieldErrors.name}
               disabled={isLoading}
               placeholder="e.g., Friendly Reminder"
               autoTrim
@@ -799,25 +814,27 @@ function TemplateModal({
             />
           </FormField>
 
-          <FormField id="subject" label="Subject Line" required hint="Email subject line with variables">
+          <FormField id="subject" label="Subject Line" required error={errors.fieldErrors.subject} hint="Email subject line with variables">
             <FormInput
               id="subject"
               type="text"
               value={formData.subject}
               onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
               onFocus={() => setLastFocusedField('subject')}
+              error={!!errors.fieldErrors.subject}
               disabled={isLoading}
               placeholder="e.g., Reminder: Invoice {invoiceNumber} due soon"
               ref={subjectRef}
             />
           </FormField>
 
-          <FormField id="body" label="Email Body" required hint="Email content with variables (use monospace font)">
+          <FormField id="body" label="Email Body" required error={errors.fieldErrors.body} hint="Email content with variables (use monospace font)">
             <FormTextarea
               id="body"
               value={formData.body}
               onChange={(e) => setFormData({ ...formData, body: e.target.value })}
               onFocus={() => setLastFocusedField('body')}
+              error={!!errors.fieldErrors.body}
               disabled={isLoading}
               placeholder="Hi {clientName},&#10;&#10;This is a friendly reminder that invoice {invoiceNumber} for {currency} {amount} is due on {dueDate}.&#10;&#10;Best regards"
               rows={10}
