@@ -22,6 +22,7 @@ import {
 } from '@/components/form';
 import { validators } from '@/lib/ui/form-errors';
 import { normalizeEmail, normalizeInvoiceNumber, normalizeFormData } from '@/lib/ui/input-normalize';
+import { useToast } from '@/components/ToastProvider';
 import type { FormSelectOption } from '@/components/form';
 
 interface Invoice {
@@ -623,6 +624,7 @@ function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuc
   const [upgradeRequired, setUpgradeRequired] = useState(false);
 
   const { errors, isLoading, setLoading, validateOnSubmit, handleApiError, clearAllErrors, hasFormErrors } = useFormValidation();
+  const toast = useToast();
 
   useEffect(() => {
     loadSchedules();
@@ -702,7 +704,7 @@ function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuc
 
       const selectedSchedule = schedules.find(s => s.id === normalized.scheduleId);
       const scheduleName = selectedSchedule?.name || 'Default schedule';
-      alert(`Invoice created successfully!\nUsing schedule: ${scheduleName}`);
+      toast.success(`Invoice created successfully!\nUsing schedule: ${scheduleName}`);
 
       onSuccess();
     } catch (err) {
