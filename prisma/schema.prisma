@@ -49,11 +49,12 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  invoices     Invoice[]
-  templates    Template[]
-  schedules    Schedule[]
-  sessions     Session[]
-  subscription Subscription?
+  invoices           Invoice[]
+  templates          Template[]
+  schedules          Schedule[]
+  sessions           Session[]
+  passwordResetTokens PasswordResetToken[]
+  subscription       Subscription?
 }
 
 model Session {
@@ -68,6 +69,21 @@ model Session {
 
   @@index([userId])
   @@index([tokenHash])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique  // SHA-256 hash of reset token (security: don't store plaintext)
+  expiresAt DateTime
+  usedAt    DateTime? // Mark when token is consumed (prevent reuse)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt]) // Query optimization for cleanup
 }
 
 model Invoice {
