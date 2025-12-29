@@ -165,7 +165,7 @@ export default function InvoiceDetailPage() {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p className="mt-4 text-slate-600">Loading invoice...</p>
+          <p className="mt-4 text-muted-foreground">Loading invoice...</p>
         </div>
       </div>
     );
@@ -180,7 +180,7 @@ export default function InvoiceDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
+      <nav className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <button
@@ -207,14 +207,14 @@ export default function InvoiceDetailPage() {
       {/* Reminders Paused Banner */}
       {invoice && !invoice.remindersEnabled && invoice.remindersPausedReason === 'user_updated_date_no_restart' && (
         <div className="max-w-7xl mx-auto px-6 mt-6">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-info/10 border border-info/20 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-info mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div className="flex-1">
-                <h3 className="text-sm font-semibold text-blue-900 mb-1">Reminders paused</h3>
-                <p className="text-sm text-blue-800">
+                <h3 className="text-sm font-semibold text-info mb-1">Reminders paused</h3>
+                <p className="text-sm text-info">
                   Reminders are paused for this invoice. No further emails will be sent unless you restart reminders.
                 </p>
                 <button
@@ -229,7 +229,7 @@ export default function InvoiceDetailPage() {
                       }),
                     }).then(() => loadInvoice());
                   }}
-                  className="mt-3 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                  className="mt-3 px-4 py-2 bg-info text-white text-sm rounded-lg hover:opacity-90 transition-colors"
                 >
                   Restart reminders
                 </button>
@@ -242,13 +242,13 @@ export default function InvoiceDetailPage() {
       {/* Reminders Restarted Banner */}
       {invoice && invoice.remindersResetAt && (
         <div className="max-w-7xl mx-auto px-6 mt-6">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="bg-success/10 border border-success/20 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-success mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               <div className="flex-1">
-                <p className="text-sm text-green-800">
+                <p className="text-sm text-success">
                   Reminders restarted on {new Date(invoice.remindersResetAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} using new due date {new Date(invoice.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}.
                 </p>
               </div>
@@ -287,7 +287,7 @@ export default function InvoiceDetailPage() {
                         navigator.clipboard.writeText(invoice.notes || '');
                         // You could add a toast notification here
                       }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-amber-300 text-amber-800 text-sm rounded-lg hover:bg-amber-100 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-amber-300 text-amber-800 text-sm rounded-lg hover:bg-amber-100 transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -297,7 +297,7 @@ export default function InvoiceDetailPage() {
                   )}
                   <Link
                     href={`/dashboard/activity?invoice=${invoice.id}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-amber-300 text-amber-800 text-sm rounded-lg hover:bg-amber-100 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-amber-300 text-amber-800 text-sm rounded-lg hover:bg-amber-100 transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -315,9 +315,9 @@ export default function InvoiceDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Invoice Details */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-2xl border border-slate-200 p-8">
+            <div className="bg-card rounded-2xl border border-border p-8">
               <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold text-slate-900">Invoice Details</h1>
+                <h1 className="text-2xl font-bold text-foreground">Invoice Details</h1>
                 <StatusBadge status={invoice.status} isOverdue={isOverdue} />
               </div>
 
@@ -451,30 +451,30 @@ export default function InvoiceDetailPage() {
 
           {/* Follow-ups */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl border border-slate-200 p-6">
-              <h2 className="text-xl font-bold text-slate-900 mb-4">Follow-ups</h2>
+            <div className="bg-card rounded-2xl border border-border p-6">
+              <h2 className="text-xl font-bold text-foreground mb-4">Follow-ups</h2>
               {invoice.followUps && invoice.followUps.length > 0 ? (
                 <div className="space-y-3">
                   {invoice.followUps.map((followUp) => (
-                    <div key={followUp.id} className="border border-slate-200 rounded-lg p-4">
+                    <div key={followUp.id} className="border border-border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-slate-900">
+                        <span className="text-sm font-medium text-foreground">
                           {new Date(followUp.scheduledDate).toLocaleDateString()}
                         </span>
                         <FollowUpStatusBadge status={followUp.status} />
                       </div>
-                      <p className="text-sm text-slate-600 mb-1">{followUp.subject}</p>
+                      <p className="text-sm text-muted-foreground mb-1">{followUp.subject}</p>
                       {followUp.sentAt && (
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                           Sent: {new Date(followUp.sentAt).toLocaleString()}
                         </p>
                       )}
                       {followUp.errorMessage && (
-                        <p className="text-xs text-red-600 mt-1">{followUp.errorMessage}</p>
+                        <p className="text-xs text-destructive mt-1">{followUp.errorMessage}</p>
                       )}
                       {followUp.logs && followUp.logs.length > 0 && (
-                        <div className="mt-2 pt-2 border-t border-slate-100">
-                          <p className="text-xs text-slate-500">
+                        <div className="mt-2 pt-2 border-t border-border">
+                          <p className="text-xs text-muted-foreground">
                             {followUp.logs.length} email log{followUp.logs.length !== 1 ? 's' : ''}
                           </p>
                         </div>
@@ -483,7 +483,7 @@ export default function InvoiceDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-slate-500">No follow-ups scheduled</p>
+                <p className="text-sm text-muted-foreground">No follow-ups scheduled</p>
               )}
             </div>
           </div>
@@ -493,11 +493,11 @@ export default function InvoiceDetailPage() {
       {/* Reminder Restart Modal */}
       {showReminderModal && invoice && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">Restart reminders?</h3>
+          <div className="bg-card rounded-lg max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-foreground mb-4">Restart reminders?</h3>
 
             <div className="space-y-3 mb-6">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 You changed the due date from{' '}
                 <span className="font-medium">
                   {new Date(invoice.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -507,10 +507,10 @@ export default function InvoiceDetailPage() {
                   {new Date(formData.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </span>.
               </p>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 Do you want InvoiceFlow to restart reminder emails based on the new due date?
               </p>
-              <p className="text-xs text-slate-500 italic">
+              <p className="text-xs text-muted-foreground italic">
                 Previous email activity will remain in the log.
               </p>
               {new Date(formData.dueDate) < new Date() && (
@@ -536,7 +536,7 @@ export default function InvoiceDetailPage() {
               </button>
               <button
                 onClick={() => performUpdate(false)}
-                className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
+                className="flex-1 px-4 py-2 bg-muted text-foreground text-sm font-medium rounded-lg hover:bg-muted/80 transition-colors"
               >
                 Update date only
               </button>
@@ -545,7 +545,7 @@ export default function InvoiceDetailPage() {
                   setShowReminderModal(false);
                   setPendingFormData(null);
                 }}
-                className="px-4 py-2 text-slate-500 text-sm font-medium hover:text-slate-700 transition-colors"
+                className="px-4 py-2 text-muted-foreground text-sm font-medium hover:text-foreground transition-colors"
               >
                 Cancel
               </button>
@@ -559,9 +559,9 @@ export default function InvoiceDetailPage() {
 
 function DetailRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="flex justify-between py-3 border-b border-slate-100 last:border-0">
-      <span className="text-sm font-medium text-slate-600">{label}</span>
-      <span className={`text-sm text-slate-900 ${mono ? 'font-mono' : ''}`}>{value}</span>
+    <div className="flex justify-between py-3 border-b border-border last:border-0">
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      <span className={`text-sm text-foreground ${mono ? 'font-mono' : ''}`}>{value}</span>
     </div>
   );
 }
@@ -569,10 +569,10 @@ function DetailRow({ label, value, mono = false }: { label: string; value: strin
 function StatusBadge({ status, isOverdue }: { status: string; isOverdue: boolean }) {
   const actualStatus = isOverdue ? 'OVERDUE' : status;
   const colors = {
-    PENDING: 'bg-yellow-100 text-yellow-800',
-    PAID: 'bg-green-100 text-green-800',
-    OVERDUE: 'bg-red-100 text-red-800',
-    CANCELLED: 'bg-slate-100 text-slate-800',
+    PENDING: 'bg-warning/10 text-warning',
+    PAID: 'bg-success/10 text-success',
+    OVERDUE: 'bg-destructive/10 text-destructive',
+    CANCELLED: 'bg-muted text-foreground',
   };
 
   return (
@@ -584,10 +584,10 @@ function StatusBadge({ status, isOverdue }: { status: string; isOverdue: boolean
 
 function FollowUpStatusBadge({ status }: { status: string }) {
   const colors = {
-    PENDING: 'bg-blue-100 text-blue-800',
-    SENT: 'bg-green-100 text-green-800',
-    SKIPPED: 'bg-yellow-100 text-yellow-800',
-    FAILED: 'bg-red-100 text-red-800',
+    PENDING: 'bg-info/10 text-info',
+    SENT: 'bg-success/10 text-success',
+    SKIPPED: 'bg-warning/10 text-warning',
+    FAILED: 'bg-destructive/10 text-destructive',
   };
 
   return (
