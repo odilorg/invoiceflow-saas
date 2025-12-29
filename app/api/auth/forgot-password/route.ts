@@ -80,10 +80,9 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Get base URL for reset link
-      const protocol = req.headers.get('x-forwarded-proto') || 'http';
-      const host = req.headers.get('host') || 'localhost:3005';
-      const baseUrl = `${protocol}://${host}`;
+      // Get base URL for reset link (use APP_URL in production, fallback to request headers)
+      const baseUrl = process.env.APP_URL ||
+        `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('host') || 'localhost:3005'}`;
 
       // Send reset email (or log in dev mode)
       await sendPasswordResetEmail(emailNormalized, resetToken, baseUrl);
