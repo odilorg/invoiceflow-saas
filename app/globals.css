@@ -48,21 +48,21 @@
 
   .dark {
     /* Base - Dark neutral background */
-    --background: 222 22% 10%; /* Deep neutral dark */
-    --foreground: 210 40% 96%; /* Soft white for text */
+    --background: 222 22% 9%; /* Deep neutral dark */
+    --foreground: 210 40% 98%; /* Soft white for text */
 
     /* Cards / Surfaces - Elevated from background */
-    --card: 222 22% 13%; /* Slightly lighter than bg for depth */
-    --card-foreground: 210 40% 96%;
+    --card: 222 22% 14%; /* Better contrast from bg for depth */
+    --card-foreground: 210 40% 98%;
 
     /* Muted / UI chrome - Darker grays for dark mode */
     --muted: 222 18% 18%; /* Dark gray for interactive elements */
-    --muted-foreground: 215 20% 65%; /* Mid-gray for secondary text */
+    --muted-foreground: 215 20% 68%; /* Mid-gray for secondary text, slightly brighter */
 
     /* Borders & inputs - Visible against dark backgrounds */
-    --border: 222 18% 22%; /* Lighter than muted for visibility */
-    --input: 222 18% 22%; /* Match borders */
-    --ring: 210 90% 56%; /* Bright blue for focus */
+    --border: 222 18% 24%; /* Lighter for better visibility */
+    --input: 222 18% 24%; /* Match borders */
+    --ring: 210 90% 58%; /* Bright blue for focus */
 
     /* Primary - Bright blue for actions in dark mode */
     --primary: 210 90% 56%; /* Brighter blue for dark backgrounds */
