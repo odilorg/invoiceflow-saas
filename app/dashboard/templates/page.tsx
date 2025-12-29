@@ -175,27 +175,27 @@ export default function TemplatesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="flex flex-col items-center">
-          <svg className="animate-spin h-10 w-10 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin h-10 w-10 text-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p className="mt-3 text-sm text-slate-600">Loading templates...</p>
+          <p className="mt-3 text-sm text-muted-foreground">Loading templates...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 lg:p-8 pb-32">
+    <div className="min-h-screen bg-background p-4 lg:p-8 pb-32">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl lg:text-3xl font-semibold text-slate-900">Email Templates</h1>
+          <h1 className="text-2xl lg:text-3xl font-semibold text-foreground">Email Templates</h1>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors min-h-[44px]"
+            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-foreground text-background text-sm font-medium rounded-lg hover:opacity-90 transition-colors min-h-[44px]"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -203,7 +203,7 @@ export default function TemplatesPage() {
             Create Template
           </button>
         </div>
-        <p className="text-sm text-slate-600">Manage your follow-up email templates</p>
+        <p className="text-sm text-muted-foreground">Manage your follow-up email templates</p>
       </div>
 
       {/* Help Box */}
@@ -215,7 +215,7 @@ export default function TemplatesPage() {
 
       {/* Usage Counter */}
       {usage && (
-        <div className="mb-4 bg-white border border-slate-200 rounded-lg p-4">
+        <div className="mb-4 bg-card border border-border rounded-lg p-4">
           <UsageCounter
             used={usage.templates.used}
             limit={usage.templates.limit}
@@ -225,11 +225,11 @@ export default function TemplatesPage() {
       )}
 
       {/* Variable Reference */}
-      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-blue-900 mb-2">Available Template Variables:</h3>
+      <div className="mb-6 bg-info/10 border border-info/20 rounded-lg p-4">
+        <h3 className="text-sm font-semibold text-info mb-2">Available Template Variables:</h3>
         <div className="flex flex-wrap gap-2">
           {['{clientName}', '{invoiceNumber}', '{amount}', '{currency}', '{dueDate}', '{invoiceLink}', '{daysOverdue}'].map((v) => (
-            <code key={v} className="px-2 py-1 bg-white border border-blue-200 rounded text-xs font-mono text-blue-900">
+            <code key={v} className="px-2 py-1 bg-card border border-info/20 rounded text-xs font-mono text-info">
               {v}
             </code>
           ))}
@@ -237,15 +237,15 @@ export default function TemplatesPage() {
       </div>
 
       {templates.length === 0 ? (
-        <div className="bg-white rounded-lg p-8 lg:p-12 text-center border border-slate-200">
-          <svg className="w-12 h-12 lg:w-16 lg:h-16 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-card rounded-lg p-8 lg:p-12 text-center border border-border">
+          <svg className="w-12 h-12 lg:w-16 lg:h-16 mx-auto text-muted-foreground mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
           </svg>
-          <h3 className="text-base font-semibold text-slate-900 mb-1">No templates yet</h3>
-          <p className="text-sm text-slate-600 mb-4">Create your first reminder in under a minute.</p>
+          <h3 className="text-base font-semibold text-foreground mb-1">No templates yet</h3>
+          <p className="text-sm text-muted-foreground mb-4">Create your first reminder in under a minute.</p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-5 py-2.5 bg-slate-900 text-white text-sm rounded-lg hover:bg-slate-800 transition-colors font-medium min-h-[44px]"
+            className="px-5 py-2.5 bg-foreground text-background text-sm rounded-lg hover:opacity-90 transition-colors font-medium min-h-[44px]"
           >
             Create Template
           </button>
@@ -273,7 +273,7 @@ export default function TemplatesPage() {
                   {
                     label: 'Subject',
                     value: (
-                      <span className="text-sm text-slate-900 line-clamp-2">
+                      <span className="text-sm text-foreground line-clamp-2">
                         {template.subject}
                       </span>
                     ),
@@ -281,7 +281,7 @@ export default function TemplatesPage() {
                   {
                     label: 'Body Preview',
                     value: (
-                      <span className="text-sm text-slate-600 line-clamp-2">
+                      <span className="text-sm text-muted-foreground line-clamp-2">
                         {template.body}
                       </span>
                     ),
@@ -329,7 +329,7 @@ export default function TemplatesPage() {
       {/* Mobile FAB with better positioning */}
       <button
         onClick={() => setShowCreateModal(true)}
-        className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-slate-800 transition-colors z-30"
+        className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-foreground text-background rounded-full flex items-center justify-center shadow-lg hover:opacity-90 transition-colors z-30"
         aria-label="Add Template"
         title="Add Template"
       >
@@ -423,12 +423,12 @@ function PreviewModal({ template, onClose }: { template: Template; onClose: () =
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-slate-900">Preview: {template.name}</h2>
+      <div className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-border flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-foreground">Preview: {template.name}</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -437,16 +437,16 @@ function PreviewModal({ template, onClose }: { template: Template; onClose: () =
         </div>
 
         <div className="p-6 space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+          <div className="bg-info/10 border border-info/20 rounded-lg p-3 text-xs text-info">
             💡 Variables shown with sample data. Actual emails will use real invoice data.
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Subject Line</label>
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm">
+            <label className="block text-sm font-semibold text-foreground mb-2">Subject Line</label>
+            <div className="p-3 bg-background border border-border rounded-lg text-sm">
               {subjectParts.map((part, i) => (
                 part.isVar ? (
-                  <span key={i} className="bg-yellow-200 px-1 py-0.5 rounded font-semibold">
+                  <span key={i} className="bg-warning/20 px-1 py-0.5 rounded font-semibold">
                     {part.text}
                   </span>
                 ) : (
@@ -457,11 +457,11 @@ function PreviewModal({ template, onClose }: { template: Template; onClose: () =
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Email Body</label>
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-sm whitespace-pre-wrap">
+            <label className="block text-sm font-semibold text-foreground mb-2">Email Body</label>
+            <div className="p-4 bg-background border border-border rounded-lg text-sm whitespace-pre-wrap">
               {bodyParts.map((part, i) => (
                 part.isVar ? (
-                  <span key={i} className="bg-yellow-200 px-1 py-0.5 rounded font-semibold">
+                  <span key={i} className="bg-warning/20 px-1 py-0.5 rounded font-semibold">
                     {part.text}
                   </span>
                 ) : (
@@ -472,10 +472,10 @@ function PreviewModal({ template, onClose }: { template: Template; onClose: () =
           </div>
         </div>
 
-        <div className="p-6 border-t border-slate-200 flex justify-end gap-3">
+        <div className="p-6 border-t border-border flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors min-h-[44px]"
+            className="px-4 py-2 bg-foreground text-background text-sm font-medium rounded-lg hover:opacity-90 transition-colors min-h-[44px]"
           >
             Close
           </button>
@@ -499,34 +499,34 @@ function DeleteConfirmModal({
 }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full">
+      <div className="bg-card rounded-lg max-w-md w-full">
         <div className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Delete Template?</h3>
+            <h3 className="text-lg font-bold text-foreground">Delete Template?</h3>
           </div>
 
           <div className="space-y-3 mb-6">
-            <p className="text-sm text-slate-700">
+            <p className="text-sm text-foreground">
               Are you sure you want to delete <strong>{template.name}</strong>?
             </p>
 
             {scheduleCount > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <p className="text-sm text-amber-800 font-semibold">
+              <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
+                <p className="text-sm text-warning font-semibold">
                   ⚠️ Warning: This template is used in {scheduleCount} active schedule{scheduleCount !== 1 ? 's' : ''}.
                 </p>
-                <p className="text-xs text-amber-700 mt-1">
+                <p className="text-xs text-warning mt-1">
                   Deleting it may affect your automated follow-up emails.
                 </p>
               </div>
             )}
 
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               This action cannot be undone.
             </p>
           </div>
@@ -534,13 +534,13 @@ function DeleteConfirmModal({
           <div className="flex gap-3">
             <button
               onClick={onCancel}
-              className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors min-h-[44px]"
+              className="flex-1 px-4 py-2 bg-muted text-foreground text-sm font-medium rounded-lg hover:bg-muted/80 transition-colors min-h-[44px]"
             >
               Cancel
             </button>
             <button
               onClick={onConfirm}
-              className="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors min-h-[44px]"
+              className="flex-1 px-4 py-2 bg-destructive text-background text-sm font-medium rounded-lg hover:opacity-90 transition-colors min-h-[44px]"
             >
               Delete Template
             </button>
