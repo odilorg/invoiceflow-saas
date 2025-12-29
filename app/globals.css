@@ -55,48 +55,48 @@
 
   .dark {
     /* Base colors */
-    --background: 222 47% 11%; /* slate-900 */
-    --foreground: 210 40% 98%; /* slate-50 */
+    --background: 222 47% 11%; /* slate-900 - dark page bg */
+    --foreground: 210 40% 98%; /* slate-50 - light text */
 
-    /* Card colors */
-    --card: 217 33% 17%; /* slate-800 */
+    /* Card colors - lighter than background for contrast */
+    --card: 217 33% 17%; /* slate-800 - elevated surface */
     --card-foreground: 210 40% 98%; /* slate-50 */
 
-    /* Muted colors */
-    --muted: 215 28% 17%; /* slate-700 */
-    --muted-foreground: 215 20% 65%; /* slate-400 */
+    /* Muted colors - for secondary text and backgrounds */
+    --muted: 215 28% 23%; /* slate-700 lightened - interactive elements */
+    --muted-foreground: 215 20% 65%; /* slate-400 - subtle text */
 
-    /* Border, input, ring */
-    --border: 215 28% 17%; /* slate-700 */
-    --input: 215 28% 17%; /* slate-700 */
-    --ring: 210 40% 98%; /* slate-50 */
+    /* Border - must be visible against both bg and card */
+    --border: 215 20% 30%; /* slate-600 - visible borders */
+    --input: 215 28% 23%; /* slate-700 lightened */
+    --ring: 217 91% 60%; /* blue-500 - focus rings */
 
     /* Primary */
     --primary: 210 40% 98%; /* slate-50 */
     --primary-foreground: 222 47% 11%; /* slate-900 */
 
     /* Secondary */
-    --secondary: 215 28% 17%; /* slate-700 */
+    --secondary: 215 28% 23%; /* slate-700 lightened */
     --secondary-foreground: 210 40% 98%; /* slate-50 */
 
-    /* Destructive/Danger */
-    --destructive: 0 63% 31%; /* red-800 */
+    /* Destructive/Danger - brighter for visibility */
+    --destructive: 0 84% 60%; /* red-500 - same as light mode for consistency */
     --destructive-foreground: 0 0% 100%; /* white */
 
-    /* Success */
-    --success: 142 70% 35%; /* green-700 */
+    /* Success - brighter for visibility */
+    --success: 142 71% 45%; /* green-600 - brighter than light mode dark variant */
     --success-foreground: 0 0% 100%; /* white */
 
-    /* Warning */
-    --warning: 32 95% 44%; /* amber-600 */
-    --warning-foreground: 0 0% 100%; /* white */
+    /* Warning - brighter for visibility */
+    --warning: 38 92% 50%; /* amber-500 - same as light mode */
+    --warning-foreground: 222 47% 11%; /* dark text for better contrast */
 
-    /* Info */
-    --info: 213 94% 50%; /* blue-600 */
+    /* Info - good contrast */
+    --info: 217 91% 60%; /* blue-500 */
     --info-foreground: 0 0% 100%; /* white */
 
     /* Accent */
-    --accent: 215 28% 17%; /* slate-700 */
+    --accent: 215 28% 23%; /* slate-700 lightened */
     --accent-foreground: 210 40% 98%; /* slate-50 */
   }
 }
