@@ -669,7 +669,7 @@ function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuc
     };
 
     const validationErrors = validateOnSubmit(formData, validationSchema);
-    if (hasFormErrors()) return;
+    if (Object.keys(validationErrors.fieldErrors).length > 0) return;
 
     // Normalize data
     const normalized = normalizeFormData(formData, {
