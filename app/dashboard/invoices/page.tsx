@@ -7,6 +7,22 @@ import UsageCounter from '@/components/UsageCounter';
 import EntityListCard from '@/components/EntityListCard';
 import { HELP_CONTENT } from '@/lib/help-content';
 import { getReminderState, getReminderStateDisplay } from '@/lib/reminder-state';
+import {
+  FormModalShell,
+  FormSection,
+  FormField,
+  FormInput,
+  FormAmountInput,
+  FormSelect,
+  FormDateInput,
+  FormTextarea,
+  FormActions,
+  FormErrorBanner,
+  useFormValidation,
+} from '@/components/form';
+import { validators } from '@/lib/ui/form-errors';
+import { normalizeEmail, normalizeInvoiceNumber, normalizeFormData } from '@/lib/ui/input-normalize';
+import type { FormSelectOption } from '@/components/form';
 
 interface Invoice {
   id: string;
@@ -466,12 +482,12 @@ function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuc
     currency: 'USD',
     dueDate: '',
     notes: '',
-    scheduleId: '', // Will use default schedule if empty
+    scheduleId: '',
   });
   const [schedules, setSchedules] = useState<Array<{ id: string; name: string; isDefault: boolean; isActive: boolean }>>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [upgradeRequired, setUpgradeRequired] = useState(false);
+
+  const { errors, isLoading, setLoading, validateOnSubmit, handleApiError, clearAllErrors, hasFormErrors } = useFormValidation();
 
   useEffect(() => {
     loadSchedules();
@@ -482,10 +498,8 @@ function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuc
       const res = await fetch('/api/schedules');
       if (res.ok) {
         const data = await res.json();
-        // Only show active schedules
         const activeSchedules = data.filter((s: any) => s.isActive);
         setSchedules(activeSchedules);
-        // Auto-select default schedule if exists
         const defaultSchedule = activeSchedules.find((s: any) => s.isDefault);
         if (defaultSchedule) {
           setFormData(prev => ({ ...prev, scheduleId: defaultSchedule.id }));
@@ -496,224 +510,228 @@ function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuc
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  const handleChange = (field: keyof typeof formData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async () => {
+    clearAllErrors();
     setUpgradeRequired(false);
+
+    // Validate
+    const validationSchema = {
+      clientName: [validators.required('Client name')],
+      clientEmail: [validators.required('Client email'), validators.email()],
+      invoiceNumber: [validators.required('Invoice number')],
+      amount: [
+        validators.required('Amount'),
+        validators.custom((v) => !isNaN(parseFloat(v)) && parseFloat(v) > 0, 'Amount must be a positive number'),
+      ],
+      currency: [validators.required('Currency')],
+      dueDate: [validators.required('Due date')],
+      notes: [],
+      scheduleId: [],
+    };
+
+    const validationErrors = validateOnSubmit(formData, validationSchema);
+    if (hasFormErrors()) return;
+
+    // Normalize data
+    const normalized = normalizeFormData(formData, {
+      clientEmail: normalizeEmail,
+      invoiceNumber: normalizeInvoiceNumber,
+    });
+
+    setLoading(true);
 
     try {
       const res = await fetch('/api/invoices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          amount: parseFloat(formData.amount),
-          dueDate: new Date(formData.dueDate).toISOString(),
+          ...normalized,
+          amount: parseFloat(normalized.amount),
+          dueDate: new Date(normalized.dueDate).toISOString(),
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Failed to create invoice');
+        handleApiError(data);
         if (data.upgradeRequired) {
           setUpgradeRequired(true);
         }
         return;
       }
 
-      // Find the selected schedule name for confirmation
-      const selectedSchedule = schedules.find(s => s.id === formData.scheduleId);
+      const selectedSchedule = schedules.find(s => s.id === normalized.scheduleId);
       const scheduleName = selectedSchedule?.name || 'Default schedule';
-
-      // Show success message with schedule info
       alert(`Invoice created successfully!\nUsing schedule: ${scheduleName}`);
 
       onSuccess();
     } catch (err) {
-      setError('An error occurred');
+      handleApiError(err);
     } finally {
       setLoading(false);
     }
   };
 
+  const currencyOptions: FormSelectOption[] = [
+    { value: 'USD', label: 'USD' },
+    { value: 'EUR', label: 'EUR' },
+    { value: 'GBP', label: 'GBP' },
+    { value: 'UZS', label: 'UZS' },
+  ];
+
+  const scheduleOptions: FormSelectOption[] = schedules.length === 0
+    ? [{ value: '', label: 'No schedules available' }]
+    : schedules.map(s => ({
+        value: s.id,
+        label: `${s.name}${s.isDefault ? ' (Default - used automatically)' : ''}`,
+      }));
+
+  const selectedSchedule = schedules.find(s => s.id === formData.scheduleId);
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-slate-200">
-          <h2 className="text-xl font-semibold text-slate-900">Create Invoice</h2>
+    <FormModalShell
+      title="Create Invoice"
+      description="Create a new invoice and set up automatic follow-up reminders"
+      onClose={onClose}
+      stickyFooter
+    >
+      {/* Error Banner */}
+      <FormErrorBanner
+        message={errors.serverError}
+        upgradeMessage={upgradeRequired ? 'Upgrade your plan to create more invoices and unlock additional features.' : undefined}
+      />
+
+      {/* Upgrade Button */}
+      {upgradeRequired && (
+        <div className="flex justify-end mb-4">
+          <button
+            type="button"
+            onClick={() => router.push('/dashboard/billing')}
+            className="px-4 py-2 bg-foreground text-background text-sm font-medium rounded-lg hover:bg-foreground/90 transition-colors"
+          >
+            View Plans
+          </button>
         </div>
+      )}
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  <p className="font-medium mb-1">{error}</p>
-                  {upgradeRequired && (
-                    <p className="text-red-600 text-xs">
-                      Upgrade your plan to create more invoices and unlock additional features.
-                    </p>
-                  )}
-                </div>
-                {upgradeRequired && (
-                  <button
-                    type="button"
-                    onClick={() => router.push('/dashboard/billing')}
-                    className="px-4 py-2 bg-slate-900 text-white text-xs font-medium rounded-lg hover:bg-slate-800 transition-colors whitespace-nowrap"
-                  >
-                    View Plans
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+      {/* Form Sections */}
+      <div className="space-y-6">
+        <FormSection title="Client Information">
+          <FormField id="clientName" label="Client Name" required error={errors.fieldErrors.clientName}>
+            <FormInput
+              id="clientName"
+              type="text"
+              value={formData.clientName}
+              onChange={(e) => handleChange('clientName', e.target.value)}
+              error={!!errors.fieldErrors.clientName}
+              disabled={isLoading}
+              autoComplete="name"
+              autoTrim
+            />
+          </FormField>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Client Name *
-              </label>
-              <input
-                type="text"
-                required
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm"
-                value={formData.clientName}
-                onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-              />
-            </div>
+          <FormField id="clientEmail" label="Client Email" required error={errors.fieldErrors.clientEmail}>
+            <FormInput
+              id="clientEmail"
+              type="email"
+              value={formData.clientEmail}
+              onChange={(e) => handleChange('clientEmail', e.target.value)}
+              error={!!errors.fieldErrors.clientEmail}
+              disabled={isLoading}
+              autoTrim
+            />
+          </FormField>
+        </FormSection>
 
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Client Email *
-              </label>
-              <input
-                type="email"
-                required
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm"
-                value={formData.clientEmail}
-                onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
-              />
-            </div>
+        <FormSection title="Invoice Details">
+          <FormField id="invoiceNumber" label="Invoice Number" required error={errors.fieldErrors.invoiceNumber} hint="e.g., INV-001">
+            <FormInput
+              id="invoiceNumber"
+              type="text"
+              value={formData.invoiceNumber}
+              onChange={(e) => handleChange('invoiceNumber', e.target.value)}
+              error={!!errors.fieldErrors.invoiceNumber}
+              disabled={isLoading}
+              placeholder="INV-001"
+              autoTrim
+            />
+          </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Invoice Number *
-              </label>
-              <input
-                type="text"
-                required
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm"
-                placeholder="INV-001"
-                value={formData.invoiceNumber}
-                onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
-              />
-            </div>
+          <FormField id="amount" label="Amount" required error={errors.fieldErrors.amount}>
+            <FormAmountInput
+              id="amount"
+              value={formData.amount}
+              onChange={(e) => handleChange('amount', e.target.value)}
+              error={!!errors.fieldErrors.amount}
+              disabled={isLoading}
+              currency={formData.currency}
+            />
+          </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Amount *
-              </label>
-              <input
-                type="number"
-                required
-                min="0"
-                step="0.01"
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              />
-            </div>
+          <FormField id="currency" label="Currency" error={errors.fieldErrors.currency}>
+            <FormSelect
+              id="currency"
+              value={formData.currency}
+              onChange={(e) => handleChange('currency', e.target.value)}
+              options={currencyOptions}
+              error={!!errors.fieldErrors.currency}
+              disabled={isLoading}
+            />
+          </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Currency
-              </label>
-              <select
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm"
-                value={formData.currency}
-                onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-              >
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
-                <option value="UZS">UZS</option>
-              </select>
-            </div>
+          <FormField id="dueDate" label="Due Date" required error={errors.fieldErrors.dueDate}>
+            <FormDateInput
+              id="dueDate"
+              value={formData.dueDate}
+              onChange={(e) => handleChange('dueDate', e.target.value)}
+              error={!!errors.fieldErrors.dueDate}
+              disabled={isLoading}
+              min={new Date()}
+            />
+          </FormField>
+        </FormSection>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Due Date *
-              </label>
-              <input
-                type="date"
-                required
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm"
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-              />
-            </div>
+        <FormSection fullWidth>
+          <FormField
+            id="scheduleId"
+            label="Follow-up Schedule"
+            hint={selectedSchedule?.isDefault ? 'This schedule will be used automatically for reminder emails' : 'You have manually selected this schedule for this invoice'}
+          >
+            <FormSelect
+              id="scheduleId"
+              value={formData.scheduleId}
+              onChange={(e) => handleChange('scheduleId', e.target.value)}
+              options={scheduleOptions}
+              disabled={isLoading}
+            />
+          </FormField>
 
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Follow-up Schedule
-              </label>
-              <select
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm bg-white"
-                value={formData.scheduleId}
-                onChange={(e) => setFormData({ ...formData, scheduleId: e.target.value })}
-              >
-                {schedules.length === 0 ? (
-                  <option value="">No schedules available</option>
-                ) : (
-                  schedules.map((schedule) => (
-                    <option key={schedule.id} value={schedule.id}>
-                      {schedule.name}{schedule.isDefault ? ' (Default - used automatically)' : ''}
-                    </option>
-                  ))
-                )}
-              </select>
-              <p className="mt-1 text-xs text-slate-500">
-                {schedules.find(s => s.id === formData.scheduleId)?.isDefault
-                  ? 'This schedule will be used automatically for reminder emails'
-                  : 'You have manually selected this schedule for this invoice'}
-              </p>
-            </div>
+          <FormField id="notes" label="Notes" hint="Optional - can be used for invoice link">
+            <FormTextarea
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => handleChange('notes', e.target.value)}
+              disabled={isLoading}
+              placeholder="https://invoice-link.com/inv-001"
+              rows={3}
+            />
+          </FormField>
+        </FormSection>
 
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Notes (optional - can be used for invoice link)
-              </label>
-              <textarea
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm"
-                rows={3}
-                placeholder="https://invoice-link.com/inv-001"
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium disabled:opacity-50"
-            >
-              {loading ? 'Creating...' : 'Create Invoice'}
-            </button>
-          </div>
-        </form>
+        <FormActions
+          onCancel={onClose}
+          onSubmit={handleSubmit}
+          submitLabel="Create Invoice"
+          loading={isLoading}
+          disabled={isLoading}
+        />
       </div>
-    </div>
+    </FormModalShell>
   );
 }
 
@@ -729,12 +747,13 @@ function EditInvoiceModal({ invoice, onClose, onSuccess }: { invoice: Invoice; o
     scheduleId: invoice.scheduleId || '',
   });
   const [schedules, setSchedules] = useState<Array<{ id: string; name: string; isDefault: boolean; isActive: boolean }>>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+
+  const { errors, isLoading, setLoading, handleApiError, clearAllErrors } = useFormValidation();
 
   // Compute followUpsSentCount from invoice data
   const followUpsSentCount = invoice.followUps?.filter((f: any) => f.status === 'SENT').length || 0;
   const isLimitedEditMode = followUpsSentCount > 0;
+  const lockedReason = isLimitedEditMode ? `Cannot edit after ${followUpsSentCount} reminder(s) sent` : undefined;
 
   useEffect(() => {
     if (!isLimitedEditMode) {
@@ -755,10 +774,13 @@ function EditInvoiceModal({ invoice, onClose, onSuccess }: { invoice: Invoice; o
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleChange = (field: keyof typeof formData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async () => {
+    clearAllErrors();
     setLoading(true);
-    setError('');
 
     try {
       const updatePayload: any = {};
@@ -771,8 +793,8 @@ function EditInvoiceModal({ invoice, onClose, onSuccess }: { invoice: Invoice; o
       } else {
         // FULL EDIT mode: send all changed fields including scheduleId
         if (formData.clientName !== invoice.clientName) updatePayload.clientName = formData.clientName;
-        if (formData.clientEmail !== invoice.clientEmail) updatePayload.clientEmail = formData.clientEmail;
-        if (formData.invoiceNumber !== invoice.invoiceNumber) updatePayload.invoiceNumber = formData.invoiceNumber;
+        if (formData.clientEmail !== invoice.clientEmail) updatePayload.clientEmail = normalizeEmail(formData.clientEmail);
+        if (formData.invoiceNumber !== invoice.invoiceNumber) updatePayload.invoiceNumber = normalizeInvoiceNumber(formData.invoiceNumber);
         if (parseFloat(formData.amount) !== invoice.amount) updatePayload.amount = parseFloat(formData.amount);
         if (formData.currency !== invoice.currency) updatePayload.currency = formData.currency;
         if (formData.dueDate !== new Date(invoice.dueDate).toISOString().split('T')[0]) {
@@ -797,189 +819,145 @@ function EditInvoiceModal({ invoice, onClose, onSuccess }: { invoice: Invoice; o
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Failed to update invoice');
+        handleApiError(data);
         return;
       }
 
       onSuccess();
     } catch (err) {
-      setError('An error occurred');
+      handleApiError(err);
     } finally {
       setLoading(false);
     }
   };
 
+  const currencyOptions: FormSelectOption[] = [
+    { value: 'USD', label: 'USD' },
+    { value: 'EUR', label: 'EUR' },
+    { value: 'GBP', label: 'GBP' },
+    { value: 'UZS', label: 'UZS' },
+  ];
+
+  const scheduleOptions: FormSelectOption[] = schedules.map(s => ({
+    value: s.id,
+    label: `${s.name}${s.isDefault ? ' (Default)' : ''}`,
+  }));
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-slate-200">
-          <h2 className="text-xl font-semibold text-slate-900">Edit Invoice</h2>
-          {isLimitedEditMode && (
-            <p className="mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
-              ⚠️ Limited editing: {followUpsSentCount} reminder(s) sent. Only notes can be edited to preserve audit trail.
-            </p>
-          )}
-        </div>
+    <FormModalShell
+      title="Edit Invoice"
+      description={isLimitedEditMode ? `⚠️ Limited editing: ${followUpsSentCount} reminder(s) sent. Only notes can be edited to preserve audit trail.` : 'Update invoice details and settings'}
+      onClose={onClose}
+      stickyFooter
+    >
+      {/* Error Banner */}
+      <FormErrorBanner message={errors.serverError} />
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-              <p className="font-medium">{error}</p>
-            </div>
-          )}
+      {/* Form Sections */}
+      <div className="space-y-6">
+        <FormSection title="Client Information">
+          <FormField id="clientName" label="Client Name" required lockedReason={lockedReason}>
+            <FormInput
+              id="clientName"
+              type="text"
+              value={formData.clientName}
+              onChange={(e) => handleChange('clientName', e.target.value)}
+              disabled={isLimitedEditMode || isLoading}
+              autoComplete="name"
+              autoTrim
+            />
+          </FormField>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Client Name *
-              </label>
-              <input
-                type="text"
-                required
-                disabled={isLimitedEditMode}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
-                value={formData.clientName}
-                onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                title={isLimitedEditMode ? 'Cannot edit after reminders sent' : ''}
+          <FormField id="clientEmail" label="Client Email" required lockedReason={lockedReason}>
+            <FormInput
+              id="clientEmail"
+              type="email"
+              value={formData.clientEmail}
+              onChange={(e) => handleChange('clientEmail', e.target.value)}
+              disabled={isLimitedEditMode || isLoading}
+              autoTrim
+            />
+          </FormField>
+        </FormSection>
+
+        <FormSection title="Invoice Details">
+          <FormField id="invoiceNumber" label="Invoice Number" required hint="e.g., INV-001" lockedReason={lockedReason}>
+            <FormInput
+              id="invoiceNumber"
+              type="text"
+              value={formData.invoiceNumber}
+              onChange={(e) => handleChange('invoiceNumber', e.target.value)}
+              disabled={isLimitedEditMode || isLoading}
+              placeholder="INV-001"
+              autoTrim
+            />
+          </FormField>
+
+          <FormField id="amount" label="Amount" required lockedReason={lockedReason}>
+            <FormAmountInput
+              id="amount"
+              value={formData.amount}
+              onChange={(e) => handleChange('amount', e.target.value)}
+              disabled={isLimitedEditMode || isLoading}
+              currency={formData.currency}
+            />
+          </FormField>
+
+          <FormField id="currency" label="Currency" lockedReason={lockedReason}>
+            <FormSelect
+              id="currency"
+              value={formData.currency}
+              onChange={(e) => handleChange('currency', e.target.value)}
+              options={currencyOptions}
+              disabled={isLimitedEditMode || isLoading}
+            />
+          </FormField>
+
+          <FormField id="dueDate" label="Due Date" required lockedReason={lockedReason}>
+            <FormDateInput
+              id="dueDate"
+              value={formData.dueDate}
+              onChange={(e) => handleChange('dueDate', e.target.value)}
+              disabled={isLimitedEditMode || isLoading}
+            />
+          </FormField>
+        </FormSection>
+
+        {!isLimitedEditMode && schedules.length > 0 && (
+          <FormSection fullWidth>
+            <FormField id="scheduleId" label="Follow-up Schedule" hint="Change the reminder schedule for this invoice. Only available before reminders are sent.">
+              <FormSelect
+                id="scheduleId"
+                value={formData.scheduleId}
+                onChange={(e) => handleChange('scheduleId', e.target.value)}
+                options={scheduleOptions}
+                disabled={isLoading}
               />
-            </div>
+            </FormField>
+          </FormSection>
+        )}
 
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Client Email *
-              </label>
-              <input
-                type="email"
-                required
-                disabled={isLimitedEditMode}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
-                value={formData.clientEmail}
-                onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
-                title={isLimitedEditMode ? 'Cannot edit after reminders sent' : ''}
-              />
-            </div>
+        <FormSection fullWidth>
+          <FormField id="notes" label="Notes" hint={isLimitedEditMode ? 'Only editable field after reminders sent' : 'Optional - can be used for invoice link'}>
+            <FormTextarea
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => handleChange('notes', e.target.value)}
+              disabled={isLoading}
+              placeholder="https://invoice-link.com/inv-001"
+              rows={3}
+            />
+          </FormField>
+        </FormSection>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Invoice Number *
-              </label>
-              <input
-                type="text"
-                required
-                disabled={isLimitedEditMode}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
-                placeholder="INV-001"
-                value={formData.invoiceNumber}
-                onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
-                title={isLimitedEditMode ? 'Cannot edit after reminders sent' : ''}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Amount *
-              </label>
-              <input
-                type="number"
-                required
-                min="0"
-                step="0.01"
-                disabled={isLimitedEditMode}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                title={isLimitedEditMode ? 'Cannot edit after reminders sent' : ''}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Currency
-              </label>
-              <select
-                disabled={isLimitedEditMode}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
-                value={formData.currency}
-                onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                title={isLimitedEditMode ? 'Cannot edit after reminders sent' : ''}
-              >
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
-                <option value="UZS">UZS</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Due Date *
-              </label>
-              <input
-                type="date"
-                required
-                disabled={isLimitedEditMode}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                title={isLimitedEditMode ? 'Cannot edit after reminders sent' : ''}
-              />
-            </div>
-
-            {!isLimitedEditMode && schedules.length > 0 && (
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Follow-up Schedule
-                </label>
-                <select
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm bg-white"
-                  value={formData.scheduleId}
-                  onChange={(e) => setFormData({ ...formData, scheduleId: e.target.value })}
-                >
-                  {schedules.map((schedule) => (
-                    <option key={schedule.id} value={schedule.id}>
-                      {schedule.name}{schedule.isDefault ? ' (Default)' : ''}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-1 text-xs text-slate-500">
-                  Change the reminder schedule for this invoice. Only available before reminders are sent.
-                </p>
-              </div>
-            )}
-
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Notes (optional - can be used for invoice link)
-                {!isLimitedEditMode && <span className="text-slate-500 font-normal"> - Always editable</span>}
-              </label>
-              <textarea
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm"
-                rows={3}
-                placeholder="https://invoice-link.com/inv-001"
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium disabled:opacity-50"
-            >
-              {loading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
+        <FormActions
+          onCancel={onClose}
+          onSubmit={handleSubmit}
+          submitLabel="Save Changes"
+          loading={isLoading}
+          disabled={isLoading}
+        />
       </div>
-    </div>
+    </FormModalShell>
   );
 }
