@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FormSection, FormField, FormInput, FormSelect, FormToggle } from '@/components/form';
 import { H2, SUBTLE, ERROR } from '@/lib/ui/tokens';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 interface UserProfile {
   id: string;
@@ -365,6 +366,12 @@ export default function SettingsPage() {
             <h2 className={`${H2} mb-6`}>Preferences</h2>
             <form onSubmit={handlePreferencesUpdate} className="space-y-6">
               <FormSection fullWidth>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-foreground">Appearance</label>
+                  <p className="text-xs text-muted-foreground mb-2">Choose your preferred theme</p>
+                  <ThemeToggle />
+                </div>
+
                 <FormField id="currency" label="Default Currency">
                   <FormSelect
                     id="currency"
