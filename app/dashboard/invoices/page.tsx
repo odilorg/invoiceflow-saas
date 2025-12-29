@@ -59,6 +59,7 @@ export default function InvoicesPage() {
   const [markingPaidId, setMarkingPaidId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [deleteConfirm, setDeleteConfirm] = useState<Invoice | null>(null);
 
   useEffect(() => {
     loadInvoices();
@@ -137,21 +138,29 @@ export default function InvoicesPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this invoice?')) return;
+  const handleDelete = (invoice: Invoice) => {
+    setDeleteConfirm(invoice);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+
     try {
-      const res = await fetch(`/api/invoices/${id}`, {
+      const res = await fetch(`/api/invoices/${deleteConfirm.id}`, {
         method: 'DELETE',
       });
       if (res.ok) {
         loadInvoices();
+        setDeleteConfirm(null);
         showSuccess('Invoice deleted');
       } else {
         const data = await res.json();
+        setDeleteConfirm(null);
         showError(data.error || 'Failed to delete invoice');
       }
     } catch (error) {
       console.error('Error deleting invoice:', error);
+      setDeleteConfirm(null);
       showError('Network error. Please check your connection and try again.');
     }
   };
@@ -325,7 +334,7 @@ export default function InvoicesPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   ),
-                  onClick: () => handleDelete(invoice.id),
+                  onClick: () => handleDelete(invoice),
                   ariaLabel: 'Delete invoice',
                 }}
               />
@@ -416,7 +425,7 @@ export default function InvoicesPage() {
                           </button>
                         )}
                         <button
-                          onClick={() => handleDelete(invoice.id)}
+                          onClick={() => handleDelete(invoice)}
                           className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-colors"
                           title="Delete invoice"
                         >
@@ -487,6 +496,49 @@ export default function InvoicesPage() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
           <div className="bg-destructive text-background px-4 py-3 rounded-lg shadow-lg text-sm max-w-md">
             {errorMessage}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-foreground">Delete Invoice?</h3>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <p className="text-sm text-foreground">
+                  Are you sure you want to delete invoice <strong>{deleteConfirm.invoiceNumber}</strong> for <strong>{deleteConfirm.clientName}</strong>?
+                </p>
+
+                <p className="text-xs text-muted-foreground">
+                  This action cannot be undone. All follow-up emails for this invoice will be cancelled.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  className="flex-1 px-4 py-2 bg-muted text-foreground text-sm font-medium rounded-lg hover:bg-muted/80 transition-colors min-h-[44px]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-2 bg-destructive text-background text-sm font-medium rounded-lg hover:opacity-90 transition-colors min-h-[44px]"
+                >
+                  Delete Invoice
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -704,6 +756,7 @@ function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuc
               disabled={isLoading}
               autoComplete="name"
               autoTrim
+              autoFocus
             />
           </FormField>
 

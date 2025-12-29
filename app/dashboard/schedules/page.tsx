@@ -58,6 +58,7 @@ export default function SchedulesPage() {
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [deleteConfirm, setDeleteConfirm] = useState<Schedule | null>(null);
 
   useEffect(() => {
     loadSchedules();
@@ -105,26 +106,32 @@ export default function SchedulesPage() {
     }
   }
 
-  const handleDelete = async (id: string, schedule: Schedule) => {
+  const handleDelete = (schedule: Schedule) => {
     // Check if this is the default schedule
     if (schedule.isDefault) {
       showError('Cannot delete the default schedule. Please set another schedule as default first.');
       return;
     }
+    setDeleteConfirm(schedule);
+  };
 
-    if (!confirm('Are you sure you want to delete this schedule? This will not affect existing follow-ups, but new invoices will not use this schedule.')) return;
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
 
     try {
-      const res = await fetch(`/api/schedules/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/schedules/${deleteConfirm.id}`, { method: 'DELETE' });
       if (!res.ok) {
         const data = await res.json();
+        setDeleteConfirm(null);
         showError(data.error || 'Failed to delete schedule');
       } else {
         loadSchedules();
+        setDeleteConfirm(null);
         showSuccess('Schedule deleted');
       }
     } catch (error) {
       console.error('Error deleting schedule:', error);
+      setDeleteConfirm(null);
       showError('Network error. Please check your connection and try again.');
     }
   };
@@ -256,7 +263,7 @@ export default function SchedulesPage() {
                             />
                           </svg>
                         ),
-                        onClick: () => handleDelete(schedule.id, schedule),
+                        onClick: () => handleDelete(schedule),
                         ariaLabel: 'Delete schedule',
                       }
                     : undefined
@@ -314,6 +321,49 @@ export default function SchedulesPage() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
           <div className="bg-destructive text-background px-4 py-3 rounded-lg shadow-lg text-sm max-w-md">
             {errorMessage}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-foreground">Delete Schedule?</h3>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <p className="text-sm text-foreground">
+                  Are you sure you want to delete <strong>{deleteConfirm.name}</strong>?
+                </p>
+
+                <p className="text-xs text-muted-foreground">
+                  This action cannot be undone. This will not affect existing follow-ups, but new invoices will not use this schedule.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  className="flex-1 px-4 py-2 bg-muted text-foreground text-sm font-medium rounded-lg hover:bg-muted/80 transition-colors min-h-[44px]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-2 bg-destructive text-background text-sm font-medium rounded-lg hover:opacity-90 transition-colors min-h-[44px]"
+                >
+                  Delete Schedule
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -513,6 +563,7 @@ function ScheduleModal({
               disabled={isLoading}
               placeholder="e.g., Standard Follow-up"
               autoTrim
+              autoFocus
             />
           </FormField>
 

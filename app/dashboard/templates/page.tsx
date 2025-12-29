@@ -795,6 +795,7 @@ function TemplateModal({
               disabled={isLoading}
               placeholder="e.g., Friendly Reminder"
               autoTrim
+              autoFocus
             />
           </FormField>
 
