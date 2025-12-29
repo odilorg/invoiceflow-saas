@@ -18,8 +18,12 @@ export interface FormInputProps extends Omit<React.InputHTMLAttributes<HTMLInput
   disabled?: boolean;
   /** Whether the input is readonly */
   readOnly?: boolean;
-  /** Autocomplete hint */
+  /** Autocomplete hint (auto-detected from type if not provided) */
   autoComplete?: string;
+  /** Input mode for mobile keyboards (auto-detected from type if not provided) */
+  inputMode?: 'none' | 'text' | 'decimal' | 'numeric' | 'tel' | 'search' | 'email' | 'url';
+  /** Auto-trim whitespace on blur */
+  autoTrim?: boolean;
   /** Optional className override (use sparingly) */
   className?: string;
 }
@@ -57,9 +61,66 @@ export default function FormInput({
   disabled = false,
   readOnly = false,
   autoComplete,
+  inputMode,
+  autoTrim = false,
   className = '',
   ...props
 }: FormInputProps) {
+  // Auto-detect inputMode based on type if not provided
+  const getInputMode = (): 'none' | 'text' | 'decimal' | 'numeric' | 'tel' | 'search' | 'email' | 'url' | undefined => {
+    if (inputMode) return inputMode;
+
+    switch (type) {
+      case 'email':
+        return 'email';
+      case 'tel':
+        return 'tel';
+      case 'url':
+        return 'url';
+      case 'number':
+        return 'decimal';
+      default:
+        return undefined;
+    }
+  };
+
+  // Auto-detect autoComplete based on type if not provided
+  const getAutoComplete = (): string | undefined => {
+    if (autoComplete) return autoComplete;
+
+    switch (type) {
+      case 'email':
+        return 'email';
+      case 'tel':
+        return 'tel';
+      case 'url':
+        return 'url';
+      default:
+        return undefined;
+    }
+  };
+
+  // Handle blur for auto-trim
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (autoTrim && typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed !== value) {
+        // Create synthetic event with trimmed value
+        const syntheticEvent = {
+          ...e,
+          target: { ...e.target, value: trimmed },
+          currentTarget: { ...e.currentTarget, value: trimmed },
+        } as React.ChangeEvent<HTMLInputElement>;
+        onChange(syntheticEvent);
+      }
+    }
+
+    // Call original onBlur if provided
+    if (props.onBlur) {
+      props.onBlur(e);
+    }
+  };
+
   const baseClasses = `
     ${INPUT_H}
     w-full
@@ -86,10 +147,12 @@ export default function FormInput({
       type={type}
       value={value}
       onChange={onChange}
+      onBlur={handleBlur}
       placeholder={placeholder}
       disabled={disabled}
       readOnly={readOnly}
-      autoComplete={autoComplete}
+      autoComplete={getAutoComplete()}
+      inputMode={getInputMode()}
       className={`${baseClasses} ${borderClasses} ${stateClasses} ${className}`.trim()}
       {...props}
     />

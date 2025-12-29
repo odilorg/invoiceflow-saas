@@ -11,6 +11,9 @@ export type { FormFieldProps } from './FormField';
 export { default as FormInput } from './FormInput';
 export type { FormInputProps } from './FormInput';
 
+export { default as FormAmountInput } from './FormAmountInput';
+export type { FormAmountInputProps } from './FormAmountInput';
+
 export { default as FormTextarea } from './FormTextarea';
 export type { FormTextareaProps } from './FormTextarea';
 

@@ -1,7 +1,8 @@
 import React from 'react';
 import { INPUT_H } from '@/lib/ui/tokens';
+import { normalizeDate, formatDate } from '@/lib/ui/input-normalize';
 
-export interface FormDateInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'className' | 'type'> {
+export interface FormDateInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'className' | 'type' | 'min' | 'max'> {
   /** Date input ID (should match FormField id) */
   id: string;
   /** Date value (YYYY-MM-DD format) */
@@ -10,14 +11,16 @@ export interface FormDateInputProps extends Omit<React.InputHTMLAttributes<HTMLI
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   /** Whether the field has an error (changes border color) */
   error?: boolean;
-  /** Minimum date (YYYY-MM-DD format) */
-  min?: string;
-  /** Maximum date (YYYY-MM-DD format) */
-  max?: string;
+  /** Minimum date (YYYY-MM-DD format or Date object) */
+  min?: string | Date;
+  /** Maximum date (YYYY-MM-DD format or Date object) */
+  max?: string | Date;
   /** Whether the input is disabled */
   disabled?: boolean;
   /** Whether the input is readonly */
   readOnly?: boolean;
+  /** Show readable format hint below input (optional) */
+  showReadableHint?: boolean;
   /** Optional className override (use sparingly) */
   className?: string;
 }
@@ -57,9 +60,33 @@ export default function FormDateInput({
   max,
   disabled = false,
   readOnly = false,
+  showReadableHint = false,
   className = '',
   ...props
 }: FormDateInputProps) {
+  // Normalize min/max to YYYY-MM-DD format
+  const getMinDate = (): string | undefined => {
+    if (!min) return undefined;
+    if (typeof min === 'string') return min;
+    return normalizeDate(min) || undefined;
+  };
+
+  const getMaxDate = (): string | undefined => {
+    if (!max) return undefined;
+    if (typeof max === 'string') return max;
+    return normalizeDate(max) || undefined;
+  };
+
+  // Get readable format for display
+  const getReadableDate = (): string => {
+    if (!value) return '';
+    try {
+      return formatDate(value, 'medium');
+    } catch {
+      return value;
+    }
+  };
+
   const baseClasses = `
     ${INPUT_H}
     w-full
@@ -80,17 +107,24 @@ export default function FormDateInput({
     : 'hover:border-ring/50 focus:border-ring cursor-pointer';
 
   return (
-    <input
-      id={id}
-      type="date"
-      value={value}
-      onChange={onChange}
-      min={min}
-      max={max}
-      disabled={disabled}
-      readOnly={readOnly}
-      className={`${baseClasses} ${borderClasses} ${stateClasses} ${className}`.trim()}
-      {...props}
-    />
+    <div className="w-full">
+      <input
+        id={id}
+        type="date"
+        value={value}
+        onChange={onChange}
+        min={getMinDate()}
+        max={getMaxDate()}
+        disabled={disabled}
+        readOnly={readOnly}
+        className={`${baseClasses} ${borderClasses} ${stateClasses} ${className}`.trim()}
+        {...props}
+      />
+      {showReadableHint && value && (
+        <p className="mt-1 text-xs text-muted-foreground">
+          {getReadableDate()}
+        </p>
+      )}
+    </div>
   );
 }
