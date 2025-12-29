@@ -29,10 +29,18 @@ export default function LoginPage() {
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
+      // Harden JSON parsing - handle non-JSON responses safely
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {
+        // Non-JSON response (e.g., 500 HTML error page)
+        setError('Login failed');
+        return;
+      }
 
       if (!res.ok) {
-        setError(data.error || 'Login failed');
+        setError(data?.error || 'Login failed');
         return;
       }
 
@@ -45,7 +53,8 @@ export default function LoginPage() {
       // 2. Must NOT start with '//' (prevents protocol-relative URLs like //evil.com)
       // 3. Only allow safe characters (no protocol schemes like http:, javascript:, data:)
       // 4. Must decode first to prevent encoded bypasses
-      // 5. Fallback to /dashboard if invalid
+      // 5. Max length limit to prevent abuse
+      // 6. Fallback to /dashboard if invalid
       let redirectTo = '/dashboard'; // safe default
 
       if (callbackUrl && typeof callbackUrl === 'string') {
@@ -53,27 +62,37 @@ export default function LoginPage() {
           // Decode URL to prevent encoded bypasses (e.g., %2F%2Fevil.com)
           const decoded = decodeURIComponent(callbackUrl.trim());
 
+          // Check: max length limit (2048 chars)
+          if (decoded.length > 2048) {
+            throw new Error('URL too long');
+          }
+
           // Check: starts with '/' but not '//'
           const isRelativePath = decoded.startsWith('/') && !decoded.startsWith('//');
 
-          // Check: only contains safe URL characters (blocks :, <, >, etc.)
-          // This prevents http:, javascript:, data:, and other protocol schemes
-          const safeCharPattern = /^[a-zA-Z0-9\/_\-?=&%]+$/;
+          // Check: only contains safe URL characters
+          // Allows: alphanumeric, /, _, -, ?, ., ~, =, &, %, #
+          // Blocks: : (protocols), < > (XSS), \ (Windows paths)
+          const safeCharPattern = /^[a-zA-Z0-9\/_\-?.~=&%#]+$/;
           const hasSafeChars = safeCharPattern.test(decoded);
 
           // Additional check: ensure no backslashes (Windows path bypass)
           const noBackslashes = !decoded.includes('\\');
 
-          if (isRelativePath && hasSafeChars && noBackslashes) {
+          // Additional check: ensure no colon (prevents protocol schemes)
+          const noColons = !decoded.includes(':');
+
+          if (isRelativePath && hasSafeChars && noBackslashes && noColons) {
             redirectTo = decoded;
           }
         } catch {
-          // Decode failed - use safe default
+          // Decode failed or validation failed - use safe default
           redirectTo = '/dashboard';
         }
       }
 
-      router.push(redirectTo);
+      // Use replace instead of push to prevent "Back" navigation to login page
+      router.replace(redirectTo);
     } catch (err) {
       setError('An error occurred');
     } finally {
