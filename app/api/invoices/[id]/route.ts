@@ -33,9 +33,7 @@ export async function GET(
     const user = await requireUser();
     const { id } = params;
 
-    // Validate ownership
-    await validateInvoiceOwnership(id, user.id);
-
+    // PHASE 4: Fetch with includes in one query instead of validate + fetch
     const invoice = await prisma.invoice.findFirst({
       where: {
         id,
@@ -50,6 +48,13 @@ export async function GET(
         },
       },
     });
+
+    if (!invoice) {
+      return NextResponse.json(
+        { success: false, error: 'Invoice not found' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
