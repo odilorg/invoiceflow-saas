@@ -1,275 +1,959 @@
-# Invoice Follow-Up SaaS
+# InvoiceFlow - Automated Invoice Follow-Up SaaS
 
-Automatic invoice follow-up reminders to help you get paid faster.
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![License](https://img.shields.io/badge/license-Proprietary-red.svg)
 
-## Features
+**Automated invoice follow-up system that helps businesses get paid faster** by sending scheduled email reminders based on customizable templates and schedules.
 
-- 📧 **Automated Email Reminders** - Send follow-up emails automatically based on your schedule
-- 📅 **Flexible Scheduling** - Customize reminder timing (e.g., day 0, 3, 7, 14 after due date)
-- 📝 **Email Templates** - Friendly, Neutral, and Firm templates (fully editable)
-- 💰 **Billing Integration** - Lemon Squeezy for Pro plan upgrades
-- 🔒 **Secure** - Password hashing, rate limiting, session management
-- 🎯 **Free Plan** - Up to 5 invoices (unlimited for Pro users)
+🌐 **Live:** https://invoice.jahongir-travel.uz
 
-## Tech Stack
+---
 
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Architecture Overview](#-architecture-overview)
+- [Database Schema](#-database-schema)
+- [Project Structure](#-project-structure)
+- [Setup Guide](#-setup-guide)
+- [Environment Variables](#-environment-variables)
+- [Security Features](#-security-features)
+- [Business Logic](#-business-logic)
+- [API Documentation](#-api-documentation)
+- [Deployment](#-deployment)
+- [Testing](#-testing)
+- [Troubleshooting](#-troubleshooting)
+
+---
+
+## 🚀 Features
+
+### Core Features
+- ✅ **Automated Email Reminders** - Scheduled follow-ups based on invoice due dates
+- ✅ **Custom Templates** - Friendly, Neutral, and Firm email templates (fully editable)
+- ✅ **Flexible Scheduling** - Multi-step reminder schedules (e.g., day 0, 3, 7, 14)
+- ✅ **Invoice Management** - Full CRUD with status tracking (Pending, Paid, Overdue, Cancelled)
+- ✅ **Activity Dashboard** - Real-time stats, upcoming reminders, recent activity
+- ✅ **Usage Limits** - Free plan (5 invoices), Starter/Pro (unlimited)
+
+### Authentication & Security
+- ✅ **Session-based Auth** - Custom implementation with httpOnly cookies
+- ✅ **Remember Me** - 7-day vs 30-day session duration
+- ✅ **Password Reset** - Email-based password recovery flow
+- ✅ **Rate Limiting** - Upstash Redis-based rate limiting (5 attempts/15min)
+- ✅ **Input Validation** - Zod schemas on all endpoints
+- ✅ **CSRF Protection** - SameSite cookies + secure headers
+
+### Billing & Subscriptions
+- ✅ **Lemon Squeezy Integration** - Checkout, webhooks, customer portal
+- ✅ **3-Tier Pricing** - Free, Starter, Pro plans
+- ✅ **Webhook Processing** - Subscription lifecycle events
+- ✅ **Usage Tracking** - Invoice count limits per plan
+
+### UX Enhancements
+- ✅ **Dark Mode** - System/Light/Dark theme with persistence
+- ✅ **Toast Notifications** - Success/error feedback
+- ✅ **Responsive Design** - Mobile-first UI with Tailwind CSS
+- ✅ **FAB Navigation** - Mobile quick actions
+- ✅ **Real-time Validation** - Client-side form validation
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
 - **Framework:** Next.js 13.4.19 (App Router)
-- **Database:** PostgreSQL + Prisma ORM
-- **Auth:** Custom session-based authentication
-- **Email:** Resend API
+- **UI:** React 18.2.0, TypeScript 5.1.6
+- **Styling:** Tailwind CSS 3.3.3
+- **Forms:** React Hook Form 7.45.0 + Zod 3.21.4
+- **Testing:** Jest 29.5.0 + React Testing Library 14.0.0
+
+### Backend
+- **Runtime:** Node.js 18+
+- **Database:** PostgreSQL 14+ with Prisma ORM 5.0.0
+- **Auth:** Custom session-based (bcryptjs 2.4.3)
+- **Email:** Brevo API (@getbrevo/brevo 3.0.1)
 - **Billing:** Lemon Squeezy
-- **Deployment:** PM2 + Nginx
+- **Rate Limiting:** Upstash Redis (@upstash/ratelimit 2.0.7)
 
-## Prerequisites
+### DevOps
+- **Deployment:** PM2 (process manager)
+- **Web Server:** Nginx (reverse proxy)
+- **SSL:** Let's Encrypt (Certbot)
+- **Cron:** System crontab or external service
 
-- Node.js 18+ and npm
-- PostgreSQL 14+
-- Resend account (for sending emails)
-- Lemon Squeezy account (for billing, optional)
+---
 
-## Setup Instructions
+## 🏗 Architecture Overview
+
+### App Router Structure (Next.js 13)
+
+```
+app/
+├── (protected)/           # Protected routes (requires auth)
+│   └── dashboard/        # All dashboard pages
+├── api/                  # API routes (RESTful)
+│   ├── auth/            # Authentication endpoints
+│   ├── invoices/        # Invoice CRUD
+│   ├── templates/       # Template management
+│   ├── schedules/       # Schedule management
+│   ├── billing/         # Billing & subscriptions
+│   ├── cron/            # Scheduled jobs
+│   └── webhooks/        # External webhooks (Lemon Squeezy)
+├── login/               # Public login page
+├── register/            # Public registration
+└── page.tsx             # Landing page
+```
+
+### Authentication Flow
+
+1. **Login:** Email/password → bcrypt verification → session creation
+2. **Session:** Stored in PostgreSQL with SHA-256 hashed token
+3. **Cookie:** httpOnly, secure (prod), SameSite=Lax
+4. **Middleware:** Route protection via `middleware.ts`
+5. **Logout:** Session deleted from DB + cookie cleared
+
+### Email Reminder Flow
+
+```
+1. User creates invoice → Auto-generate follow-ups based on schedule
+2. Cron job runs daily → Query pending follow-ups (scheduledDate <= today)
+3. Send emails via Brevo API → Update follow-up status to SENT
+4. Log results → EmailLog table for auditing
+5. Mark invoice reminders complete when all sent
+```
+
+### Billing Flow (Lemon Squeezy)
+
+```
+1. User clicks "Upgrade" → POST /api/billing/checkout → Lemon Squeezy checkout URL
+2. User completes payment → Lemon Squeezy webhook → POST /api/webhooks/lemon-squeezy
+3. Webhook creates/updates Subscription → Update User.planStatus
+4. User gets access to unlimited invoices
+```
+
+---
+
+## 🗄 Database Schema
+
+### Core Models
+
+**User** - Authentication and profile
+- `email` (unique), `passwordHash`, `name`, `planStatus` (FREE/STARTER/PRO)
+- Relations: invoices, templates, schedules, sessions, subscription
+
+**Invoice** - Customer invoices
+- `clientName`, `clientEmail`, `amount`, `currency`, `dueDate`, `status`
+- Reminder tracking: `lastReminderSentAt`, `remindersCompleted`, `remindersEnabled`
+- Relations: user, schedule, followUps
+
+**Template** - Email templates
+- `name`, `subject`, `body` (supports variables: `{clientName}`, `{amount}`, `{dueDate}`, `{invoiceNumber}`, `{daysOverdue}`)
+- Relations: user, scheduleSteps
+
+**Schedule** - Reminder schedules
+- `name`, `isActive`, `isDefault`
+- Relations: user, steps, invoices
+
+**ScheduleStep** - Individual reminder steps
+- `dayOffset` (days from due date), `order`, `templateId`
+- Relations: schedule, template
+
+**FollowUp** - Scheduled reminders
+- `invoiceId`, `templateId`, `scheduledDate`, `status` (PENDING/SENT/SKIPPED)
+- `subject`, `body` (rendered at creation time)
+- Relations: invoice, logs
+
+**EmailLog** - Audit trail
+- `followUpId`, `recipientEmail`, `sentAt`, `success`, `errorMessage`
+
+### Billing Models
+
+**Subscription** - User subscriptions
+- `providerSubscriptionId` (Lemon Squeezy ID), `status`, `renewsAt`, `isActive`
+- Relations: user, billingEvents
+
+**BillingEvent** - Webhook audit
+- `providerEventId`, `providerEventType`, `providerPayload`, `processedAt`
+
+### Security Models
+
+**Session** - Authentication sessions
+- `tokenHash` (SHA-256), `expiresAt`, `revokedAt`
+- Relations: user
+
+**PasswordResetToken** - Password recovery
+- `tokenHash` (SHA-256), `expiresAt`, `usedAt`
+- Relations: user
+
+---
+
+## 📁 Project Structure
+
+```
+invoice-followup-saas/
+├── app/                          # Next.js App Router
+│   ├── (protected)/             # Protected routes group
+│   │   └── dashboard/
+│   │       ├── layout.tsx       # Dashboard layout (server component)
+│   │       ├── DashboardShellClient.tsx  # Client shell (sidebar, header)
+│   │       ├── page.tsx         # Dashboard home (stats, charts)
+│   │       ├── invoices/
+│   │       │   ├── page.tsx     # Invoice list
+│   │       │   └── [id]/page.tsx  # Invoice detail
+│   │       ├── activity/page.tsx   # Activity feed
+│   │       ├── templates/page.tsx  # Template management
+│   │       ├── schedules/page.tsx  # Schedule management
+│   │       ├── settings/page.tsx   # User settings
+│   │       └── billing/page.tsx    # Billing & subscriptions
+│   ├── api/                     # API routes
+│   │   ├── auth/
+│   │   │   ├── login/route.ts
+│   │   │   ├── register/route.ts
+│   │   │   ├── logout/route.ts
+│   │   │   ├── forgot-password/route.ts
+│   │   │   ├── reset-password/route.ts
+│   │   │   └── update-profile/route.ts
+│   │   ├── invoices/
+│   │   │   ├── route.ts         # GET (list), POST (create)
+│   │   │   └── [id]/route.ts    # GET, PATCH, DELETE
+│   │   ├── templates/route.ts   # Template CRUD
+│   │   ├── schedules/route.ts   # Schedule CRUD
+│   │   ├── billing/
+│   │   │   ├── checkout/route.ts  # Create checkout session
+│   │   │   ├── portal/route.ts    # Customer portal URL
+│   │   │   ├── status/route.ts    # Subscription status
+│   │   │   └── usage/route.ts     # Usage limits
+│   │   ├── cron/
+│   │   │   └── run-followups/route.ts  # Daily cron job
+│   │   ├── webhooks/
+│   │   │   └── lemon-squeezy/route.ts  # Billing webhooks
+│   │   ├── dashboard/
+│   │   │   └── stats/route.ts   # Dashboard statistics
+│   │   └── version/route.ts     # Version check
+│   ├── billing/
+│   │   ├── success/page.tsx     # Payment success redirect
+│   │   └── cancel/page.tsx      # Payment cancelled redirect
+│   ├── login/page.tsx           # Login page
+│   ├── register/page.tsx        # Registration page
+│   ├── reset-password/page.tsx  # Password reset
+│   ├── layout.tsx               # Root layout
+│   ├── page.tsx                 # Landing page
+│   └── middleware.ts            # Route protection
+├── components/                   # Reusable UI components
+│   ├── form/                    # Form components
+│   │   ├── FormErrorBanner.tsx
+│   │   ├── FormField.tsx
+│   │   └── FormLabel.tsx
+│   ├── Badge.tsx                # Status badges
+│   ├── ConfirmDialog.tsx        # Delete confirmations
+│   ├── EntityListCard.tsx       # Generic list card
+│   ├── HelpBox.tsx              # Help tooltips
+│   ├── Toast.tsx                # Toast notifications
+│   ├── ToastProvider.tsx        # Toast context
+│   ├── UsageCounter.tsx         # Invoice usage display
+│   ├── theme-provider.tsx       # Dark mode provider
+│   ├── theme-toggle.tsx         # Theme switcher
+│   └── version-check.tsx        # Version mismatch detector
+├── lib/                         # Shared utilities
+│   ├── auth.ts                  # Auth helpers (session, password)
+│   ├── db.ts                    # Prisma client singleton
+│   ├── email.ts                 # Brevo email sender
+│   ├── followups.ts             # Follow-up generation logic
+│   ├── invoice-validation.ts    # Invoice validation schemas
+│   ├── rate-limit.ts            # Upstash rate limiter
+│   ├── api-response.ts          # Standardized API responses
+│   ├── api-error-handler.ts     # Error handling utility
+│   ├── constants.ts             # App constants
+│   ├── performance.ts           # Performance logging
+│   ├── reminder-state.ts        # Reminder state machine
+│   ├── seed-defaults.ts         # Default templates/schedules
+│   ├── help-content.ts          # Help text content
+│   ├── billing/                 # Billing utilities
+│   │   ├── config.ts            # Lemon Squeezy config
+│   │   └── webhook-handler.ts   # Webhook processing
+│   └── ui/                      # UI utilities
+├── prisma/
+│   ├── schema.prisma            # Database schema
+│   └── seed.ts                  # Database seeding
+├── __tests__/                   # Test suite
+│   ├── lib/                     # Unit tests
+│   │   ├── auth.test.ts
+│   │   ├── followups.test.ts
+│   │   └── validation.test.ts
+│   └── components/              # Integration tests
+│       ├── DashboardPage.test.tsx
+│       ├── InvoicesPage.test.tsx
+│       └── ...
+├── scripts/
+│   └── seed-existing-users.ts   # Migration script
+├── public/                      # Static assets
+├── .env                         # Environment variables
+├── .env.example                 # Env template
+├── next.config.js               # Next.js config
+├── tailwind.config.js           # Tailwind config
+├── tsconfig.json                # TypeScript config
+├── jest.config.js               # Jest config
+├── package.json                 # Dependencies
+└── README.md                    # This file
+```
+
+---
+
+## 🔧 Setup Guide
+
+### Prerequisites
+
+- **Node.js** 18+ and pnpm (or npm)
+- **PostgreSQL** 14+
+- **Brevo** account (for sending emails)
+- **Lemon Squeezy** account (for billing, optional)
+- **Upstash** Redis account (for rate limiting)
 
 ### 1. Clone and Install
 
 ```bash
-git clone <repository-url>
-cd invoice-followup-saas
-npm install
+git clone https://github.com/odilorg/invoiceflow-saas.git
+cd invoiceflow-saas
+pnpm install
 ```
 
-### 2. Environment Variables
-
-Copy the example environment file:
+### 2. Database Setup
 
 ```bash
-cp .env.example .env
-```
+# Create PostgreSQL database
+createdb invoice_followup
 
-Edit `.env` and fill in your values:
-
-```bash
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/invoice_followup
-
-# Email (Get from https://resend.com)
-RESEND_API_KEY=re_xxxxxxxxxxxx
-EMAIL_FROM=Invoice Reminders <reminders@yourdomain.com>
-
-# Cron Secret (generate with: openssl rand -hex 32)
-CRON_SECRET=your-secure-random-secret
-
-# Billing (Get from https://lemonsqueezy.com)
-LEMON_STORE_ID=12345
-LEMON_API_KEY=sk_xxxxxxxxxxxx
-LEMON_WEBHOOK_SECRET=whsec_xxxxxxxxxxxx
-LEMON_CHECKOUT_URL=https://yourstore.lemonsqueezy.com/checkout/buy/xxx
-```
-
-### 3. Database Setup
-
-```bash
 # Generate Prisma client
-npm run db:generate
+pnpm db:generate
 
-# Push schema to database (development)
-npm run db:push
-
-# OR run migrations (production)
-npx prisma migrate deploy
+# Push schema to database
+pnpm db:push
 
 # Seed default templates and demo user
-npm run db:seed
+pnpm db:seed
 ```
 
-This creates:
+**Seeded data:**
 - Demo user: `demo@invoiceflow.com` / `demo123456`
-- 3 default templates (Friendly, Neutral, Firm)
-- Default schedule (day 0, 3, 7, 14)
+- 3 templates: Friendly, Neutral, Firm
+- 1 default schedule: Day 0, 3, 7, 14
+
+### 3. Environment Variables
+
+See [Environment Variables](#-environment-variables) section below.
 
 ### 4. Run Development Server
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
-Open [http://localhost:3005](http://localhost:3005)
+Open http://localhost:3005
 
 ### 5. Build for Production
 
 ```bash
-npm run build
-npm start
+pnpm build
+pnpm start
 ```
 
-## Cron Job Setup
+---
 
-The app needs a cron job to send scheduled follow-up emails.
+## 🌍 Environment Variables
 
-### Option 1: System Crontab
-
-Add to your crontab (`crontab -e`):
+Create `.env` file in project root:
 
 ```bash
-# Run follow-ups daily at 9 AM
-0 9 * * * curl -X POST https://yourdomain.com/api/cron/run-followups \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
+# Database
+DATABASE_URL="postgresql://user:password@localhost:5432/invoice_followup"
+
+# Email (Brevo)
+BREVO_API_KEY="xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+EMAIL_FROM="Invoice Reminders <no-reply@yourdomain.com>"
+
+# Cron Secret (generate with: openssl rand -hex 32)
+CRON_SECRET="your-secure-random-secret-here"
+
+# Billing (Lemon Squeezy)
+LEMON_STORE_ID="12345"
+LEMON_API_KEY="sk_xxxxxxxxxxxx"
+LEMON_WEBHOOK_SECRET="whsec_xxxxxxxxxxxx"
+LEMON_STARTER_MONTHLY_VARIANT_ID="123456"
+LEMON_STARTER_YEARLY_VARIANT_ID="123457"
+LEMON_PRO_MONTHLY_VARIANT_ID="123458"
+LEMON_PRO_YEARLY_VARIANT_ID="123459"
+
+# Rate Limiting (Upstash Redis)
+UPSTASH_REDIS_REST_URL="https://your-redis.upstash.io"
+UPSTASH_REDIS_REST_TOKEN="your-token-here"
+
+# App URLs
+NEXT_PUBLIC_APP_URL="https://invoice.jahongir-travel.uz"
+NEXT_PUBLIC_VERSION="1.0.0"
+
+# Node Environment
+NODE_ENV="production"  # or "development"
 ```
 
-### Option 2: External Cron Service
+### Getting API Keys
 
-Use services like:
-- [EasyCron](https://www.easycron.com/)
-- [cron-job.org](https://cron-job.org/)
-- [UptimeRobot](https://uptimerobot.com/) (with HTTP monitoring)
+**Brevo (Email):**
+1. Sign up at https://www.brevo.com
+2. Go to Settings → API Keys → Create new API key
+3. Verify sender email/domain in Settings → Senders
 
-Configure them to POST to:
+**Lemon Squeezy (Billing):**
+1. Sign up at https://lemonsqueezy.com
+2. Create store and products
+3. Get API key from Settings → API
+4. Get variant IDs from product URLs
+5. Create webhook pointing to `https://yourdomain.com/api/webhooks/lemon-squeezy`
+
+**Upstash (Rate Limiting):**
+1. Sign up at https://upstash.com
+2. Create Redis database
+3. Copy REST URL and token from database details
+
+---
+
+## 🔐 Security Features
+
+### Authentication
+
+✅ **Password Hashing** - bcrypt with 10 rounds
+✅ **Session Tokens** - Cryptographically secure (crypto.randomBytes)
+✅ **Token Storage** - SHA-256 hashed in database (plaintext never stored)
+✅ **Session Expiration** - 7 days (unchecked) / 30 days (remember me)
+✅ **Session Revocation** - Logout deletes session from DB
+✅ **Cookie Security** - httpOnly, secure (prod), SameSite=Lax
+
+### Rate Limiting
+
+✅ **Login Protection** - 5 attempts per 15 minutes (per IP)
+✅ **API Rate Limits** - 100 requests per minute (per user)
+✅ **Email Rate Limits** - Max 3 emails per follow-up per day
+✅ **Upstash Redis** - Distributed rate limiting
+
+### Input Validation
+
+✅ **Zod Schemas** - All API endpoints validate input
+✅ **Email Validation** - RFC-compliant email regex
+✅ **SQL Injection Protection** - Prisma parameterized queries
+✅ **XSS Protection** - React auto-escaping + CSP headers
+
+### CSRF Protection
+
+✅ **SameSite Cookies** - Prevents cross-site attacks
+✅ **Origin Validation** - Webhook signature verification
+✅ **POST-only Mutations** - No sensitive GET requests
+
+### Data Protection
+
+✅ **Secrets Never Exposed** - No client-side env vars
+✅ **Error Sanitization** - No stack traces in production
+✅ **Audit Logs** - EmailLog table tracks all sent emails
+✅ **Soft Deletes** - Session revocation preserves history
+
+---
+
+## 💼 Business Logic
+
+### Invoice Reminder System
+
+**Follow-up Generation:**
+1. User creates invoice → System finds active schedule (or default)
+2. Generate FollowUp records for each schedule step
+3. Calculate `scheduledDate = invoice.dueDate + step.dayOffset`
+4. Render email body with variable substitution at creation time
+
+**Reminder Sending (Cron Job):**
+1. Query: `status = PENDING AND scheduledDate <= today`
+2. For each follow-up:
+   - Send email via Brevo API
+   - Create EmailLog record
+   - Update FollowUp.status to SENT
+   - Update Invoice.lastReminderSentAt
+3. If all follow-ups sent → Mark Invoice.remindersCompleted = true
+
+**Reminder State Management:**
+- **Due Date Change:** Recalculate all pending follow-ups
+- **Mark as Paid:** Skip all pending follow-ups
+- **Pause Reminders:** Set Invoice.remindersEnabled = false
+- **Resume Reminders:** Regenerate follow-ups from current date
+
+### Usage Limits
+
+**Free Plan:**
+- 5 invoices maximum
+- Check: `SELECT COUNT(*) FROM Invoice WHERE userId = ? AND status != 'CANCELLED'`
+- Block invoice creation if count >= 5
+
+**Starter/Pro Plans:**
+- Unlimited invoices
+- Set User.planStatus via webhook when subscription activates
+
+### Template Variables
+
+Supported placeholders in email templates:
+- `{clientName}` → Invoice.clientName
+- `{amount}` → Invoice.amount (formatted with currency)
+- `{dueDate}` → Invoice.dueDate (formatted as "Jan 15, 2025")
+- `{invoiceNumber}` → Invoice.invoiceNumber
+- `{daysOverdue}` → Calculated from dueDate (only if overdue)
+
+Example:
 ```
-URL: https://yourdomain.com/api/cron/run-followups
-Header: Authorization: Bearer YOUR_CRON_SECRET
-Method: POST
-Schedule: Daily at 9 AM (or your preferred time)
+Subject: Reminder: Invoice {invoiceNumber} payment due
+
+Hi {clientName},
+
+This is a friendly reminder that Invoice {invoiceNumber} for {amount}
+was due on {dueDate}.
+
+Please process payment at your earliest convenience.
+
+Best regards,
+Your Company
 ```
 
-## Available Scripts
+### Subscription Lifecycle
 
+**Webhook Events Handled:**
+- `subscription_created` → Create Subscription record
+- `subscription_updated` → Update status, renewsAt
+- `subscription_payment_success` → Activate subscription
+- `subscription_cancelled` → Set endsAt, keep active until end
+- `subscription_expired` → Deactivate, set User.planStatus = FREE
+
+---
+
+## 📡 API Documentation
+
+### Authentication Endpoints
+
+**POST /api/auth/register**
+```json
+Request:
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "John Doe"  // optional
+}
+
+Response (200):
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "clx...",
+      "email": "user@example.com",
+      "name": "John Doe"
+    }
+  }
+}
+```
+
+**POST /api/auth/login**
+```json
+Request:
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "rememberMe": true  // optional, default true
+}
+
+Response (200):
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "clx...",
+      "email": "user@example.com"
+    }
+  }
+}
+```
+
+**POST /api/auth/logout**
+```json
+Response (200):
+{
+  "success": true
+}
+```
+
+### Invoice Endpoints
+
+**GET /api/invoices**
+```
+Headers: Cookie: session_token=...
+
+Response (200):
+{
+  "success": true,
+  "data": [
+    {
+      "id": "clx...",
+      "clientName": "Acme Corp",
+      "clientEmail": "billing@acme.com",
+      "amount": 1500.00,
+      "currency": "USD",
+      "invoiceNumber": "INV-001",
+      "dueDate": "2025-01-15T00:00:00Z",
+      "status": "PENDING",
+      "followUps": [
+        {
+          "id": "clx...",
+          "scheduledDate": "2025-01-15T00:00:00Z",
+          "status": "PENDING",
+          "subject": "Reminder: Invoice INV-001 payment due"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**POST /api/invoices**
+```json
+Request:
+{
+  "clientName": "Acme Corp",
+  "clientEmail": "billing@acme.com",
+  "amount": 1500.00,
+  "currency": "USD",
+  "invoiceNumber": "INV-001",
+  "dueDate": "2025-01-15",
+  "scheduleId": "clx...",  // optional, uses default if omitted
+  "notes": "Net 30 payment terms"  // optional
+}
+
+Response (201):
+{
+  "success": true,
+  "data": {
+    "id": "clx...",
+    "clientName": "Acme Corp",
+    ...
+  }
+}
+```
+
+**PATCH /api/invoices/:id**
+```json
+Request:
+{
+  "status": "PAID",  // optional
+  "dueDate": "2025-01-20",  // optional
+  "notes": "Updated notes"  // optional
+}
+
+Response (200):
+{
+  "success": true,
+  "data": { ... }
+}
+```
+
+**DELETE /api/invoices/:id**
+```
+Response (200):
+{
+  "success": true
+}
+```
+
+### Cron Endpoint
+
+**POST /api/cron/run-followups**
+```
+Headers:
+  Authorization: Bearer YOUR_CRON_SECRET
+
+Response (200):
+{
+  "success": true,
+  "data": {
+    "processed": 5,
+    "sent": 4,
+    "failed": 1,
+    "details": [
+      {
+        "followUpId": "clx...",
+        "invoiceNumber": "INV-001",
+        "clientEmail": "billing@acme.com",
+        "status": "sent"
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 🚀 Deployment
+
+### Production Deployment (PM2 + Nginx)
+
+**1. Build Application**
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm start            # Start production server
-npm run lint         # Run ESLint
-npm test             # Run tests
-npm run test:watch   # Run tests in watch mode
-npm run test:coverage # Generate coverage report
-npm run db:generate  # Generate Prisma client
-npm run db:push      # Push schema to database
-npm run db:migrate   # Run migrations
-npm run db:seed      # Seed database with defaults
+cd /domains/invoice.jahongir-travel.uz
+pnpm install
+pnpm build
 ```
 
-## Project Structure
-
-```
-invoice-followup-saas/
-├── app/                      # Next.js 13 App Router
-│   ├── api/                  # API routes
-│   │   ├── auth/            # Authentication endpoints
-│   │   ├── invoices/        # Invoice CRUD
-│   │   ├── templates/       # Template management
-│   │   ├── schedules/       # Schedule management
-│   │   ├── cron/            # Cron job endpoint
-│   │   └── webhooks/        # Lemon Squeezy webhooks
-│   ├── dashboard/           # Dashboard page
-│   ├── login/               # Login page
-│   ├── register/            # Registration page
-│   └── page.tsx             # Landing page
-├── lib/                      # Shared utilities
-│   ├── auth.ts              # Authentication helpers
-│   ├── db.ts                # Prisma client
-│   ├── followups.ts         # Follow-up generation logic
-│   ├── constants.ts         # App constants
-│   └── rate-limit.ts        # Rate limiting
-├── prisma/                   # Database
-│   ├── schema.prisma        # Database schema
-│   └── seed.ts              # Seed script
-├── __tests__/               # Tests
-└── package.json
-```
-
-## Security Features
-
-- ✅ Passwords hashed with bcrypt (10 rounds)
-- ✅ Rate limiting on login (5 attempts per 15 minutes)
-- ✅ Server-side route protection
-- ✅ Session-based authentication (30-day expiry)
-- ✅ CSRF protection (httpOnly cookies)
-- ✅ Input validation (Zod schemas)
-- ✅ Secrets never exposed to client
-
-## Testing
-
-Run the test suite:
-
+**2. Start with PM2**
 ```bash
-npm test                # Run all tests
-npm run test:watch      # Watch mode
-npm run test:coverage   # Coverage report
-```
-
-Test coverage includes:
-- Authentication (password hashing, verification)
-- Validation schemas
-- Template rendering
-- Follow-up generation logic
-- API endpoints
-
-## Deployment
-
-### PM2 (Production)
-
-```bash
-# Build
-npm run build
-
-# Start with PM2
 pm2 start npm --name "invoice-followup" -- start
-
-# Save PM2 config
 pm2 save
-
-# Auto-restart on server reboot
 pm2 startup
 ```
 
-### Nginx Configuration
-
+**3. Nginx Configuration**
 ```nginx
+# /etc/nginx/sites-available/invoice.jahongir-travel.uz.conf
 server {
-    listen 80;
-    server_name yourdomain.com;
+    server_name invoice.jahongir-travel.uz;
 
     location / {
-        proxy_pass http://localhost:3005;
+        proxy_pass http://127.0.0.1:3005;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
     }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/invoice.jahongir-travel.uz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/invoice.jahongir-travel.uz/privkey.pem;
+}
+
+server {
+    if ($host = invoice.jahongir-travel.uz) {
+        return 301 https://$host$request_uri;
+    }
+    listen 80;
+    server_name invoice.jahongir-travel.uz;
+    return 404;
 }
 ```
 
-## Troubleshooting
+**4. Enable Site and Reload Nginx**
+```bash
+ln -s /etc/nginx/sites-available/invoice.jahongir-travel.uz.conf /etc/nginx/sites-enabled/
+nginx -t
+systemctl reload nginx
+```
 
-### "Too many login attempts"
+**5. SSL Certificate (Let's Encrypt)**
+```bash
+certbot --nginx -d invoice.jahongir-travel.uz
+```
+
+**6. Setup Cron Job**
+```bash
+crontab -e
+```
+
+Add:
+```cron
+# Run follow-ups daily at 9 AM
+0 9 * * * curl -X POST https://invoice.jahongir-travel.uz/api/cron/run-followups -H "Authorization: Bearer YOUR_CRON_SECRET"
+```
+
+### PM2 Management Commands
+
+```bash
+pm2 list                    # List all processes
+pm2 logs invoice-followup   # View logs
+pm2 restart invoice-followup  # Restart app
+pm2 stop invoice-followup   # Stop app
+pm2 delete invoice-followup # Delete app
+pm2 monit                   # Real-time monitoring
+```
+
+---
+
+## 🧪 Testing
+
+### Run Tests
+
+```bash
+pnpm test              # Run all tests
+pnpm test:watch        # Watch mode
+pnpm test:coverage     # Coverage report
+```
+
+### Test Coverage
+
+**Unit Tests (`__tests__/lib/`):**
+- ✅ `auth.test.ts` - Password hashing, session creation
+- ✅ `followups.test.ts` - Follow-up generation logic
+- ✅ `validation.test.ts` - Zod schema validation
+- ✅ `constants.test.ts` - Default values
+
+**Integration Tests (`__tests__/components/`):**
+- ✅ `DashboardPage.test.tsx` - Dashboard rendering
+- ✅ `InvoicesPage.test.tsx` - Invoice CRUD
+- ✅ `TemplatesPage.test.tsx` - Template management
+- ✅ `SchedulesPage.test.tsx` - Schedule management
+- ✅ `ActivityPage.test.tsx` - Activity feed
+
+**Coverage Goals:**
+- Unit tests: >80%
+- Integration tests: >60%
+- E2E tests: Critical paths (login, create invoice, send reminder)
+
+---
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**"Too many login attempts"**
 - Rate limiting is working correctly
-- Wait 15 minutes or reset via database:
-  ```sql
-  -- No database table for rate limit (in-memory)
-  -- Just restart the app: pm2 restart invoice-followup
-  ```
+- Wait 15 minutes or restart app: `pm2 restart invoice-followup`
 
-### Emails not sending
-1. Check Resend API key is correct
-2. Verify EMAIL_FROM domain is verified in Resend
-3. Check cron job is running:
+**Emails not sending**
+1. Verify Brevo API key: `echo $BREVO_API_KEY`
+2. Check sender email verified in Brevo dashboard
+3. Test manually:
    ```bash
    curl -X POST http://localhost:3005/api/cron/run-followups \
      -H "Authorization: Bearer YOUR_CRON_SECRET"
    ```
-4. Check logs: `pm2 logs invoice-followup`
+4. Check logs: `pm2 logs invoice-followup --lines 100`
 
-### Database connection issues
+**Database connection errors**
 1. Verify DATABASE_URL in `.env`
-2. Ensure PostgreSQL is running
-3. Test connection:
-   ```bash
-   npx prisma db pull
-   ```
+2. Check PostgreSQL running: `systemctl status postgresql`
+3. Test connection: `npx prisma db pull`
 
-## License
+**Build errors**
+1. Clear Next.js cache: `rm -rf .next`
+2. Reinstall dependencies: `rm -rf node_modules && pnpm install`
+3. Regenerate Prisma client: `pnpm db:generate`
+
+**Session expires too quickly**
+- Check `SESSION_DURATION_SHORT` in `lib/auth.ts` (default 7 days)
+- Ensure "Remember me" checkbox works (should be 30 days)
+
+**Follow-ups not being generated**
+1. Check invoice has scheduleId set (or default schedule exists)
+2. Query: `SELECT * FROM Schedule WHERE isDefault = true LIMIT 1`
+3. If no default: Run `pnpm db:seed`
+
+**Lemon Squeezy webhook not working**
+1. Verify webhook URL: `https://yourdomain.com/api/webhooks/lemon-squeezy`
+2. Check webhook secret matches `.env`
+3. View webhook logs in Lemon Squeezy dashboard
+4. Check BillingEvent table: `SELECT * FROM BillingEvent ORDER BY createdAt DESC`
+
+---
+
+## 📊 Performance Optimizations
+
+### Database Indexes
+
+All hot paths have composite indexes:
+- `Invoice`: `[userId, createdAt]`, `[userId, status]`, `[status, remindersEnabled]`
+- `FollowUp`: `[status, scheduledDate]` (critical for cron job)
+- `Session`: `[tokenHash]` (auth lookup)
+- `Template`: `[userId, createdAt]`
+
+### Query Optimization
+
+**Invoice List (Dashboard):**
+```typescript
+// Optimized query with selective includes
+const invoices = await prisma.invoice.findMany({
+  where: { userId },
+  include: {
+    followUps: {
+      where: { status: 'PENDING' },
+      orderBy: { scheduledDate: 'asc' },
+      take: 1  // Only next reminder
+    }
+  },
+  orderBy: { createdAt: 'desc' }
+});
+```
+
+**Cron Job Query:**
+```typescript
+// Uses composite index [status, scheduledDate]
+const pendingFollowUps = await prisma.followUp.findMany({
+  where: {
+    status: 'PENDING',
+    scheduledDate: { lte: new Date() }
+  },
+  include: { invoice: true }
+});
+```
+
+---
+
+## 📝 Roadmap
+
+### Planned Features
+
+- [ ] **Multi-language Support** - i18n for email templates
+- [ ] **SMS Reminders** - Twilio integration
+- [ ] **Recurring Invoices** - Auto-create monthly/yearly invoices
+- [ ] **Payment Links** - Stripe/PayPal integration
+- [ ] **Analytics Dashboard** - Charts, trends, insights
+- [ ] **Team Collaboration** - Multi-user accounts
+- [ ] **API Access** - Public REST API for integrations
+- [ ] **Zapier Integration** - Connect to 5000+ apps
+- [ ] **Mobile App** - React Native iOS/Android
+
+### Security Roadmap
+
+- [ ] **"Log out from all devices"** - Revoke all sessions
+- [ ] **Active Sessions Management** - View/revoke individual sessions
+- [ ] **2FA (TOTP)** - Authenticator app support
+- [ ] **Audit Logs** - User action tracking
+- [ ] **IP Whitelisting** - Restrict access by IP
+
+---
+
+## 📄 License
 
 Proprietary - All rights reserved
 
-## Support
+---
 
-For issues or questions, contact support@yourdomain.com
+## 🤝 Support
+
+For technical issues or questions:
+- **Email:** support@jahongir-travel.uz
+- **GitHub Issues:** https://github.com/odilorg/invoiceflow-saas/issues
+
+---
+
+## 👨‍💻 Development Team
+
+**Developer:** Odil Khamidov
+**Company:** Jahongir Travel
+**Version:** 1.0.0
+**Last Updated:** December 2025
+
+---
+
+## 📚 Additional Resources
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [Brevo API Docs](https://developers.brevo.com/)
+- [Lemon Squeezy Webhooks](https://docs.lemonsqueezy.com/api/webhooks)
+- [Upstash Redis](https://docs.upstash.com/redis)
+
+---
+
+**Built with ❤️ using Next.js, Prisma, and Tailwind CSS**
