@@ -216,20 +216,42 @@ export default function Home() {
 
       {/* Pricing Section */}
       <section className="py-12 px-6 md:py-14">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-slate-900">
               Pricing
             </h2>
+            <p className="text-slate-600 mt-2 text-sm">
+              Choose the plan that fits your business needs
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {/* Free Plan */}
             <div className="bg-white border-2 border-slate-200 rounded-lg p-6">
               <h3 className="text-2xl font-bold text-slate-900 mb-1">Free</h3>
-              <div className="mb-5 space-y-1">
-                <p className="text-slate-600 text-sm">Up to 5 invoices</p>
-                <p className="text-slate-600 text-sm">All reminder features included</p>
+              <p className="text-3xl font-bold text-slate-900 mb-4">
+                $0<span className="text-sm text-slate-600 font-normal">/month</span>
+              </p>
+              <div className="mb-5 space-y-2">
+                <p className="text-slate-700 text-sm flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  3 invoices per month
+                </p>
+                <p className="text-slate-700 text-sm flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  1 schedule
+                </p>
+                <p className="text-slate-700 text-sm flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  3 email templates
+                </p>
               </div>
               <a
                 href="/register"
@@ -239,13 +261,88 @@ export default function Home() {
               </a>
             </div>
 
-            {/* Pro Plan */}
-            <div className="bg-indigo-600 border-2 border-indigo-700 rounded-lg p-6">
-              <h3 className="text-2xl font-bold text-white mb-1">Pro — $12/month</h3>
-              <div className="mb-5 space-y-1">
-                <p className="text-indigo-100 text-sm">Unlimited invoices</p>
-                <p className="text-indigo-100 text-sm">Unlimited reminders</p>
-                <p className="text-indigo-100 text-sm">Priority support</p>
+            {/* Starter Plan */}
+            <div className="bg-white border-2 border-slate-200 rounded-lg p-6">
+              <h3 className="text-2xl font-bold text-slate-900 mb-1">Starter</h3>
+              <p className="text-3xl font-bold text-slate-900 mb-4">
+                $9<span className="text-sm text-slate-600 font-normal">/month</span>
+              </p>
+              <div className="mb-5 space-y-2">
+                <p className="text-slate-700 text-sm flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  50 invoices per month
+                </p>
+                <p className="text-slate-700 text-sm flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  5 schedules
+                </p>
+                <p className="text-slate-700 text-sm flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  10 email templates
+                </p>
+                <p className="text-slate-700 text-sm flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Export to CSV
+                </p>
+              </div>
+              <a
+                href="/register"
+                className="block w-full px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors text-center font-semibold text-sm"
+              >
+                Get started
+              </a>
+            </div>
+
+            {/* Professional Plan */}
+            <div className="bg-indigo-600 border-2 border-indigo-700 rounded-lg p-6 relative">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <span className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  MOST POPULAR
+                </span>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-1 mt-3">Professional</h3>
+              <p className="text-3xl font-bold text-white mb-4">
+                $29<span className="text-sm text-indigo-100 font-normal">/month</span>
+              </p>
+              <div className="mb-5 space-y-2">
+                <p className="text-indigo-50 text-sm flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Unlimited invoices
+                </p>
+                <p className="text-indigo-50 text-sm flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Unlimited schedules
+                </p>
+                <p className="text-indigo-50 text-sm flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Unlimited templates
+                </p>
+                <p className="text-indigo-50 text-sm flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Priority support
+                </p>
+                <p className="text-indigo-50 text-sm flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  API access (soon)
+                </p>
               </div>
               <a
                 href="/register"
@@ -256,8 +353,8 @@ export default function Home() {
             </div>
           </div>
 
-          <p className="text-center text-slate-500 mt-5 text-sm">
-            Upgrade anytime. Cancel anytime.
+          <p className="text-center text-slate-500 mt-6 text-sm">
+            Upgrade anytime. Cancel anytime. <span className="font-medium">Save 17% with yearly billing.</span>
           </p>
         </div>
       </section>
