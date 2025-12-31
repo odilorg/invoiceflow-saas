@@ -1,3 +1,5 @@
+import { PricingCard } from '@/components/PricingCard';
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-white">
@@ -6,8 +8,8 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-indigo-600 rounded-lg" role="img" aria-label="InvoiceFlow logo"></div>
-              <span className="text-lg font-semibold text-slate-900">InvoiceFlow</span>
+              <div className="w-7 h-7 bg-indigo-600 rounded-lg" role="img" aria-label="Billza logo"></div>
+              <span className="text-lg font-semibold text-slate-900">Billza</span>
             </div>
             <div className="flex items-center gap-3">
               <a
@@ -64,11 +66,11 @@ export default function Home() {
       <section className="py-12 px-6 md:py-14">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-slate-900 mb-5">
-            Why InvoiceFlow
+            Why Billza
           </h2>
           <div className="text-base md:text-lg text-slate-600 leading-relaxed space-y-3">
             <p>Late payments are normal. Chasing them shouldn't be your job.</p>
-            <p>InvoiceFlow provides invoice follow-up automation that sends professional email reminders on your schedule until an invoice is paid — calmly, consistently, and without awkwardness.</p>
+            <p>Billza provides invoice follow-up automation that sends professional email reminders on your schedule until an invoice is paid — calmly, consistently, and without awkwardness.</p>
             <p className="font-medium text-slate-700 pt-1">
               No accounting.<br />
               No payment processing.<br />
@@ -227,130 +229,49 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {/* Free Plan */}
-            <div className="bg-white border-2 border-slate-200 rounded-lg p-6">
-              <h3 className="text-2xl font-bold text-slate-900 mb-1">Free</h3>
-              <p className="text-3xl font-bold text-slate-900 mb-4">
-                $0<span className="text-sm text-slate-600 font-normal">/month</span>
-              </p>
-              <div className="mb-5 space-y-2">
-                <p className="text-slate-700 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  3 invoices per month
-                </p>
-                <p className="text-slate-700 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  1 schedule
-                </p>
-                <p className="text-slate-700 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  3 email templates
-                </p>
-              </div>
-              <a
-                href="/register"
-                className="block w-full px-5 py-2.5 bg-white border-2 border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 transition-colors text-center font-semibold text-sm"
-              >
-                Start free
-              </a>
-            </div>
-
-            {/* Starter Plan */}
-            <div className="bg-white border-2 border-slate-200 rounded-lg p-6">
-              <h3 className="text-2xl font-bold text-slate-900 mb-1">Starter</h3>
-              <p className="text-3xl font-bold text-slate-900 mb-4">
-                $9<span className="text-sm text-slate-600 font-normal">/month</span>
-              </p>
-              <div className="mb-5 space-y-2">
-                <p className="text-slate-700 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  50 invoices per month
-                </p>
-                <p className="text-slate-700 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  5 schedules
-                </p>
-                <p className="text-slate-700 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  10 email templates
-                </p>
-                <p className="text-slate-700 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Export to CSV
-                </p>
-              </div>
-              <a
-                href="/register"
-                className="block w-full px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors text-center font-semibold text-sm"
-              >
-                Get started
-              </a>
-            </div>
-
-            {/* Professional Plan */}
-            <div className="bg-indigo-600 border-2 border-indigo-700 rounded-lg p-6 relative">
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <span className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  MOST POPULAR
-                </span>
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-1 mt-3">Professional</h3>
-              <p className="text-3xl font-bold text-white mb-4">
-                $29<span className="text-sm text-indigo-100 font-normal">/month</span>
-              </p>
-              <div className="mb-5 space-y-2">
-                <p className="text-indigo-50 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Unlimited invoices
-                </p>
-                <p className="text-indigo-50 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Unlimited schedules
-                </p>
-                <p className="text-indigo-50 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Unlimited templates
-                </p>
-                <p className="text-indigo-50 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Priority support
-                </p>
-                <p className="text-indigo-50 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  API access (soon)
-                </p>
-              </div>
-              <a
-                href="/register"
-                className="block w-full px-5 py-2.5 bg-white text-indigo-600 rounded-lg hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600 transition-colors text-center font-semibold text-sm"
-              >
-                Upgrade to Pro
-              </a>
-            </div>
+            <PricingCard
+              variant="landing"
+              name="Free"
+              price="$0"
+              priceInterval="month"
+              features={[
+                { text: '3 invoices per month', included: true },
+                { text: '1 schedule', included: true },
+                { text: '3 email templates', included: true },
+              ]}
+              ctaText="Start free"
+              ctaHref="/register"
+            />
+            <PricingCard
+              variant="landing"
+              name="Starter"
+              price="$9"
+              priceInterval="month"
+              features={[
+                { text: '100 invoices per month', included: true },
+                { text: '5 schedules', included: true },
+                { text: '10 email templates', included: true },
+              ]}
+              ctaText="Get started"
+              ctaHref="/register"
+            />
+            <PricingCard
+              variant="landing"
+              name="Professional"
+              price="$29"
+              priceInterval="month"
+              features={[
+                { text: 'Unlimited invoices', included: true },
+                { text: 'Unlimited schedules', included: true },
+                { text: 'Unlimited templates', included: true },
+                { text: 'Priority support', included: true },
+                { text: 'API access (soon)', included: true },
+              ]}
+              isPopular={true}
+              isHighlighted={true}
+              ctaText="Upgrade to Pro"
+              ctaHref="/register"
+            />
           </div>
 
           <p className="text-center text-slate-500 mt-6 text-sm">
@@ -375,14 +296,14 @@ export default function Home() {
 
           <div className="space-y-5">
             <div className="border-b border-slate-200 pb-5">
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Does InvoiceFlow create invoices?</h3>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Does Billza create invoices?</h3>
               <p className="text-slate-600 leading-relaxed text-sm max-w-2xl">
-                No. InvoiceFlow only handles follow-up emails for existing invoices.
+                No. Billza only handles follow-up emails for existing invoices.
               </p>
             </div>
 
             <div className="border-b border-slate-200 pb-5">
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Does InvoiceFlow process payments?</h3>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Does Billza process payments?</h3>
               <p className="text-slate-600 leading-relaxed text-sm max-w-2xl">
                 No. You can include a link to your existing payment method if needed.
               </p>
@@ -391,7 +312,7 @@ export default function Home() {
             <div className="border-b border-slate-200 pb-5">
               <h3 className="text-lg font-semibold text-slate-900 mb-2">Who sends the automatic invoice reminders?</h3>
               <p className="text-slate-600 leading-relaxed text-sm max-w-2xl">
-                Emails are sent automatically from InvoiceFlow using a verified sending domain.
+                Emails are sent automatically from Billza using a verified sending domain.
                 (Gmail sending support planned.)
               </p>
             </div>
@@ -434,8 +355,8 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 py-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-5">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-indigo-600 rounded-lg" role="img" aria-label="InvoiceFlow logo"></div>
-              <span className="text-base font-semibold text-slate-900">InvoiceFlow</span>
+              <div className="w-6 h-6 bg-indigo-600 rounded-lg" role="img" aria-label="Billza logo"></div>
+              <span className="text-base font-semibold text-slate-900">Billza</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-slate-600">
               <a href="/privacy" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Privacy Policy</a>
@@ -444,7 +365,7 @@ export default function Home() {
             </div>
           </div>
           <div className="text-center text-sm text-slate-500">
-            © {new Date().getFullYear()} InvoiceFlow. All rights reserved.
+            © {new Date().getFullYear()} Billza. All rights reserved.
           </div>
         </div>
       </footer>
