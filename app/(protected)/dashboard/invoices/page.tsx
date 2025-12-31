@@ -67,13 +67,11 @@ export default function InvoicesPage() {
     loadInvoices();
     loadUsage();
 
-    // Auto-open create modal if ?create=true in URL
-    if (searchParams.get('create') === 'true') {
+    // Auto-open create modal if ?new=1 in URL
+    if (searchParams.get('new') === '1') {
       setShowCreateModal(true);
-      // Clean up URL parameter
-      router.replace('/dashboard/invoices');
     }
-  }, []);
+  }, [searchParams]);
 
   async function loadInvoices() {
     try {
@@ -469,11 +467,17 @@ export default function InvoicesPage() {
       {/* Create Modal */}
       {showCreateModal && (
         <CreateInvoiceModal
-          onClose={() => setShowCreateModal(false)}
-          onSuccess={() => {
+          onClose={() => {
             setShowCreateModal(false);
-            loadInvoices();
-            showSuccess('Invoice created');
+            // Clean URL query param when modal closes
+            if (searchParams.get('new') === '1') {
+              router.replace('/dashboard/invoices');
+            }
+          }}
+          onSuccess={(invoiceId: string) => {
+            setShowCreateModal(false);
+            // Redirect to the created invoice detail page
+            router.push(`/dashboard/invoices/${invoiceId}?created=1`);
           }}
         />
       )}
@@ -620,7 +624,7 @@ function getCurrencySymbol(code: string): string {
   return symbols[code] || code;
 }
 
-function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (invoiceId: string) => void }) {
   const router = useRouter();
   const [formData, setFormData] = useState({
     clientName: '',
@@ -718,7 +722,7 @@ function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuc
       const scheduleName = selectedSchedule?.name || 'Default schedule';
       toast.success(`Invoice created successfully!\nUsing schedule: ${scheduleName}`);
 
-      onSuccess();
+      onSuccess(data.id);
     } catch (err) {
       handleApiError(err);
     } finally {
