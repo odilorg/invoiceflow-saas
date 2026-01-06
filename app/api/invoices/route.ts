@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { generateFollowUps } from '@/lib/followups';
 import { ensureDefaultSchedule } from '@/lib/default-schedule';
 import { checkPlanLimitEnhanced } from '@/lib/billing/subscription-service';
-import { timeQuery } from '@/lib/performance'; // TEMPORARY: For baseline measurement
+import { timeQuery } from '@/lib/performance';
 
 const invoiceSchema = z.object({
   clientName: z.string().min(1),
@@ -16,19 +16,32 @@ const invoiceSchema = z.object({
   invoiceNumber: z.string().min(1),
   dueDate: z.string().datetime(),
   notes: z.string().optional(),
-  scheduleId: z.string().optional(), // Optional schedule override
+  scheduleId: z.string().optional(),
 });
 
-// GET all invoices for current user
+// GET all invoices for current user (with optional pagination)
 export const GET = withErrorHandler(async (req: NextRequest) => {
   const user = await requireUser();
 
-    // TEMPORARY: Measure performance
+  // Parse pagination params (optional - backwards compatible)
+  const searchParams = req.nextUrl.searchParams;
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '0', 10)));
+  const status = searchParams.get('status'); // Optional status filter
+
+  // Build where clause
+  const where: Record<string, unknown> = { userId: user.id };
+  if (status && ['PENDING', 'PAID', 'OVERDUE', 'CANCELLED'].includes(status)) {
+    where.status = status;
+  }
+
+  // If limit is 0, return all (backwards compatible behavior)
+  if (limit === 0) {
     const invoices = await timeQuery(
       'GET /api/invoices',
-      'findMany with followUps (optimized)',
+      'findMany with followUps (all)',
       () => prisma.invoice.findMany({
-        where: { userId: user.id },
+        where,
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,
@@ -58,6 +71,59 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     );
 
     return NextResponse.json(invoices);
+  }
+
+  // Paginated query
+  const skip = (page - 1) * limit;
+
+  const [invoices, total] = await Promise.all([
+    timeQuery(
+      'GET /api/invoices',
+      `findMany with followUps (page ${page}, limit ${limit})`,
+      () => prisma.invoice.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          clientName: true,
+          clientEmail: true,
+          invoiceNumber: true,
+          amount: true,
+          currency: true,
+          dueDate: true,
+          status: true,
+          notes: true,
+          scheduleId: true,
+          createdAt: true,
+          lastReminderSentAt: true,
+          totalScheduledReminders: true,
+          remindersCompleted: true,
+          followUps: {
+            select: {
+              id: true,
+              status: true,
+              scheduledDate: true,
+            },
+            orderBy: { scheduledDate: 'asc' },
+          },
+        },
+      })
+    ),
+    prisma.invoice.count({ where }),
+  ]);
+
+  return NextResponse.json({
+    data: invoices,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasMore: page * limit < total,
+    },
+  });
 });
 
 // POST create new invoice
@@ -77,7 +143,7 @@ export async function POST(req: NextRequest) {
           limit: quotaCheck.limit,
           plan: quotaCheck.plan,
         },
-        { status: 402 } // HTTP 402 Payment Required
+        { status: 402 }
       );
     }
 

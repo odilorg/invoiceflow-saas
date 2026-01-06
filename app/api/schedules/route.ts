@@ -6,7 +6,9 @@ import { regenerateAllFollowUps } from '@/lib/followups';
 import { withVersionCheck } from '@/lib/api-version-check';
 import { z } from 'zod';
 import { checkPlanLimitEnhanced } from '@/lib/billing/subscription-service';
-import { timeQuery } from '@/lib/performance'; // TEMPORARY: For baseline measurement
+import { timeQuery } from '@/lib/performance';
+
+const isDev = process.env.NODE_ENV !== 'production';
 
 const scheduleSchema = z.object({
   name: z.string().min(1, 'Schedule name is required'),
@@ -21,125 +23,99 @@ const scheduleSchema = z.object({
 });
 
 // GET all schedules for current user
-export async function GET(req: NextRequest) {
-  try {
-    const user = await requireUser();
+export const GET = withErrorHandler(async (req: NextRequest) => {
+  const user = await requireUser();
 
-    // TEMPORARY: Measure performance
-    const schedules = await timeQuery(
-      'GET /api/schedules',
-      'findMany with steps+templates (optimized)',
-      () => prisma.schedule.findMany({
-        where: { userId: user.id },
-        select: {
-          id: true,
-          name: true,
-          isActive: true,
-          isDefault: true,
-          createdAt: true,
-          updatedAt: true,
-          steps: {
-            select: {
-              id: true,
-              templateId: true,
-              dayOffset: true,
-              order: true,
-              template: {
-                select: {
-                  id: true,
-                  name: true,
-                },
+  const schedules = await timeQuery(
+    'GET /api/schedules',
+    'findMany with steps+templates (optimized)',
+    () => prisma.schedule.findMany({
+      where: { userId: user.id },
+      select: {
+        id: true,
+        name: true,
+        isActive: true,
+        isDefault: true,
+        createdAt: true,
+        updatedAt: true,
+        steps: {
+          select: {
+            id: true,
+            templateId: true,
+            dayOffset: true,
+            order: true,
+            template: {
+              select: {
+                id: true,
+                name: true,
               },
             },
-            orderBy: { order: 'asc' },
           },
+          orderBy: { order: 'asc' },
         },
-        orderBy: { createdAt: 'desc' },
-      })
-    );
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+  );
 
-    return NextResponse.json(schedules);
-  } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json(schedules);
+});
 
 // POST create new schedule (wrapped with version check)
-const _POST = async (req: NextRequest) => {
-  try {
-    const user = await requireUser();
+const _POST = withErrorHandler(async (req: NextRequest) => {
+  const user = await requireUser();
 
-    // Check schedule limit with enhanced enforcement (transaction-safe)
-    const quotaCheck = await checkPlanLimitEnhanced(user.id, 'schedules');
-    if (!quotaCheck.allowed) {
-      return NextResponse.json(
-        {
-          error: quotaCheck.error,
-          upgradeRequired: true,
-          limitKey: quotaCheck.limitKey,
-          currentUsage: quotaCheck.currentUsage,
-          limit: quotaCheck.limit,
-          plan: quotaCheck.plan,
-        },
-        { status: 402 } // HTTP 402 Payment Required
-      );
-    }
+  // Check schedule limit with enhanced enforcement (transaction-safe)
+  const quotaCheck = await checkPlanLimitEnhanced(user.id, 'schedules');
+  if (!quotaCheck.allowed) {
+    return NextResponse.json(
+      {
+        error: quotaCheck.error,
+        upgradeRequired: true,
+        limitKey: quotaCheck.limitKey,
+        currentUsage: quotaCheck.currentUsage,
+        limit: quotaCheck.limit,
+        plan: quotaCheck.plan,
+      },
+      { status: 402 }
+    );
+  }
 
-    const body = await req.json();
+  const body = await req.json();
+  
+  // Only log payloads in development
+  if (isDev) {
     console.log('[Schedule CREATE] Received payload:', JSON.stringify(body, null, 2));
-
-    // Additional validation logging
     if (!body.name) console.log('[Schedule CREATE] Missing name');
     if (!body.steps) console.log('[Schedule CREATE] Missing steps');
     if (body.steps && body.steps.length === 0) console.log('[Schedule CREATE] Empty steps array');
-
-    const data = scheduleSchema.parse(body);
-
-    const schedule = await prisma.schedule.create({
-      data: {
-        name: data.name,
-        isActive: data.isActive,
-        userId: user.id,
-        steps: {
-          create: data.steps,
-        },
-      },
-      include: {
-        steps: {
-          include: {
-            template: true,
-          },
-        },
-      },
-    });
-
-    // Regenerate follow-ups for all pending invoices with this schedule
-    await regenerateAllFollowUps(user.id);
-
-    return NextResponse.json(schedule, { status: 201 });
-  } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    if (error instanceof z.ZodError) {
-      console.error('[Schedule CREATE] Validation error:', JSON.stringify(error.errors, null, 2));
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
   }
-}
+
+  const data = scheduleSchema.parse(body);
+
+  const schedule = await prisma.schedule.create({
+    data: {
+      name: data.name,
+      isActive: data.isActive,
+      userId: user.id,
+      steps: {
+        create: data.steps,
+      },
+    },
+    include: {
+      steps: {
+        include: {
+          template: true,
+        },
+      },
+    },
+  });
+
+  // Regenerate follow-ups for all pending invoices with this schedule
+  await regenerateAllFollowUps(user.id);
+
+  return NextResponse.json(schedule, { status: 201 });
+});
 
 // Export POST with version check wrapper
 export const POST = withVersionCheck(_POST);

@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { checkRateLimit, authRateLimit } from '@/lib/rate-limit';
 import { apiSuccess, commonErrors } from '@/lib/api-response';
 import { sendPasswordResetEmail } from '@/lib/email';
+import { getClientIp } from '@/lib/request-utils';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email(),
@@ -15,21 +16,6 @@ const forgotPasswordSchema = z.object({
  */
 function hashToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex');
-}
-
-/**
- * Extract client IP from request headers
- */
-function getClientIp(req: NextRequest): string {
-  const forwardedFor = req.headers.get('x-forwarded-for');
-  if (forwardedFor) {
-    return forwardedFor.split(',')[0].trim();
-  }
-  const realIp = req.headers.get('x-real-ip');
-  if (realIp) {
-    return realIp.trim();
-  }
-  return 'unknown';
 }
 
 export async function POST(req: NextRequest) {
@@ -43,7 +29,7 @@ export async function POST(req: NextRequest) {
     // Rate limiting - CRITICAL to prevent email spam
     const clientIp = getClientIp(req);
     const identifier = `forgot-password:${clientIp}:${emailNormalized}`;
-    const rateCheck = await checkRateLimit(authRateLimit, identifier);
+    const rateCheck = await checkRateLimit(authRateLimit, identifier, 'auth');
 
     if (!rateCheck.success) {
       return NextResponse.json(
@@ -87,8 +73,13 @@ export async function POST(req: NextRequest) {
       // Send reset email (or log in dev mode)
       await sendPasswordResetEmail(emailNormalized, resetToken, baseUrl);
 
-      console.log(`[Password Reset] Token generated for ${emailNormalized}`);
-      console.log(`[Password Reset] Reset URL: ${baseUrl}/reset-password?token=${resetToken}`);
+      // Log without exposing token in production
+      console.log(`[Password Reset] Reset requested for ${emailNormalized}`);
+      
+      // Only log full reset URL in development
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[Password Reset] Reset URL: ${baseUrl}/reset-password?token=${resetToken}`);
+      }
     }
 
     // ALWAYS return success to prevent email enumeration

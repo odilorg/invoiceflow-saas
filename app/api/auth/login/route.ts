@@ -3,30 +3,9 @@ import { prisma } from '@/lib/db';
 import { verifyPassword, createSession, loginSchema } from '@/lib/auth';
 import { checkRateLimit, authRateLimit } from '@/lib/rate-limit';
 import { apiSuccess, apiError, commonErrors } from '@/lib/api-response';
+import { getClientIp } from '@/lib/request-utils';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-
-/**
- * Extract client IP from request headers
- * Handles proxy scenarios (x-forwarded-for, x-real-ip)
- */
-function getClientIp(req: NextRequest): string {
-  // Check x-forwarded-for (standard proxy header)
-  const forwardedFor = req.headers.get('x-forwarded-for');
-  if (forwardedFor) {
-    // Take first IP in comma-separated list (original client IP)
-    return forwardedFor.split(',')[0].trim();
-  }
-
-  // Check x-real-ip (alternative proxy header)
-  const realIp = req.headers.get('x-real-ip');
-  if (realIp) {
-    return realIp.trim();
-  }
-
-  // Fallback to 'unknown' if no IP found
-  return 'unknown';
-}
 
 /**
  * Dummy hash for timing-safe password comparison when user not found
@@ -52,7 +31,7 @@ export async function POST(req: NextRequest) {
     const ipEmailIdentifier = `login:${clientIp}:${emailNormalized}`;
 
     // Check per-IP rate limit (global protection)
-    const ipRateCheck = await checkRateLimit(authRateLimit, ipIdentifier);
+    const ipRateCheck = await checkRateLimit(authRateLimit, ipIdentifier, 'auth');
     if (!ipRateCheck.success) {
       return NextResponse.json(
         commonErrors.rateLimit(ipRateCheck.reset),
@@ -61,7 +40,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check per-IP+Email rate limit (targeted protection)
-    const ipEmailRateCheck = await checkRateLimit(authRateLimit, ipEmailIdentifier);
+    const ipEmailRateCheck = await checkRateLimit(authRateLimit, ipEmailIdentifier, 'auth');
     if (!ipEmailRateCheck.success) {
       return NextResponse.json(
         commonErrors.rateLimit(ipEmailRateCheck.reset),

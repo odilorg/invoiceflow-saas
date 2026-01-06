@@ -2,10 +2,10 @@
  * Email utility for sending transactional emails
  *
  * In development: Logs email content to console
- * In production: Sends via Brevo (formerly Sendinblue)
+ * In production: Sends via SMTP (Brevo SMTP relay)
  */
 
-import * as brevo from '@getbrevo/brevo';
+import nodemailer from 'nodemailer';
 
 interface SendEmailParams {
   to: string;
@@ -14,15 +14,19 @@ interface SendEmailParams {
   text?: string;
 }
 
-// Initialize Brevo API client
-const brevoApi = new brevo.TransactionalEmailsApi();
-brevoApi.setApiKey(
-  brevo.TransactionalEmailsApiApiKeys.apiKey,
-  process.env.BREVO_API_KEY as string
-);
+// Create reusable transporter using SMTP
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 /**
- * Send email via Brevo (with dev fallback to console logging)
+ * Send email via SMTP (with dev fallback to console logging)
  */
 export async function sendEmail({ to, subject, html, text }: SendEmailParams): Promise<boolean> {
   const isDev = process.env.NODE_ENV !== 'production';
@@ -38,25 +42,23 @@ export async function sendEmail({ to, subject, html, text }: SendEmailParams): P
     return true;
   }
 
-  // Production mode: Send via Brevo
+  // Production mode: Send via SMTP
   try {
-    const sendSmtpEmail = new brevo.SendSmtpEmail();
-    sendSmtpEmail.sender = {
-      name: process.env.BREVO_SENDER_NAME || 'InvoiceFlow',
-      email: process.env.EMAIL_FROM?.match(/<(.+)>/)?.[1] || 'info@jahongir-travel.uz',
-    };
-    sendSmtpEmail.to = [{ email: to }];
-    sendSmtpEmail.subject = subject;
-    sendSmtpEmail.htmlContent = html;
-    if (text) {
-      sendSmtpEmail.textContent = text;
-    }
+    const fromName = process.env.SMTP_FROM_NAME || 'InvoiceFlow';
+    const fromEmail = process.env.SMTP_FROM_EMAIL || 'info@jahongir-travel.uz';
 
-    await brevoApi.sendTransacEmail(sendSmtpEmail);
-    console.log(`[EMAIL] Sent via Brevo to ${to}: ${subject}`);
+    await transporter.sendMail({
+      from: `${fromName} <${fromEmail}>`,
+      to,
+      subject,
+      html,
+      text: text || undefined,
+    });
+
+    console.log(`[EMAIL] Sent via SMTP to ${to}: ${subject}`);
     return true;
   } catch (error) {
-    console.error('[EMAIL] Failed to send via Brevo:', error);
+    console.error('[EMAIL] Failed to send via SMTP:', error);
     return false;
   }
 }
@@ -75,7 +77,7 @@ export async function sendPasswordResetEmail(
     <!DOCTYPE html>
     <html>
       <head>
-        <meta charset="utf-8">
+        <meta charset=utf-8>
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -92,7 +94,7 @@ export async function sendPasswordResetEmail(
         </style>
       </head>
       <body>
-        <div class="container">
+        <div class=container>
           <h2>Password Reset Request</h2>
           <p>You requested to reset your password for your InvoiceFlow account.</p>
           <p>Click the button below to reset your password:</p>

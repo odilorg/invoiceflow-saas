@@ -1,24 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import * as brevo from '@getbrevo/brevo';
+import { sendEmail } from '@/lib/email';
 import { MAX_FOLLOWUPS_PER_DAY_PER_INVOICE } from '@/lib/constants';
-import { timeQuery } from '@/lib/performance'; // TEMPORARY: For baseline measurement
-
-// Initialize Brevo API client
-const brevoApi = new brevo.TransactionalEmailsApi();
-brevoApi.setApiKey(
-  brevo.TransactionalEmailsApiApiKeys.apiKey,
-  process.env.BREVO_API_KEY as string
-);
+import { timeQuery } from '@/lib/performance';
+import { verifyCronAuth } from '@/lib/request-utils';
 
 export async function POST(req: NextRequest) {
   const cronStartTime = new Date();
   console.log(`[CRON] Started at ${cronStartTime.toISOString()}`);
 
   try {
-    // Verify cron secret
-    const authHeader = req.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    // Verify cron secret with timing-safe comparison
+    if (!verifyCronAuth(req)) {
       console.log(`[CRON] Unauthorized request at ${new Date().toISOString()}`);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -46,8 +39,6 @@ export async function POST(req: NextRequest) {
     });
 
     // Get pending follow-ups due today (filtered by subscription status)
-    // PHASE 3: Add batch processing limit + optimized select
-    // TEMPORARY: Measure performance
     const followUps = await timeQuery(
       'POST /api/cron/run-followups',
       'findMany followUps with invoice+user+subscription (batched)',
@@ -59,18 +50,16 @@ export async function POST(req: NextRequest) {
             lt: tomorrow,
           },
           invoice: {
-            status: 'PENDING', // Only send for pending invoices
-            remindersEnabled: true, // Only send if reminders are enabled
+            status: 'PENDING',
+            remindersEnabled: true,
             user: {
-              // CRITICAL: Only send for users with PAID active subscriptions
-              // FREE users are NOT eligible for automated cron reminders
               subscription: {
                 status: {
                   in: ['ACTIVE', 'TRIALING'],
                 },
                 OR: [
-                  { endsAt: null }, // No end date (lifetime)
-                  { endsAt: { gt: new Date() } }, // Or not expired
+                  { endsAt: null },
+                  { endsAt: { gt: new Date() } },
                 ],
               },
             },
@@ -101,37 +90,39 @@ export async function POST(req: NextRequest) {
           },
         },
         orderBy: {
-          scheduledDate: 'asc', // Process oldest first
+          scheduledDate: 'asc',
         },
-        take: 500, // PHASE 3: Batch limit - max 500 per run
+        take: 500,
       })
     );
 
     // Count unique invoices eligible (after subscription filter)
     const uniqueInvoiceIds = new Set(followUps.map(f => f.invoiceId));
+    const followUpIds = followUps.map(f => f.id);
 
-    // PHASE 3: Pre-fetch rate limit data to prevent N+1 queries
-    // Get count of emails sent today per invoice (in one query)
+    // BATCHED: Pre-fetch existing logs for idempotency check (prevents N+1)
+    const existingLogs = await prisma.emailLog.findMany({
+      where: {
+        followUpId: { in: followUpIds },
+        sentAt: { gte: today, lt: tomorrow },
+      },
+      select: { followUpId: true },
+    });
+    const existingLogIds = new Set(existingLogs.map(l => l.followUpId));
+
+    // BATCHED: Pre-fetch rate limit data
     const emailsSentToday = await prisma.emailLog.groupBy({
       by: ['followUpId'],
       where: {
-        sentAt: {
-          gte: today,
-          lt: tomorrow,
-        },
+        sentAt: { gte: today, lt: tomorrow },
         success: true,
         followUp: {
-          invoiceId: {
-            in: Array.from(uniqueInvoiceIds),
-          },
+          invoiceId: { in: Array.from(uniqueInvoiceIds) },
         },
       },
-      _count: {
-        id: true,
-      },
+      _count: { id: true },
     });
 
-    // Create a map: invoiceId -> count of emails sent today
     const invoiceSentCountMap = new Map<string, number>();
     for (const result of emailsSentToday) {
       const followUp = followUps.find(f => f.id === result.followUpId);
@@ -141,32 +132,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // PHASE 3: Pre-fetch invoice followUp counts to prevent N+1 queries
+    // BATCHED: Pre-fetch invoice followUp counts
     const invoiceFollowUpCounts = await prisma.invoice.findMany({
-      where: {
-        id: {
-          in: Array.from(uniqueInvoiceIds),
-        },
-      },
+      where: { id: { in: Array.from(uniqueInvoiceIds) } },
       select: {
         id: true,
-        _count: {
-          select: {
-            followUps: true,
-          },
-        },
+        _count: { select: { followUps: true } },
         followUps: {
-          where: {
-            status: 'SENT',
-          },
-          select: {
-            id: true,
-          },
+          where: { status: 'SENT' },
+          select: { id: true },
         },
       },
     });
 
-    // Create maps for quick lookup
     const totalFollowUpsMap = new Map<string, number>();
     const sentFollowUpsMap = new Map<string, number>();
     for (const invoice of invoiceFollowUpCounts) {
@@ -186,125 +164,134 @@ export async function POST(req: NextRequest) {
       failed: 0,
     };
 
+    // Collect batch operations
+    const emailLogsToCreate: Array<{
+      followUpId: string;
+      recipientEmail: string;
+      subject: string;
+      success: boolean;
+      errorMessage?: string;
+    }> = [];
+    const followUpsToMarkSent: string[] = [];
+    const followUpsToSkip: Array<{ id: string; reason: string }> = [];
+    const invoicesToUpdate: string[] = [];
+    const invoicesToComplete: Array<{ id: string; totalReminders: number }> = [];
+
     for (const followUp of followUps) {
       try {
-        // PHASE 3: Idempotency check - skip if already processed
-        // This prevents duplicates if cron runs twice
-        const existingLog = await prisma.emailLog.findFirst({
-          where: {
-            followUpId: followUp.id,
-            sentAt: {
-              gte: today,
-              lt: tomorrow,
-            },
-          },
-        });
-
-        if (existingLog) {
-          // Already processed today, skip silently
+        // BATCHED: Idempotency check using pre-fetched data
+        if (existingLogIds.has(followUp.id)) {
           results.skipped++;
           continue;
         }
 
-        // PHASE 3: Use pre-fetched rate limit data (no DB query in loop)
+        // BATCHED: Rate limit check using pre-fetched data
         const sentToday = invoiceSentCountMap.get(followUp.invoiceId) || 0;
-
         if (sentToday >= MAX_FOLLOWUPS_PER_DAY_PER_INVOICE) {
-          await prisma.followUp.update({
-            where: { id: followUp.id },
-            data: {
-              status: 'SKIPPED',
-              errorMessage: 'Max follow-ups per day limit reached',
-            },
-          });
+          followUpsToSkip.push({ id: followUp.id, reason: 'Max follow-ups per day limit reached' });
           results.skipped++;
           results.skipped_rate_limit++;
           continue;
         }
 
-        // Send email using Brevo
+        // Send email using shared sendEmail function
         try {
-          // Parse sender email and name from EMAIL_FROM
-          const emailFrom = process.env.EMAIL_FROM || 'Invoice Reminders <no-reply@yourdomain.com>';
-          const senderMatch = emailFrom.match(/^(.+?)\s*<(.+)>$/);
-          const senderName = senderMatch ? senderMatch[1] : process.env.BREVO_SENDER_NAME || 'Invoice Reminders';
-          const senderEmail = senderMatch ? senderMatch[2] : emailFrom;
-
-          const sendSmtpEmail = new brevo.SendSmtpEmail();
-          sendSmtpEmail.subject = followUp.subject;
-          sendSmtpEmail.htmlContent = followUp.body.replace(/\n/g, '<br>');
-          sendSmtpEmail.sender = { name: senderName, email: senderEmail };
-          sendSmtpEmail.to = [{ email: followUp.invoice.clientEmail, name: followUp.invoice.clientName }];
-
-          const result = await brevoApi.sendTransacEmail(sendSmtpEmail);
-
-          // Log success
-          await prisma.emailLog.create({
-            data: {
-              followUpId: followUp.id,
-              recipientEmail: followUp.invoice.clientEmail,
-              subject: followUp.subject,
-              success: true,
-            },
+          const htmlBody = followUp.body.replace(/\n/g, '<br>');
+          
+          const success = await sendEmail({
+            to: followUp.invoice.clientEmail,
+            subject: followUp.subject,
+            html: htmlBody,
+            text: followUp.body,
           });
 
-          await prisma.followUp.update({
-            where: { id: followUp.id },
-            data: {
-              status: 'SENT',
-              sentAt: new Date(),
-            },
-          });
+          if (!success) {
+            throw new Error('Failed to send email');
+          }
 
-          // Update invoice reminder tracking
-          await prisma.invoice.update({
-            where: { id: followUp.invoiceId },
-            data: {
-              lastReminderSentAt: new Date(),
-            },
+          // Collect for batch insert
+          emailLogsToCreate.push({
+            followUpId: followUp.id,
+            recipientEmail: followUp.invoice.clientEmail,
+            subject: followUp.subject,
+            success: true,
           });
+          
+          followUpsToMarkSent.push(followUp.id);
+          invoicesToUpdate.push(followUp.invoiceId);
 
-          // PHASE 3: Check if this was the last scheduled reminder (use pre-fetched data)
+          // Check if this was the last scheduled reminder
           const totalFollowUps = totalFollowUpsMap.get(followUp.invoiceId) || 0;
-          const sentFollowUps = (sentFollowUpsMap.get(followUp.invoiceId) || 0) + 1; // +1 for current
+          const sentFollowUps = (sentFollowUpsMap.get(followUp.invoiceId) || 0) + 1;
 
-          // If all follow-ups have been sent and invoice is still unpaid, mark as completed
           if (sentFollowUps >= totalFollowUps) {
-            await prisma.invoice.update({
-              where: { id: followUp.invoiceId },
-              data: {
-                remindersCompleted: true,
-                totalScheduledReminders: totalFollowUps,
-              },
-            });
+            invoicesToComplete.push({ id: followUp.invoiceId, totalReminders: totalFollowUps });
           }
 
           results.sent++;
-        } catch (emailError: any) {
-          // Log failure
-          await prisma.emailLog.create({
-            data: {
-              followUpId: followUp.id,
-              recipientEmail: followUp.invoice.clientEmail,
-              subject: followUp.subject,
-              success: false,
-              errorMessage: emailError.message || 'Unknown error',
-            },
+        } catch (emailError: unknown) {
+          const errorMessage = emailError instanceof Error ? emailError.message : 'Unknown error';
+          
+          emailLogsToCreate.push({
+            followUpId: followUp.id,
+            recipientEmail: followUp.invoice.clientEmail,
+            subject: followUp.subject,
+            success: false,
+            errorMessage,
           });
 
-          await prisma.followUp.update({
-            where: { id: followUp.id },
-            data: {
-              errorMessage: emailError.message || 'Failed to send email',
-            },
-          });
-
+          followUpsToSkip.push({ id: followUp.id, reason: errorMessage });
           results.failed++;
         }
       } catch (error) {
         console.error(`Failed to process follow-up ${followUp.id}:`, error);
         results.failed++;
       }
+    }
+
+    // BATCHED: Execute all database updates in bulk
+    const now = new Date();
+
+    // Batch create email logs
+    if (emailLogsToCreate.length > 0) {
+      await prisma.emailLog.createMany({
+        data: emailLogsToCreate,
+      });
+    }
+
+    // Batch update sent follow-ups
+    if (followUpsToMarkSent.length > 0) {
+      await prisma.followUp.updateMany({
+        where: { id: { in: followUpsToMarkSent } },
+        data: { status: 'SENT', sentAt: now },
+      });
+    }
+
+    // Batch update skipped follow-ups
+    for (const skip of followUpsToSkip) {
+      await prisma.followUp.update({
+        where: { id: skip.id },
+        data: { status: 'SKIPPED', errorMessage: skip.reason },
+      });
+    }
+
+    // Batch update invoice reminder timestamps
+    if (invoicesToUpdate.length > 0) {
+      await prisma.invoice.updateMany({
+        where: { id: { in: [...new Set(invoicesToUpdate)] } },
+        data: { lastReminderSentAt: now },
+      });
+    }
+
+    // Update completed invoices
+    for (const complete of invoicesToComplete) {
+      await prisma.invoice.update({
+        where: { id: complete.id },
+        data: {
+          remindersCompleted: true,
+          totalScheduledReminders: complete.totalReminders,
+        },
+      });
     }
 
     const cronEndTime = new Date();
