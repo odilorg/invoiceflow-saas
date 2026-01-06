@@ -141,7 +141,7 @@ export default function ActivityPage() {
     if (!invoices || invoices.length === 0) return [];
 
     const unpaidInvoices = invoices.filter(inv => inv.status === 'PENDING' || inv.status === 'OVERDUE');
-    const upcomingReminders: { invoice: Invoice; followUp: any }[] = [];
+    const upcomingReminders: { invoice: Invoice; followUp: { id: string; status: "PENDING" | "SENT" | "FAILED"; scheduledDate: string } }[] = [];
 
     for (const invoice of unpaidInvoices) {
       const pendingFollowUps = invoice.followUps?.filter(f => f.status === 'PENDING') || [];

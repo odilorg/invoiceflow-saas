@@ -38,7 +38,7 @@ function verifySignature(payload: string, signature: string, secret: string): bo
  * Generate stable event ID from payload for idempotency
  * Uses SHA256 hash of raw payload as fallback if event_id missing
  */
-function getStableEventId(meta: any, payload: string): string {
+function getStableEventId(meta: { event_id?: string } | null | undefined, payload: string): string {
   if (meta?.event_id) {
     return meta.event_id;
   }

@@ -517,7 +517,7 @@ function ScheduleModal({
         // Show detailed validation errors if available
         if (data.details && Array.isArray(data.details)) {
           const errorMessages = data.details
-            .map((d: any) => {
+            .map((d: { path: string[]; message: string }) => {
               const field = d.path.join('.') || 'Field';
               return `• ${field}: ${d.message}`;
             })

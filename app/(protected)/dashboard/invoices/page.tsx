@@ -24,6 +24,7 @@ import { validators } from '@/lib/ui/form-errors';
 import { normalizeEmail, normalizeInvoiceNumber, normalizeFormData } from '@/lib/ui/input-normalize';
 import { useToast } from '@/components/ToastProvider';
 import type { FormSelectOption } from '@/components/form';
+import type { FollowUp, Schedule } from '@/lib/types';
 
 interface Invoice {
   id: string;
@@ -37,7 +38,7 @@ interface Invoice {
   notes?: string | null;
   scheduleId?: string | null;
   createdAt: string;
-  followUps?: any[];
+  followUps?: FollowUp[];
   lastReminderSentAt?: string | null;
   totalScheduledReminders?: number | null;
   remindersCompleted?: boolean;
@@ -393,7 +394,7 @@ export default function InvoicesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-muted-foreground">
-                        {invoice.followUps?.filter((f: any) => f.status === 'SENT').length || 0} /
+                        {invoice.followUps?.filter((f: FollowUp) => f.status === 'SENT').length || 0} /
                         {invoice.followUps?.length || 0} sent
                       </span>
                     </td>
@@ -651,9 +652,9 @@ function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuc
       const res = await fetch('/api/schedules');
       if (res.ok) {
         const data = await res.json();
-        const activeSchedules = data.filter((s: any) => s.isActive);
+        const activeSchedules = data.filter((s: Schedule) => s.isActive);
         setSchedules(activeSchedules);
-        const defaultSchedule = activeSchedules.find((s: any) => s.isDefault);
+        const defaultSchedule = activeSchedules.find((s: Schedule) => s.isDefault);
         if (defaultSchedule) {
           setFormData(prev => ({ ...prev, scheduleId: defaultSchedule.id }));
         }
@@ -892,7 +893,7 @@ function EditInvoiceModal({ invoice, onClose, onSuccess }: { invoice: Invoice; o
   const { errors, isLoading, setLoading, handleApiError, clearAllErrors } = useFormValidation();
 
   // Compute followUpsSentCount from invoice data
-  const followUpsSentCount = invoice.followUps?.filter((f: any) => f.status === 'SENT').length || 0;
+  const followUpsSentCount = invoice.followUps?.filter((f: FollowUp) => f.status === 'SENT').length || 0;
   const isLimitedEditMode = followUpsSentCount > 0;
   const lockedReason = isLimitedEditMode ? `Cannot edit after ${followUpsSentCount} reminder(s) sent` : undefined;
 
@@ -907,7 +908,7 @@ function EditInvoiceModal({ invoice, onClose, onSuccess }: { invoice: Invoice; o
       const res = await fetch('/api/schedules');
       if (res.ok) {
         const data = await res.json();
-        const activeSchedules = data.filter((s: any) => s.isActive);
+        const activeSchedules = data.filter((s: Schedule) => s.isActive);
         setSchedules(activeSchedules);
       }
     } catch (error) {
@@ -924,7 +925,7 @@ function EditInvoiceModal({ invoice, onClose, onSuccess }: { invoice: Invoice; o
     setLoading(true);
 
     try {
-      const updatePayload: any = {};
+      const updatePayload: Partial<{ clientName: string; clientEmail: string; invoiceNumber: string; amount: number; currency: string; dueDate: string; notes: string; scheduleId: string; restartReminders: boolean }> = {};
 
       // In LIMITED mode, only send notes
       if (isLimitedEditMode) {

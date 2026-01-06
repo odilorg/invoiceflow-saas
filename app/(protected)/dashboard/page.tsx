@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { Invoice, Schedule } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import HelpBox from '@/components/HelpBox';
@@ -55,12 +56,12 @@ export default function DashboardPage() {
           const invoices = await invoicesRes.json();
           const now = new Date();
           const overdue = invoices
-            .filter((inv: any) => inv.status === 'PENDING' && new Date(inv.dueDate) < now)
-            .map((inv: any) => ({
+            .filter((inv: Invoice) => inv.status === 'PENDING' && new Date(inv.dueDate) < now)
+            .map((inv: Invoice) => ({
               ...inv,
               daysPastDue: Math.floor((now.getTime() - new Date(inv.dueDate).getTime()) / (1000 * 60 * 60 * 24)),
             }))
-            .sort((a: any, b: any) => b.daysPastDue - a.daysPastDue)
+            .sort((a: OverdueInvoice, b: OverdueInvoice) => b.daysPastDue - a.daysPastDue)
             .slice(0, 5);
           setOverdueInvoices(overdue);
         }
@@ -77,7 +78,7 @@ export default function DashboardPage() {
 
         setSetupStatus({
           hasTemplates: templates.length > 0,
-          hasActiveSchedule: schedules.some((s: any) => s.isActive),
+          hasActiveSchedule: schedules.some((s: Schedule) => s.isActive),
           hasInvoices: invoices.length > 0,
         });
       } catch (error) {

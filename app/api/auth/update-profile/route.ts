@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { requireUser } from '@/lib/auth';
 import { withErrorHandler } from '@/lib/api-error-handler';
 import { z } from 'zod';
@@ -80,7 +81,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Build update data
-    const updateData: any = {};
+    const updateData: Prisma.UserUpdateInput = {};
 
     if (data.name !== undefined) {
       updateData.name = data.name;
