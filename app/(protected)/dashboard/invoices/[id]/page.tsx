@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { clientLogger } from '@/lib/logger';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getReminderState, getReminderStatusMessage, isReminderExhausted } from '@/lib/reminder-state';
@@ -113,7 +114,7 @@ export default function InvoiceDetailPage() {
         status: data.status,
       });
     } catch (error) {
-      console.error('Error loading invoice:', error);
+      clientLogger.error('Error loading invoice', error);
     } finally {
       setLoading(false);
     }
@@ -166,7 +167,7 @@ export default function InvoiceDetailPage() {
         loadInvoice();
       }
     } catch (error) {
-      console.error('Error updating invoice:', error);
+      clientLogger.error('Error updating invoice', error);
     }
   };
 

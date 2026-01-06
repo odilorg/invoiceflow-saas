@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { clientLogger } from '@/lib/logger';
 import { useRouter } from 'next/navigation';
 import HelpBox from '@/components/HelpBox';
 import UsageCounter from '@/components/UsageCounter';
@@ -88,7 +89,7 @@ export default function SchedulesPage() {
       const data = await res.json();
       setSchedules(data);
     } catch (error) {
-      console.error('Error loading schedules:', error);
+      clientLogger.error('Error loading schedules', error);
     } finally {
       setLoading(false);
     }
@@ -102,7 +103,7 @@ export default function SchedulesPage() {
         setUsage(data);
       }
     } catch (error) {
-      console.error('Error loading usage:', error);
+      clientLogger.error('Error loading usage', error);
     }
   }
 
@@ -130,7 +131,7 @@ export default function SchedulesPage() {
         showSuccess('Schedule deleted');
       }
     } catch (error) {
-      console.error('Error deleting schedule:', error);
+      clientLogger.error('Error deleting schedule', error);
       setDeleteConfirm(null);
       showError('Network error. Please check your connection and try again.');
     }
@@ -432,7 +433,7 @@ function ScheduleModal({
         handleApiError({ error: 'Failed to load templates' });
       }
     } catch (error) {
-      console.error('Error loading templates:', error);
+      clientLogger.error('Error loading templates', error);
       handleApiError({ error: 'Error loading templates. Please refresh and try again.' });
     } finally {
       setTemplatesLoading(false);
@@ -499,7 +500,7 @@ function ScheduleModal({
         })),
       };
 
-      console.log('[Schedule Form] Sending payload:', payload);
+      clientLogger.debug('Schedule form payload', payload);
 
       const res = await fetch(url, {
         method,
@@ -531,7 +532,7 @@ function ScheduleModal({
 
       onSuccess();
     } catch (err) {
-      console.error('Error saving schedule:', err);
+      clientLogger.error('Error saving schedule', err);
       handleApiError({ error: 'An error occurred while saving. Please try again.' });
     } finally {
       setLoading(false);

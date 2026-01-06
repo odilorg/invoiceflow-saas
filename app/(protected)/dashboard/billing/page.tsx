@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { clientLogger } from '@/lib/logger';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { BILLING_CONFIG } from '@/lib/billing/config';
 import { PricingCard, PricingFeature } from '@/components/PricingCard';
@@ -75,7 +76,7 @@ export default function BillingPage() {
       if (userRes.ok) setUserData(await userRes.json());
       if (usageRes.ok) setUsage(await usageRes.json());
     } catch (error) {
-      console.error('Error loading data:', error);
+      clientLogger.error('Error loading billing data', error);
     } finally {
       setLoading(false);
     }
@@ -99,7 +100,7 @@ export default function BillingPage() {
       }
       window.location.href = data.checkoutUrl;
     } catch (error) {
-      console.error('Checkout error:', error);
+      clientLogger.error('Checkout error', error);
       setError('Failed to start checkout.');
       setProcessingPlan(null);
     }

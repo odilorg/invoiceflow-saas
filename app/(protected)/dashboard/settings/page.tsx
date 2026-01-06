@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { clientLogger } from '@/lib/logger';
 import { useRouter } from 'next/navigation';
 import { FormSection, FormField, FormInput, FormSelect, FormToggle } from '@/components/form';
 import { H2, SUBTLE, ERROR } from '@/lib/ui/tokens';
@@ -24,13 +25,17 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences'>('profile');
 
   // Form states
+  // Non-sensitive form data (safe to keep in state)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
   });
+
+  // Password refs - using refs instead of state for security
+  // (prevents password exposure via React DevTools)
+  const currentPasswordRef = useRef<HTMLInputElement>(null);
+  const newPasswordRef = useRef<HTMLInputElement>(null);
+  const confirmPasswordRef = useRef<HTMLInputElement>(null);
 
   // Preferences (stored in localStorage for now)
   const [preferences, setPreferences] = useState({
@@ -66,7 +71,7 @@ export default function SettingsPage() {
       }));
     } catch (err) {
       setError('Failed to load profile');
-      console.error(err);
+      clientLogger.error('Failed to load user data', err);
     } finally {
       setLoading(false);
     }
@@ -78,7 +83,7 @@ export default function SettingsPage() {
       try {
         setPreferences(JSON.parse(saved));
       } catch (err) {
-        console.error('Failed to load preferences:', err);
+        clientLogger.error('Failed to load preferences', err);
       }
     }
   }
@@ -121,12 +126,16 @@ export default function SettingsPage() {
     setMessage('');
     setError('');
 
-    if (formData.newPassword !== formData.confirmPassword) {
+    const currentPassword = currentPasswordRef.current?.value || '';
+    const newPassword = newPasswordRef.current?.value || '';
+    const confirmPassword = confirmPasswordRef.current?.value || '';
+
+    if (newPassword !== confirmPassword) {
       setError('New passwords do not match');
       return;
     }
 
-    if (formData.newPassword.length < 6) {
+    if (newPassword.length < 6) {
       setError('Password must be at least 6 characters');
       return;
     }
@@ -138,8 +147,8 @@ export default function SettingsPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          currentPassword: formData.currentPassword,
-          newPassword: formData.newPassword,
+          currentPassword,
+          newPassword,
         }),
       });
 
@@ -151,12 +160,10 @@ export default function SettingsPage() {
       }
 
       setMessage('Password updated successfully');
-      setFormData(prev => ({
-        ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      }));
+      // Clear password inputs (using refs)
+      if (currentPasswordRef.current) currentPasswordRef.current.value = '';
+      if (newPasswordRef.current) newPasswordRef.current.value = '';
+      if (confirmPasswordRef.current) confirmPasswordRef.current.value = '';
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
       setError('Failed to update password');
@@ -312,8 +319,7 @@ export default function SettingsPage() {
                   <FormInput
                     id="current-password"
                     type="password"
-                    value={formData.currentPassword}
-                    onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                    ref={currentPasswordRef}
                     disabled={saving}
                   />
                 </FormField>
@@ -322,8 +328,7 @@ export default function SettingsPage() {
                   <FormInput
                     id="new-password"
                     type="password"
-                    value={formData.newPassword}
-                    onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                    ref={newPasswordRef}
                     disabled={saving}
                     minLength={6}
                   />
@@ -333,8 +338,7 @@ export default function SettingsPage() {
                   <FormInput
                     id="confirm-password"
                     type="password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    ref={confirmPasswordRef}
                     disabled={saving}
                   />
                 </FormField>

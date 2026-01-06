@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { clientLogger } from '@/lib/logger';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import HelpBox from '@/components/HelpBox';
@@ -114,7 +115,7 @@ export default function ActivityPage() {
       setInvoices(invoicesData);
       setStats(statsData);
     } catch (error) {
-      console.error('Error loading data:', error);
+      clientLogger.error('Error loading activity data', error);
     } finally {
       setLoading(false);
     }

@@ -7,9 +7,9 @@ export interface FormInputProps extends Omit<React.InputHTMLAttributes<HTMLInput
   /** Input type (text, email, password, number, etc.) */
   type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';
   /** Input value */
-  value: string | number;
+  value?: string | number;
   /** Change handler */
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   /** Whether the field has an error (changes border color) */
   error?: boolean;
   /** Placeholder text */
@@ -111,7 +111,7 @@ const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(({
           target: { ...e.target, value: trimmed },
           currentTarget: { ...e.currentTarget, value: trimmed },
         } as React.ChangeEvent<HTMLInputElement>;
-        onChange(syntheticEvent);
+        onChange?.(syntheticEvent);
       }
     }
 

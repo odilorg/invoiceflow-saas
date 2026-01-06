@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
+import { clientLogger } from '@/lib/logger';
 import { useRouter } from 'next/navigation';
 import HelpBox from '@/components/HelpBox';
 import UsageCounter from '@/components/UsageCounter';
@@ -104,7 +105,7 @@ export default function TemplatesPage() {
         setUsage(usageData);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      clientLogger.error('Error loading templates data', error);
     } finally {
       setLoading(false);
     }
@@ -164,7 +165,7 @@ export default function TemplatesPage() {
         }
       }
     } catch (error) {
-      console.error('Error duplicating template:', error);
+      clientLogger.error('Error duplicating template', error);
       showError('Network error. Please check your connection and try again.');
     }
   };
@@ -197,7 +198,7 @@ export default function TemplatesPage() {
         showError(data.error || 'Failed to delete template');
       }
     } catch (error) {
-      console.error('Error deleting template:', error);
+      clientLogger.error('Error deleting template', error);
       setDeleteConfirm(null);
       showError('Network error. Please check your connection and try again.');
     }

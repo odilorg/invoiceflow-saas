@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { clientLogger } from '@/lib/logger';
 import { useRouter, useSearchParams } from 'next/navigation';
 import HelpBox from '@/components/HelpBox';
 import UsageCounter from '@/components/UsageCounter';
@@ -87,7 +88,7 @@ export default function InvoicesPage() {
       const data = await res.json();
       setInvoices(data);
     } catch (error) {
-      console.error('Error loading invoices:', error);
+      clientLogger.error('Error loading invoices', error);
     } finally {
       setLoading(false);
     }
@@ -101,7 +102,7 @@ export default function InvoicesPage() {
         setUsage(data);
       }
     } catch (error) {
-      console.error('Error loading usage:', error);
+      clientLogger.error('Error loading usage', error);
     }
   }
 
@@ -115,7 +116,7 @@ export default function InvoicesPage() {
     setTimeout(() => setErrorMessage(''), 5000);
   };
 
-  const filteredInvoices = invoices.filter((invoice) => {
+  const filteredInvoices = useMemo(() => invoices.filter((invoice) => {
     if (filter === 'all') return true;
     if (filter === 'overdue') {
       return invoice.status === 'PENDING' && new Date(invoice.dueDate) < new Date();
@@ -125,7 +126,7 @@ export default function InvoicesPage() {
       return invoice.status === 'PENDING' && new Date(invoice.dueDate) >= new Date();
     }
     return invoice.status === filter.toUpperCase();
-  });
+  }), [invoices, filter]);
 
   const handleMarkAsPaid = async (id: string) => {
     setMarkingPaidId(id);
@@ -143,7 +144,7 @@ export default function InvoicesPage() {
         showError(data.error || 'Failed to update invoice status');
       }
     } catch (error) {
-      console.error('Error updating invoice:', error);
+      clientLogger.error('Error updating invoice', error);
       showError('Network error. Please check your connection and try again.');
     } finally {
       setMarkingPaidId(null);
@@ -171,7 +172,7 @@ export default function InvoicesPage() {
         showError(data.error || 'Failed to delete invoice');
       }
     } catch (error) {
-      console.error('Error deleting invoice:', error);
+      clientLogger.error('Error deleting invoice', error);
       setDeleteConfirm(null);
       showError('Network error. Please check your connection and try again.');
     }
@@ -660,7 +661,7 @@ function CreateInvoiceModal({ onClose, onSuccess }: { onClose: () => void; onSuc
         }
       }
     } catch (error) {
-      console.error('Error loading schedules:', error);
+      clientLogger.error('Error loading schedules', error);
     }
   }
 
@@ -912,7 +913,7 @@ function EditInvoiceModal({ invoice, onClose, onSuccess }: { invoice: Invoice; o
         setSchedules(activeSchedules);
       }
     } catch (error) {
-      console.error('Error loading schedules:', error);
+      clientLogger.error('Error loading schedules', error);
     }
   }
 

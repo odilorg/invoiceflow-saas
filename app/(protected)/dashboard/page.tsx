@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { clientLogger } from '@/lib/logger';
 import type { Invoice, Schedule } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -82,7 +83,7 @@ export default function DashboardPage() {
           hasInvoices: invoices.length > 0,
         });
       } catch (error) {
-        console.error('Failed to load dashboard:', error);
+        clientLogger.error('Failed to load dashboard', error);
       } finally {
         setLoading(false);
       }
