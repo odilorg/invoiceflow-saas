@@ -25,8 +25,8 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
   // Parse pagination params (optional - backwards compatible)
   const searchParams = req.nextUrl.searchParams;
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '0', 10)));
+  const page = Math.max(0, parseInt(searchParams.get('page') || '1', 10));
+  const limit = Math.min(100, Math.max(0, parseInt(searchParams.get('limit') || '0', 10)));
   const status = searchParams.get('status'); // Optional status filter
 
   // Build where clause
