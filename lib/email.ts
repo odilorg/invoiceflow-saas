@@ -1,11 +1,20 @@
 /**
- * Email utility for sending transactional emails
+ * Email utility for sending transactional emails via Brevo API
  *
- * In development: Logs email content to console
- * In production: Sends via SMTP (Brevo SMTP relay)
+ * Provider: Brevo (Sendinblue) Transactional API
+ * Sender: Billza <reminders@billza.app> (enforced)
+ *
+ * In development: Logs email content to console (EMAIL_ENABLED=false)
+ * In production: Sends via Brevo API (EMAIL_ENABLED=true)
  */
 
-import nodemailer from 'nodemailer';
+import * as brevo from '@getbrevo/brevo';
+
+// ============================================================
+// SENDER CONFIGURATION - ENFORCED
+// ============================================================
+const ENFORCED_SENDER_EMAIL = 'reminders@billza.app';
+const ENFORCED_SENDER_NAME = 'Billza';
 
 interface SendEmailParams {
   to: string;
@@ -14,51 +23,100 @@ interface SendEmailParams {
   text?: string;
 }
 
-// Create reusable transporter using SMTP
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+/**
+ * Validate sender to prevent accidental use of wrong domain
+ * Fails closed - throws error if invalid
+ */
+function getValidatedSender(): { email: string; name: string } {
+  const senderEmail = ENFORCED_SENDER_EMAIL;
+  const senderName = ENFORCED_SENDER_NAME;
+
+  // Safety check: Block any sender containing "jahongir" (case insensitive)
+  if (senderEmail.toLowerCase().includes('jahongir')) {
+    throw new Error(`[EMAIL] BLOCKED: Sender email contains forbidden domain: ${senderEmail}`);
+  }
+
+  // Safety check: Require sender to be @billza.app
+  if (!senderEmail.endsWith('@billza.app')) {
+    throw new Error(`[EMAIL] BLOCKED: Sender must be @billza.app, got: ${senderEmail}`);
+  }
+
+  return { email: senderEmail, name: senderName };
+}
 
 /**
- * Send email via SMTP (with dev fallback to console logging)
+ * Mask email for logging (show first 2 chars + domain)
+ */
+function maskEmail(email: string): string {
+  const [local, domain] = email.split('@');
+  if (!local || !domain) return '***@***';
+  const maskedLocal = local.length > 2 ? local.slice(0, 2) + '***' : '***';
+  return `${maskedLocal}@${domain}`;
+}
+
+/**
+ * Initialize Brevo API client
+ */
+function getBrevoClient(): brevo.TransactionalEmailsApi {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
+    throw new Error('[EMAIL] BREVO_API_KEY not configured');
+  }
+
+  const apiInstance = new brevo.TransactionalEmailsApi();
+  apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey);
+  return apiInstance;
+}
+
+/**
+ * Send email via Brevo Transactional API
+ *
+ * @returns true if sent successfully, false otherwise
  */
 export async function sendEmail({ to, subject, html, text }: SendEmailParams): Promise<boolean> {
-  const isDev = process.env.NODE_ENV !== 'production';
+  const emailEnabled = process.env.EMAIL_ENABLED === 'true';
 
-  if (isDev) {
-    // Development mode: Log to console instead of sending
-    console.log('\n========== EMAIL (DEV MODE) ==========');
+  // Get validated sender (throws if invalid)
+  const sender = getValidatedSender();
+
+  // Log attempt (no secrets)
+  console.log(`[EMAIL] Attempt | provider=BREVO | sender=${sender.email} | to=${maskEmail(to)} | subject="${subject.slice(0, 50)}..."`);
+
+  if (!emailEnabled) {
+    // Development/staging mode: Log to console instead of sending
+    console.log('\n========== EMAIL (DISABLED - EMAIL_ENABLED=false) ==========');
+    console.log(`Provider: BREVO API`);
+    console.log(`From: ${sender.name} <${sender.email}>`);
     console.log(`To: ${to}`);
     console.log(`Subject: ${subject}`);
     console.log(`Text: ${text || 'N/A'}`);
-    console.log(`HTML: ${html}`);
-    console.log('======================================\n');
+    console.log(`HTML length: ${html.length} chars`);
+    console.log('=============================================================\n');
     return true;
   }
 
-  // Production mode: Send via SMTP
+  // Production mode: Send via Brevo API
   try {
-    const fromName = process.env.SMTP_FROM_NAME || 'InvoiceFlow';
-    const fromEmail = process.env.SMTP_FROM_EMAIL || 'info@jahongir-travel.uz';
+    const apiInstance = getBrevoClient();
 
-    await transporter.sendMail({
-      from: `${fromName} <${fromEmail}>`,
-      to,
-      subject,
-      html,
-      text: text || undefined,
-    });
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = { name: sender.name, email: sender.email };
+    sendSmtpEmail.to = [{ email: to }];
+    sendSmtpEmail.subject = subject;
+    sendSmtpEmail.htmlContent = html;
+    if (text) {
+      sendSmtpEmail.textContent = text;
+    }
 
-    console.log(`[EMAIL] Sent via SMTP to ${to}: ${subject}`);
+    const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    const messageId = response.body?.messageId || 'unknown';
+
+    console.log(`[EMAIL] SUCCESS | provider=BREVO | messageId=${messageId} | sender=${sender.email} | to=${maskEmail(to)}`);
     return true;
-  } catch (error) {
-    console.error('[EMAIL] Failed to send via SMTP:', error);
+  } catch (error: any) {
+    // Log error without exposing sensitive data
+    const errorMessage = error?.response?.body?.message || error?.message || 'Unknown error';
+    console.error(`[EMAIL] FAILED | provider=BREVO | sender=${sender.email} | to=${maskEmail(to)} | error=${errorMessage}`);
     return false;
   }
 }
@@ -77,26 +135,27 @@ export async function sendPasswordResetEmail(
     <!DOCTYPE html>
     <html>
       <head>
-        <meta charset=utf-8>
+        <meta charset="utf-8">
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
           .button {
             display: inline-block;
             padding: 12px 24px;
-            background-color: #0066cc;
+            background-color: #2563eb;
             color: white;
             text-decoration: none;
-            border-radius: 4px;
+            border-radius: 6px;
             margin: 20px 0;
+            font-weight: 600;
           }
           .footer { margin-top: 30px; font-size: 12px; color: #666; }
         </style>
       </head>
       <body>
-        <div class=container>
+        <div class="container">
           <h2>Password Reset Request</h2>
-          <p>You requested to reset your password for your InvoiceFlow account.</p>
+          <p>You requested to reset your password for your Billza account.</p>
           <p>Click the button below to reset your password:</p>
           <a href="${resetUrl}" class="button">Reset Password</a>
           <p>Or copy and paste this URL into your browser:</p>
@@ -104,7 +163,7 @@ export async function sendPasswordResetEmail(
           <p><strong>This link will expire in 1 hour.</strong></p>
           <p>If you didn't request this password reset, you can safely ignore this email.</p>
           <div class="footer">
-            <p>This is an automated email from InvoiceFlow. Please do not reply.</p>
+            <p>This is an automated email from Billza. Please do not reply.</p>
           </div>
         </div>
       </body>
@@ -114,7 +173,7 @@ export async function sendPasswordResetEmail(
   const text = `
 Password Reset Request
 
-You requested to reset your password for your InvoiceFlow account.
+You requested to reset your password for your Billza account.
 
 Click the link below to reset your password:
 ${resetUrl}
@@ -126,7 +185,7 @@ If you didn't request this password reset, you can safely ignore this email.
 
   return sendEmail({
     to: email,
-    subject: 'Reset Your Password - InvoiceFlow',
+    subject: 'Reset Your Password - Billza',
     html,
     text,
   });
