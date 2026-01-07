@@ -334,5 +334,17 @@ describe('DashboardPage', () => {
         expect(screen.getByText('Upgrade')).toBeInTheDocument();
       });
     });
+
+    it('should have + New Invoice button linking to create flow', async () => {
+      render(<DashboardPage />);
+
+      await waitFor(() => {
+        // Find the + New Invoice button
+        const newInvoiceButton = screen.getByRole('link', { name: /\+ New Invoice/i });
+        expect(newInvoiceButton).toBeInTheDocument();
+        // Verify it links directly to create flow with ?new=1 param
+        expect(newInvoiceButton).toHaveAttribute('href', '/dashboard/invoices?new=1');
+      });
+    });
   });
 });

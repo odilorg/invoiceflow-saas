@@ -152,7 +152,7 @@ export default function DashboardPage() {
         title: 'Add your first invoice',
         description: 'Start tracking invoices and automate follow-ups for overdue payments.',
         action: 'Add Invoice',
-        href: '/dashboard/invoices',
+        href: '/dashboard/invoices?new=1',
         icon: (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -177,7 +177,7 @@ export default function DashboardPage() {
               <p className={SUBTLE}>Overview of your invoices and follow-ups</p>
             </div>
             <Link
-              href="/dashboard/invoices"
+              href="/dashboard/invoices?new=1"
               className={`hidden sm:inline-flex ${BTN_MIN_H} px-6 py-2.5 bg-foreground text-background text-sm font-medium rounded-lg hover:bg-foreground/90 transition-colors items-center`}
             >
               + New Invoice
@@ -454,7 +454,7 @@ export default function DashboardPage() {
       {/* Mobile FAB - hidden at top, shows when scrolled past summary */}
       {showFab && (
         <Link
-          href="/dashboard/invoices?create=true"
+          href="/dashboard/invoices?new=1"
           aria-label="Create invoice"
           title="Create invoice"
           className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-foreground text-background rounded-full flex items-center justify-center shadow-lg hover:bg-foreground/90 transition-all z-30"
