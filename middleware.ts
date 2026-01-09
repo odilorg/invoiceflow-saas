@@ -48,6 +48,13 @@ function applySecurityHeaders(res: NextResponse) {
   if (process.env.NODE_ENV === 'production') {
     res.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }
+
+  // CORS headers - restrict to same origin
+  const origin = process.env.APP_URL || "https://billza.app";
+  res.headers.set("Access-Control-Allow-Origin", origin);
+  res.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+  res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.headers.set("Access-Control-Allow-Credentials", "true");
   
   return res;
 }
