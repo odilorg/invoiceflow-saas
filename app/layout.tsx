@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/ToastProvider";
+import { CookieConsent } from "@/components/CookieConsent";
 
 export const metadata: Metadata = {
   title: "Invoice Follow-Up Automation | Automatic Invoice Reminders — InvoiceFlow",
@@ -25,6 +26,7 @@ export default function RootLayout({
         <ThemeProvider>
           <ToastProvider>
             {children}
+            <CookieConsent />
           </ToastProvider>
         </ThemeProvider>
       </body>

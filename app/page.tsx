@@ -372,6 +372,7 @@ export default function Home() {
               <a href="/legal/privacy" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Privacy Policy</a>
               <a href="/legal/terms" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Terms of Service</a>
               <a href="/legal/refunds" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Refund Policy</a>
+              <a href="/legal/cookies" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Cookie Policy</a>
             </div>
           </div>
           <p className="text-center text-xs text-slate-400 mb-3 max-w-2xl mx-auto">

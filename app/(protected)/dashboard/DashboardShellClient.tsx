@@ -279,6 +279,7 @@ export function DashboardShellClient({
             <a href="/legal/terms" className="text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-400 transition-colors">Terms</a>
             <a href="/legal/privacy" className="text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-400 transition-colors">Privacy</a>
             <a href="/legal/refunds" className="text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-400 transition-colors">Refunds</a>
+            <a href="/legal/cookies" className="text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-400 transition-colors">Cookies</a>
           </div>
         </div>
       </div>
