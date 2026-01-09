@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
@@ -85,10 +86,10 @@ const _POST = withErrorHandler(async (req: NextRequest) => {
   
   // Only log payloads in development
   if (isDev) {
-    console.log('[Schedule CREATE] Received payload:', JSON.stringify(body, null, 2));
-    if (!body.name) console.log('[Schedule CREATE] Missing name');
-    if (!body.steps) console.log('[Schedule CREATE] Missing steps');
-    if (body.steps && body.steps.length === 0) console.log('[Schedule CREATE] Empty steps array');
+    logger.debug('[Schedule CREATE] Received payload:', JSON.stringify(body, null, 2));
+    if (!body.name) logger.debug('[Schedule CREATE] Missing name');
+    if (!body.steps) logger.debug('[Schedule CREATE] Missing steps');
+    if (body.steps && body.steps.length === 0) logger.debug('[Schedule CREATE] Empty steps array');
   }
 
   const data = scheduleSchema.parse(body);

@@ -1,3 +1,4 @@
+import { logger } from './logger';
 /**
  * Email utility for sending transactional emails via Brevo API
  *
@@ -80,18 +81,18 @@ export async function sendEmail({ to, subject, html, text }: SendEmailParams): P
   const sender = getValidatedSender();
 
   // Log attempt (no secrets)
-  console.log(`[EMAIL] Attempt | provider=BREVO | sender=${sender.email} | to=${maskEmail(to)} | subject="${subject.slice(0, 50)}..."`);
+  logger.info(`[EMAIL] Attempt | provider=BREVO | sender=${sender.email} | to=${maskEmail(to)} | subject="${subject.slice(0, 50)}..."`);
 
   if (!emailEnabled) {
     // Development/staging mode: Log to console instead of sending
-    console.log('\n========== EMAIL (DISABLED - EMAIL_ENABLED=false) ==========');
-    console.log(`Provider: BREVO API`);
-    console.log(`From: ${sender.name} <${sender.email}>`);
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Text: ${text || 'N/A'}`);
-    console.log(`HTML length: ${html.length} chars`);
-    console.log('=============================================================\n');
+    logger.debug('\n========== EMAIL (DISABLED - EMAIL_ENABLED=false) ==========');
+    logger.debug(`Provider: BREVO API`);
+    logger.debug(`From: ${sender.name} <${sender.email}>`);
+    logger.debug(`To: ${to}`);
+    logger.debug(`Subject: ${subject}`);
+    logger.debug(`Text: ${text || 'N/A'}`);
+    logger.debug(`HTML length: ${html.length} chars`);
+    logger.debug('=============================================================\n');
     return true;
   }
 
@@ -111,12 +112,12 @@ export async function sendEmail({ to, subject, html, text }: SendEmailParams): P
     const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
     const messageId = response.body?.messageId || 'unknown';
 
-    console.log(`[EMAIL] SUCCESS | provider=BREVO | messageId=${messageId} | sender=${sender.email} | to=${maskEmail(to)}`);
+    logger.info(`[EMAIL] SUCCESS | provider=BREVO | messageId=${messageId} | sender=${sender.email} | to=${maskEmail(to)}`);
     return true;
   } catch (error: any) {
     // Log error without exposing sensitive data
     const errorMessage = error?.response?.body?.message || error?.message || 'Unknown error';
-    console.error(`[EMAIL] FAILED | provider=BREVO | sender=${sender.email} | to=${maskEmail(to)} | error=${errorMessage}`);
+    logger.error(`[EMAIL] FAILED | provider=BREVO | sender=${sender.email} | to=${maskEmail(to)} | error=${errorMessage}`);
     return false;
   }
 }
