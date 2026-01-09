@@ -86,7 +86,7 @@ const _POST = withErrorHandler(async (req: NextRequest) => {
   
   // Only log payloads in development
   if (isDev) {
-    logger.debug('[Schedule CREATE] Received payload:', JSON.stringify(body, null, 2));
+    logger.debug('[Schedule CREATE] Received payload: ' + JSON.stringify(body, null, 2));
     if (!body.name) logger.debug('[Schedule CREATE] Missing name');
     if (!body.steps) logger.debug('[Schedule CREATE] Missing steps');
     if (body.steps && body.steps.length === 0) logger.debug('[Schedule CREATE] Empty steps array');

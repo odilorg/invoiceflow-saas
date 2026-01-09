@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     try {
       await seedDefaultTemplatesAndSchedule(user.id);
     } catch (seedError) {
-      logger.error('[SEED_ERROR]', user.id, seedError);
+      logger.error('[SEED_ERROR] User: ' + user.id, seedError);
       // Don't fail registration if seeding fails
     }
 
