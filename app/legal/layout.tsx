@@ -59,6 +59,9 @@ export default function LegalLayout({
               <Link href="/legal/refunds" className="hover:text-slate-900 transition-colors">Refund Policy</Link>
             </div>
           </div>
+          <p className="text-center text-xs text-slate-400 mb-3 max-w-2xl mx-auto">
+            Billza is automated invoice reminder software. Billza is not a debt collection agency and does not provide legal, financial, or debt recovery services.
+          </p>
           <div className="text-center text-sm text-slate-500">
             © {new Date().getFullYear()} Billza. All rights reserved.
           </div>

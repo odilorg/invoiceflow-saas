@@ -94,7 +94,23 @@ export default function TermsOfServicePage() {
       </section>
 
       <section className="mb-8">
-        <h2 className="text-xl font-semibold text-slate-900 mb-3">6. Payments & Subscriptions</h2>
+        <h2 className="text-xl font-semibold text-slate-900 mb-3">6. Automated Email Sending</h2>
+        <p className="text-slate-600 leading-relaxed mb-4">
+          Billza sends invoice reminder emails automatically based on your configuration:
+        </p>
+        <ul className="list-disc pl-6 text-slate-600 mb-4">
+          <li>All reminder emails are sent by software, not humans</li>
+          <li>Billza does not manually write, review, or approve email content</li>
+          <li>You are solely responsible for the content of your email templates</li>
+          <li>Email delivery depends on third-party email providers and is not guaranteed</li>
+        </ul>
+        <p className="text-slate-600 leading-relaxed">
+          Billza does not monitor recipient responses or take action based on email replies.
+        </p>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="text-xl font-semibold text-slate-900 mb-3">7. Payments & Subscriptions</h2>
         <p className="text-slate-600 leading-relaxed mb-4">
           Some features require a paid subscription.
         </p>
@@ -110,7 +126,7 @@ export default function TermsOfServicePage() {
       </section>
 
       <section className="mb-8">
-        <h2 className="text-xl font-semibold text-slate-900 mb-3">7. Availability & Modifications</h2>
+        <h2 className="text-xl font-semibold text-slate-900 mb-3">8. Availability & Modifications</h2>
         <p className="text-slate-600 leading-relaxed mb-2">We may:</p>
         <ul className="list-disc pl-6 text-slate-600 mb-4">
           <li>Modify features</li>
@@ -123,7 +139,7 @@ export default function TermsOfServicePage() {
       </section>
 
       <section className="mb-8">
-        <h2 className="text-xl font-semibold text-slate-900 mb-3">8. Intellectual Property</h2>
+        <h2 className="text-xl font-semibold text-slate-900 mb-3">9. Intellectual Property</h2>
         <p className="text-slate-600 leading-relaxed mb-4">
           All rights, title, and interest in the Service, including software, design, branding, and content, remain the exclusive property of Billza.
         </p>
@@ -133,7 +149,7 @@ export default function TermsOfServicePage() {
       </section>
 
       <section className="mb-8">
-        <h2 className="text-xl font-semibold text-slate-900 mb-3">9. Limitation of Liability</h2>
+        <h2 className="text-xl font-semibold text-slate-900 mb-3">10. Limitation of Liability</h2>
         <p className="text-slate-600 leading-relaxed mb-4">
           To the maximum extent permitted by law:
         </p>
@@ -150,7 +166,7 @@ export default function TermsOfServicePage() {
       </section>
 
       <section className="mb-8">
-        <h2 className="text-xl font-semibold text-slate-900 mb-3">10. Indemnification</h2>
+        <h2 className="text-xl font-semibold text-slate-900 mb-3">11. Indemnification</h2>
         <p className="text-slate-600 leading-relaxed mb-2">
           You agree to indemnify and hold Billza harmless from any claims, damages, or losses arising from:
         </p>
@@ -162,7 +178,7 @@ export default function TermsOfServicePage() {
       </section>
 
       <section className="mb-8">
-        <h2 className="text-xl font-semibold text-slate-900 mb-3">11. Termination</h2>
+        <h2 className="text-xl font-semibold text-slate-900 mb-3">12. Termination</h2>
         <p className="text-slate-600 leading-relaxed mb-2">We may suspend or terminate your account if:</p>
         <ul className="list-disc pl-6 text-slate-600 mb-4">
           <li>You violate these Terms</li>
@@ -175,21 +191,21 @@ export default function TermsOfServicePage() {
       </section>
 
       <section className="mb-8">
-        <h2 className="text-xl font-semibold text-slate-900 mb-3">12. Changes to These Terms</h2>
+        <h2 className="text-xl font-semibold text-slate-900 mb-3">13. Changes to These Terms</h2>
         <p className="text-slate-600 leading-relaxed">
           We may update these Terms from time to time. Changes will be posted on this page with an updated "Last updated" date. Continued use of the Service constitutes acceptance of the revised Terms.
         </p>
       </section>
 
       <section className="mb-8">
-        <h2 className="text-xl font-semibold text-slate-900 mb-3">13. Governing Law</h2>
+        <h2 className="text-xl font-semibold text-slate-900 mb-3">14. Governing Law</h2>
         <p className="text-slate-600 leading-relaxed">
           These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which Billza operates, without regard to conflict of law principles.
         </p>
       </section>
 
       <section className="mb-8">
-        <h2 className="text-xl font-semibold text-slate-900 mb-3">14. Contact Information</h2>
+        <h2 className="text-xl font-semibold text-slate-900 mb-3">15. Contact Information</h2>
         <p className="text-slate-600 leading-relaxed">
           For questions regarding these Terms, contact:
         </p>

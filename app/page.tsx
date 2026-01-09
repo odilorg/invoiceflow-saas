@@ -312,8 +312,9 @@ export default function Home() {
             <div className="border-b border-slate-200 pb-5">
               <h3 className="text-lg font-semibold text-slate-900 mb-2">Who sends the automatic invoice reminders?</h3>
               <p className="text-slate-600 leading-relaxed text-sm max-w-2xl">
-                Emails are sent automatically from Billza using a verified sending domain.
-                (Gmail sending support planned.)
+                Reminder emails are sent automatically by Billza software — no human involvement. 
+                The software sends emails based on your configured schedule using a verified sending domain.
+                Billza does not manually write, review, or approve email content.
               </p>
             </div>
 
@@ -321,6 +322,15 @@ export default function Home() {
               <h3 className="text-lg font-semibold text-slate-900 mb-2">How do automatic invoice reminders stop?</h3>
               <p className="text-slate-600 leading-relaxed text-sm max-w-2xl">
                 Mark the invoice as paid and all future reminders stop immediately.
+              </p>
+            </div>
+
+            <div className="border-b border-slate-200 pb-5">
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Is Billza a debt collection service?</h3>
+              <p className="text-slate-600 leading-relaxed text-sm max-w-2xl">
+                No. Billza is automated software that sends invoice reminder emails. 
+                It is not a debt collection agency, does not negotiate payments, and does not guarantee payment.
+                You are responsible for ensuring you have permission to contact invoice recipients.
               </p>
             </div>
 
@@ -364,6 +374,9 @@ export default function Home() {
               <a href="/legal/refunds" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Refund Policy</a>
             </div>
           </div>
+          <p className="text-center text-xs text-slate-400 mb-3 max-w-2xl mx-auto">
+            Billza is automated invoice reminder software. Billza is not a debt collection agency and does not provide legal, financial, or debt recovery services.
+          </p>
           <div className="text-center text-sm text-slate-500">
             © {new Date().getFullYear()} Billza. All rights reserved.
           </div>
