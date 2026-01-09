@@ -259,7 +259,7 @@ export default function TemplatesPage() {
       <div className="mb-6 bg-info/10 border border-info/20 rounded-lg p-4">
         <h3 className="text-sm font-semibold text-info mb-2">Available Template Variables:</h3>
         <div className="flex flex-wrap gap-2">
-          {['{clientName}', '{invoiceNumber}', '{amount}', '{currency}', '{dueDate}', '{invoiceLink}', '{daysOverdue}'].map((v) => (
+          {['{clientName}', '{invoiceNumber}', '{amount}', '{currency}', '{dueDate}', '{invoiceLink}', '{daysOverdue}', '{businessName}'].map((v) => (
             <code key={v} className="px-2 py-1 bg-card border border-info/20 rounded text-xs font-mono text-info">
               {v}
             </code>
@@ -440,6 +440,7 @@ function PreviewModal({ template, onClose }: { template: Template; onClose: () =
     { name: 'dueDate', example: 'Dec 31, 2025' },
     { name: 'invoiceLink', example: 'https://invoice.example.com/inv-001' },
     { name: 'daysOverdue', example: '3' },
+    { name: 'businessName', example: 'Acme Corp' },
   ];
 
   const highlightVariables = (text: string) => {
@@ -637,6 +638,7 @@ function TemplateModal({
     { name: 'dueDate', example: 'Dec 31, 2025' },
     { name: 'invoiceLink', example: 'https://invoice.example.com/inv-001' },
     { name: 'daysOverdue', example: '3' },
+    { name: 'businessName', example: 'Acme Corp' },
   ];
 
   const validVariableNames = variables.map(v => v.name);

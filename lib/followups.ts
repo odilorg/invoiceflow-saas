@@ -142,6 +142,7 @@ export async function generateFollowUps(invoiceId: string, scheduleId?: string) 
       invoiceNumber: invoice.invoiceNumber,
       daysOverdue: step.dayOffset > 0 ? step.dayOffset.toString() : '0',
       invoiceLink: invoice.notes || '', // Use notes field as invoice link or add dedicated field
+      businessName: invoice.user.businessName || invoice.user.name || "Your business",
     };
 
     return {

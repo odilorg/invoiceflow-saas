@@ -11,6 +11,7 @@ interface UserProfile {
   id: string;
   email: string;
   name: string | null;
+  businessName: string | null;
   planStatus: string;
   createdAt: string;
 }
@@ -28,6 +29,7 @@ export default function SettingsPage() {
   // Non-sensitive form data (safe to keep in state)
   const [formData, setFormData] = useState({
     name: '',
+    businessName: '',
     email: '',
   });
 
@@ -67,6 +69,7 @@ export default function SettingsPage() {
       setFormData(prev => ({
         ...prev,
         name: data.name || '',
+        businessName: data.businessName || '',
         email: data.email || '',
       }));
     } catch (err) {
@@ -100,6 +103,7 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
+          businessName: formData.businessName,
           email: formData.email,
         }),
       });
@@ -259,6 +263,19 @@ export default function SettingsPage() {
                     placeholder="Enter your name"
                     disabled={saving}
                     autoTrim
+                  />
+                </FormField>
+
+                <FormField id="businessName" label="Business Name" hint="Shown in your reminder emails so clients know who sent them">
+                  <FormInput
+                    id="businessName"
+                    type="text"
+                    value={formData.businessName}
+                    onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                    placeholder="Your Company LLC"
+                    disabled={saving}
+                    autoTrim
+                    maxLength={80}
                   />
                 </FormField>
 

@@ -44,6 +44,7 @@ model User {
   email        String    @unique
   passwordHash String
   name         String?
+  businessName String?    // Business name shown in reminder emails
   planStatus   PlanStatus @default(FREE)
   lsCustomerId String?   // Lemon Squeezy customer ID
   createdAt    DateTime  @default(now())
