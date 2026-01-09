@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
@@ -74,11 +75,11 @@ export async function POST(req: NextRequest) {
       await sendPasswordResetEmail(emailNormalized, resetToken, baseUrl);
 
       // Log without exposing token in production
-      console.log(`[Password Reset] Reset requested for ${emailNormalized}`);
+      logger.info(`[Password Reset] Reset requested for ${emailNormalized}`);
       
       // Only log full reset URL in development
       if (process.env.NODE_ENV !== 'production') {
-        console.log(`[Password Reset] Reset URL: ${baseUrl}/reset-password?token=${resetToken}`);
+        logger.info(`[Password Reset] Reset URL: ${baseUrl}/reset-password?token=${resetToken}`);
       }
     }
 
@@ -98,7 +99,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.error('[FORGOT_PASSWORD_ERROR]', error);
+    logger.error('[FORGOT_PASSWORD_ERROR]', error);
     return NextResponse.json(
       commonErrors.internal(),
       { status: 500 }

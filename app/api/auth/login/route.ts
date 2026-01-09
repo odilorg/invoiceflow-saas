@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyPassword, createSession, loginSchema } from '@/lib/auth';
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
       );
     }
     // Log error without sensitive data (no password, no request body)
-    console.error('[LOGIN_ERROR]', error);
+    logger.error('[LOGIN_ERROR]', error);
     return NextResponse.json(
       commonErrors.internal(),
       { status: 500 }

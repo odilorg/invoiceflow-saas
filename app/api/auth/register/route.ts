@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { hashPassword, createSession, registerSchema } from '@/lib/auth';
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     try {
       await seedDefaultTemplatesAndSchedule(user.id);
     } catch (seedError) {
-      console.error('[SEED_ERROR]', user.id, seedError);
+      logger.error('[SEED_ERROR]', user.id, seedError);
       // Don't fail registration if seeding fails
     }
 
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    console.error('[REGISTER_ERROR]', error);
+    logger.error('[REGISTER_ERROR]', error);
     return NextResponse.json(
       commonErrors.internal(),
       { status: 500 }
