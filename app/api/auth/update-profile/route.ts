@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 
 const updateProfileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
+  businessName: z.string().max(80).optional(),
   email: z.string().email().optional(),
   currentPassword: z.string().optional(),
   newPassword: z.string().min(6).optional(),
@@ -23,6 +24,7 @@ export async function GET(req: NextRequest) {
         id: true,
         email: true,
         name: true,
+        businessName: true,
         planStatus: true,
         createdAt: true,
       },
@@ -87,6 +89,10 @@ export async function PATCH(req: NextRequest) {
       updateData.name = data.name;
     }
 
+    if (data.businessName !== undefined) {
+      updateData.businessName = data.businessName.trim() || null;
+    }
+
     if (data.email !== undefined && data.email !== user.email) {
       // Check if email is already taken
       const existingUser = await prisma.user.findUnique({
@@ -115,6 +121,7 @@ export async function PATCH(req: NextRequest) {
         id: true,
         email: true,
         name: true,
+        businessName: true,
         planStatus: true,
         updatedAt: true,
       },

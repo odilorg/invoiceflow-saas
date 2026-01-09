@@ -6,6 +6,8 @@ const DEFAULT_TEMPLATES = [
     subject: 'Reminder: Invoice {invoiceNumber} payment due',
     body: `Hi {clientName},
 
+This invoice was issued by {businessName}.
+
 I hope this message finds you well!
 
 This is a friendly reminder that invoice {invoiceNumber} for {currency} {amount} is due on {dueDate}.
@@ -25,6 +27,8 @@ Best regards`,
     subject: 'Follow-up: Invoice {invoiceNumber} - {currency} {amount}',
     body: `Hello {clientName},
 
+This invoice was issued by {businessName}.
+
 This is a follow-up regarding invoice {invoiceNumber} for {currency} {amount}, which was due on {dueDate}.
 
 Invoice details:
@@ -42,6 +46,8 @@ Best regards`,
     name: 'Firm Reminder',
     subject: 'Important: Invoice {invoiceNumber} is now {daysOverdue} days overdue',
     body: `Dear {clientName},
+
+This invoice was issued by {businessName}.
 
 This is an important notice regarding invoice {invoiceNumber} for {currency} {amount}.
 
