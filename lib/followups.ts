@@ -3,6 +3,20 @@ import { Invoice } from '@prisma/client';
 import { ensureDefaultSchedule } from './default-schedule';
 
 /**
+ * Escape HTML special characters to prevent XSS attacks in email templates
+ * @security This is critical for preventing template injection attacks
+ */
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+
+/**
  * Add days to a date using UTC to avoid timezone/DST drift
  */
 function addDaysUTC(date: Date, days: number): Date {
@@ -53,7 +67,7 @@ export function renderTemplate(
       // Otherwise, just replace placeholder with empty string
       result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), '');
     } else {
-      result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+      result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), escapeHtml(value));
     }
   }
   // Clean up multiple consecutive blank lines
