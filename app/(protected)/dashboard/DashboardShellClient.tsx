@@ -273,6 +273,13 @@ export function DashboardShellClient({
               Sign out
             </button>
           </div>
+
+          {/* Legal links */}
+          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 px-1">
+            <a href="/legal/terms" className="text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-400 transition-colors">Terms</a>
+            <a href="/legal/privacy" className="text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-400 transition-colors">Privacy</a>
+            <a href="/legal/refunds" className="text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-400 transition-colors">Refunds</a>
+          </div>
         </div>
       </div>
 

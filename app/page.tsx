@@ -359,9 +359,9 @@ export default function Home() {
               <span className="text-base font-semibold text-slate-900">Billza</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-slate-600">
-              <a href="/privacy" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Privacy Policy</a>
-              <a href="/terms" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Terms of Service</a>
-              <a href="/contact" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Contact</a>
+              <a href="/legal/privacy" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Privacy Policy</a>
+              <a href="/legal/terms" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Terms of Service</a>
+              <a href="/legal/refunds" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Refund Policy</a>
             </div>
           </div>
           <div className="text-center text-sm text-slate-500">
