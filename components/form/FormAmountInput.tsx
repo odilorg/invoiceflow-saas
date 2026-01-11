@@ -165,7 +165,7 @@ export default function FormAmountInput({
     : 'hover:border-ring/50 focus:border-ring';
 
   // Adjust padding for currency symbol
-  const paddingClasses = currency ? 'pl-8 pr-3' : 'px-3';
+  const paddingClasses = currency ? 'pl-14 pr-3' : 'px-3';
 
   return (
     <div className="relative">

@@ -5,7 +5,7 @@
 
 **Automated invoice follow-up system that helps businesses get paid faster** by sending scheduled email reminders based on customizable templates and schedules.
 
-🌐 **Live:** https://invoice.jahongir-travel.uz
+🌐 **Live:** https://billza.app
 
 ---
 
@@ -50,6 +50,12 @@
 - ✅ **3-Tier Pricing** - Free, Starter, Pro plans
 - ✅ **Webhook Processing** - Subscription lifecycle events
 - ✅ **Usage Tracking** - Invoice count limits per plan
+
+### Blog
+- ✅ **File-Based Blog** - Markdown posts with frontmatter metadata
+- ✅ **Static Generation** - Pre-rendered blog pages for SEO
+- ✅ **SEO Optimized** - Dynamic metadata for each post
+- ✅ **Responsive Design** - Mobile-friendly blog layout
 
 ### UX Enhancements
 - ✅ **Dark Mode** - System/Light/Dark theme with persistence
@@ -192,7 +198,7 @@ app/
 ## 📁 Project Structure
 
 ```
-invoice-followup-saas/
+billza-app/
 ├── app/                          # Next.js App Router
 │   ├── (protected)/             # Protected routes group
 │   │   └── dashboard/
@@ -390,7 +396,7 @@ UPSTASH_REDIS_REST_URL="https://your-redis.upstash.io"
 UPSTASH_REDIS_REST_TOKEN="your-token-here"
 
 # App URLs
-NEXT_PUBLIC_APP_URL="https://invoice.jahongir-travel.uz"
+NEXT_PUBLIC_APP_URL="https://billza.app"
 NEXT_PUBLIC_VERSION="1.0.0"
 
 # Node Environment
@@ -699,23 +705,23 @@ Response (200):
 
 **1. Build Application**
 ```bash
-cd /domains/invoice.jahongir-travel.uz
+cd /var/www/billza-app
 pnpm install
 pnpm build
 ```
 
 **2. Start with PM2**
 ```bash
-pm2 start npm --name "invoice-followup" -- start
+pm2 start npm --name "billza-app" -- start
 pm2 save
 pm2 startup
 ```
 
 **3. Nginx Configuration**
 ```nginx
-# /etc/nginx/sites-available/invoice.jahongir-travel.uz.conf
+# /etc/nginx/sites-available/billza.app.conf
 server {
-    server_name invoice.jahongir-travel.uz;
+    server_name billza.app;
 
     location / {
         proxy_pass http://127.0.0.1:3005;
@@ -730,30 +736,30 @@ server {
     }
 
     listen 443 ssl;
-    ssl_certificate /etc/letsencrypt/live/invoice.jahongir-travel.uz/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/invoice.jahongir-travel.uz/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/billza.app/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/billza.app/privkey.pem;
 }
 
 server {
-    if ($host = invoice.jahongir-travel.uz) {
+    if ($host = billza.app) {
         return 301 https://$host$request_uri;
     }
     listen 80;
-    server_name invoice.jahongir-travel.uz;
+    server_name billza.app;
     return 404;
 }
 ```
 
 **4. Enable Site and Reload Nginx**
 ```bash
-ln -s /etc/nginx/sites-available/invoice.jahongir-travel.uz.conf /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/billza.app.conf /etc/nginx/sites-enabled/
 nginx -t
 systemctl reload nginx
 ```
 
 **5. SSL Certificate (Let's Encrypt)**
 ```bash
-certbot --nginx -d invoice.jahongir-travel.uz
+certbot --nginx -d billza.app
 ```
 
 **6. Setup Cron Job**
@@ -764,17 +770,17 @@ crontab -e
 Add:
 ```cron
 # Run follow-ups daily at 9 AM
-0 9 * * * curl -X POST https://invoice.jahongir-travel.uz/api/cron/run-followups -H "Authorization: Bearer YOUR_CRON_SECRET"
+0 9 * * * curl -X POST https://billza.app/api/cron/run-followups -H "Authorization: Bearer YOUR_CRON_SECRET"
 ```
 
 ### PM2 Management Commands
 
 ```bash
 pm2 list                    # List all processes
-pm2 logs invoice-followup   # View logs
-pm2 restart invoice-followup  # Restart app
-pm2 stop invoice-followup   # Stop app
-pm2 delete invoice-followup # Delete app
+pm2 logs billza-app   # View logs
+pm2 restart billza-app  # Restart app
+pm2 stop billza-app   # Stop app
+pm2 delete billza-app # Delete app
 pm2 monit                   # Real-time monitoring
 ```
 
@@ -818,7 +824,7 @@ pnpm test:coverage     # Coverage report
 
 **"Too many login attempts"**
 - Rate limiting is working correctly
-- Wait 15 minutes or restart app: `pm2 restart invoice-followup`
+- Wait 15 minutes or restart app: `pm2 restart billza-app`
 
 **Emails not sending**
 1. Verify Brevo API key: `echo $BREVO_API_KEY`
@@ -828,7 +834,7 @@ pnpm test:coverage     # Coverage report
    curl -X POST http://localhost:3005/api/cron/run-followups \
      -H "Authorization: Bearer YOUR_CRON_SECRET"
    ```
-4. Check logs: `pm2 logs invoice-followup --lines 100`
+4. Check logs: `pm2 logs billza-app --lines 100`
 
 **Database connection errors**
 1. Verify DATABASE_URL in `.env`
@@ -957,3 +963,84 @@ For technical issues or questions:
 ---
 
 **Built with ❤️ using Next.js, Prisma, and Tailwind CSS**
+
+
+---
+
+## Blog System
+
+Billza includes a file-based blog system for content marketing and SEO.
+
+### Blog Structure
+
+```
+content/
+  blog/
+    getting-started-with-billza.md
+    invoice-follow-up-best-practices.md
+    freelancer-invoicing-mistakes.md
+
+app/
+  blog/
+    page.tsx           # Blog index
+    [slug]/
+      page.tsx         # Individual blog post
+
+lib/
+  blog.ts              # Blog utilities
+```
+
+### Creating a New Blog Post
+
+1. Create a new `.md` file in `content/blog/`:
+
+```markdown
+---
+title: "Your Blog Post Title"
+slug: "your-blog-post-slug"
+date: "2025-01-15"
+excerpt: "A brief description of your post for previews and SEO."
+author: "Billza Team"
+tags: ["invoicing", "tips", "business"]
+---
+
+# Your Blog Post Title
+
+Your content goes here...
+```
+
+2. Build and deploy:
+
+```bash
+pnpm build
+pm2 restart billza-app
+```
+
+### Frontmatter Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `title` | Yes | The post title |
+| `slug` | Yes | URL-friendly identifier |
+| `date` | Yes | Publication date (YYYY-MM-DD) |
+| `excerpt` | Yes | Short description for previews |
+| `author` | Yes | Author name |
+| `tags` | No | Array of tags for categorization |
+
+### Blog URLs
+
+- Blog Index: `https://billza.app/blog`
+- Blog Post: `https://billza.app/blog/{slug}`
+
+### SEO Features
+
+- Dynamic title and meta description per post
+- OpenGraph tags for social sharing
+- Twitter card support
+- Semantic HTML structure
+
+### Dependencies
+
+- `gray-matter` - Parses frontmatter metadata
+- `remark` - Processes Markdown content
+- `remark-html` - Converts Markdown to HTML

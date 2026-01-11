@@ -22,20 +22,6 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 let toastId = 0;
 
-/**
- * ToastProvider - Context provider for toast notifications
- *
- * Usage:
- * 1. Wrap your app with <ToastProvider>
- * 2. Use useToast() hook in components
- *
- * Example:
- * ```tsx
- * const toast = useToast();
- * toast.success('Invoice created successfully!');
- * toast.error('Failed to delete invoice');
- * ```
- */
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -67,41 +53,32 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast, success, error, info, warning }}>
       {children}
-      {/* Render all active toasts */}
-      <div className="fixed top-0 right-0 z-50 p-4 pointer-events-none">
-        <div className="flex flex-col gap-2 pointer-events-auto">
-          {toasts.map((toast, index) => (
-            <div
-              key={toast.id}
-              style={{
-                transform: `translateY(${index * 4}px)`,
-                transition: 'transform 0.3s ease-out'
-              }}
-            >
-              <Toast
-                message={toast.message}
-                type={toast.type}
-                duration={toast.duration}
-                onClose={() => removeToast(toast.id)}
-              />
-            </div>
-          ))}
+      {toasts.length > 0 && (
+        <div className="fixed top-4 right-4 z-50 pointer-events-none">
+          <div className="flex flex-col gap-2 pointer-events-auto">
+            {toasts.map((toast, index) => (
+              <div
+                key={toast.id}
+                style={{
+                  transform: `translateY(${index * 4}px)`,
+                  transition: 'transform 0.3s ease-out'
+                }}
+              >
+                <Toast
+                  message={toast.message}
+                  type={toast.type}
+                  duration={toast.duration}
+                  onClose={() => removeToast(toast.id)}
+                />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </ToastContext.Provider>
   );
 }
 
-/**
- * useToast - Hook to show toast notifications
- *
- * Returns:
- * - showToast(message, type, duration)
- * - success(message, duration)
- * - error(message, duration)
- * - info(message, duration)
- * - warning(message, duration)
- */
 export function useToast() {
   const context = useContext(ToastContext);
   if (!context) {

@@ -13,6 +13,12 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-3">
               <a
+                href="/blog"
+                className="px-4 py-2.5 text-slate-700 hover:text-slate-900 transition-colors font-medium text-sm"
+              >
+                Blog
+              </a>
+              <a
                 href="/login"
                 className="px-4 py-2.5 text-slate-700 hover:text-slate-900 transition-colors font-medium text-sm"
               >
@@ -359,6 +365,7 @@ export default function Home() {
               <span className="text-base font-semibold text-slate-900">Billza</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-slate-600">
+              <a href="/blog" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Blog</a>
               <a href="/privacy" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Privacy Policy</a>
               <a href="/terms" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Terms of Service</a>
               <a href="/contact" className="hover:text-slate-900 focus:outline-none focus:underline transition-colors">Contact</a>
