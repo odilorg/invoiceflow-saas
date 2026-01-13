@@ -1,129 +1,186 @@
-import { Metadata } from "next";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getAllPostSlugs, getPostData } from "@/lib/blog";
+import fs from 'fs';
+import path from 'path';
+import matter from 'gray-matter';
+import { MDXRemote } from 'next-mdx-remote/rsc';
+import Link from 'next/link';
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 
-interface PageProps {
+interface BlogPostProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateStaticParams() {
-  const slugs = getAllPostSlugs();
-  return slugs.map((slug) => ({
-    slug,
-  }));
+interface BlogPostData {
+  title: string;
+  description: string;
+  date: string;
+  author: string;
+  tags: string[];
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+async function getBlogPost(slug: string): Promise<{ data: BlogPostData; content: string } | null> {
+  const blogDir = path.join(process.cwd(), 'content', 'blog');
+  const filePath = path.join(blogDir, `${slug}.md`);
+
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  const fileContent = fs.readFileSync(filePath, 'utf-8');
+  const { data, content } = matter(fileContent);
+
+  return {
+    data: data as BlogPostData,
+    content,
+  };
+}
+
+async function getAllBlogSlugs(): Promise<string[]> {
+  const blogDir = path.join(process.cwd(), 'content', 'blog');
+
+  if (!fs.existsSync(blogDir)) {
+    return [];
+  }
+
+  const files = fs.readdirSync(blogDir);
+  return files.filter((file) => file.endsWith('.md')).map((file) => file.replace('.md', ''));
+}
+
+export async function generateStaticParams() {
+  const slugs = await getAllBlogSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: BlogPostProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPostData(slug);
-  
+  const post = await getBlogPost(slug);
+
   if (!post) {
     return {
-      title: "Post Not Found | Billza Blog",
+      title: 'Post Not Found - Billza Blog',
     };
   }
 
   return {
-    title: `${post.title} | Billza Blog`,
-    description: post.excerpt,
-    openGraph: {
-      title: post.title,
-      description: post.excerpt,
-      type: "article",
-      publishedTime: post.date,
-      authors: [post.author],
-      tags: post.tags,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: post.title,
-      description: post.excerpt,
-    },
+    title: `${post.data.title} - Billza Blog`,
+    description: post.data.description,
   };
 }
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   });
 }
 
-export default async function BlogPostPage({ params }: PageProps) {
+export default async function BlogPostPage({ params }: BlogPostProps) {
   const { slug } = await params;
-  const post = await getPostData(slug);
+  const post = await getBlogPost(slug);
 
   if (!post) {
     notFound();
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-3xl mx-auto px-4 py-6">
-          <Link href="/blog" className="text-blue-600 hover:text-blue-700 text-sm mb-2 inline-block">
-            &larr; Back to Blog
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900">
+      <article className="max-w-4xl mx-auto px-4 py-16">
+        {/* Header */}
+        <header className="mb-12">
+          <Link
+            href="/blog"
+            className="inline-flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium mb-8"
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            Back to Blog
           </Link>
-        </div>
-      </header>
 
-      {/* Article */}
-      <main className="max-w-3xl mx-auto px-4 py-12">
-        <article className="bg-white rounded-lg shadow-sm p-8">
-          {/* Article Header */}
-          <header className="mb-8 pb-8 border-b">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">{post.title}</h1>
-            <div className="flex items-center gap-4 text-sm text-gray-500">
-              <time dateTime={post.date}>{formatDate(post.date)}</time>
-              <span>&bull;</span>
-              <span>By {post.author}</span>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {post.tags.map((tag) => (
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+            {post.data.title}
+          </h1>
+
+          <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400 mb-6">
+            <time dateTime={post.data.date}>{formatDate(post.data.date)}</time>
+            <span>•</span>
+            <span>{post.data.author}</span>
+          </div>
+
+          {post.data.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {post.data.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="inline-block px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded"
+                  className="inline-block bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 text-sm px-3 py-1 rounded-full"
                 >
                   {tag}
                 </span>
               ))}
             </div>
-          </header>
+          )}
+        </header>
 
-          {/* Article Content */}
-          <div
-            className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-600 prose-strong:text-gray-900"
-            dangerouslySetInnerHTML={{ __html: post.content || "" }}
-          />
-        </article>
-
-        {/* CTA */}
-        <div className="mt-12 bg-blue-600 rounded-lg p-8 text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">
-            Ready to streamline your invoicing?
-          </h2>
-          <p className="text-blue-100 mb-6">
-            Join thousands of businesses using Billza to get paid faster.
-          </p>
-          <Link
-            href="/register"
-            className="inline-block bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
-          >
-            Get Started Free
-          </Link>
+        {/* Content */}
+        <div className="prose prose-lg prose-indigo dark:prose-invert max-w-none
+          prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-white
+          prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl
+          prose-p:text-gray-700 dark:prose-p:text-gray-300
+          prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline
+          prose-strong:text-gray-900 dark:prose-strong:text-white
+          prose-code:text-indigo-600 dark:prose-code:text-indigo-400 prose-code:bg-indigo-50 dark:prose-code:bg-indigo-900/30
+          prose-ul:text-gray-700 dark:prose-ul:text-gray-300
+          prose-ol:text-gray-700 dark:prose-ol:text-gray-300
+          prose-li:text-gray-700 dark:prose-li:text-gray-300
+          bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 md:p-12"
+        >
+          <MDXRemote source={post.content} />
         </div>
-      </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t mt-12">
-        <div className="max-w-3xl mx-auto px-4 py-6 text-center text-gray-500 text-sm">
-          <p>&copy; {new Date().getFullYear()} Billza. All rights reserved.</p>
-        </div>
-      </footer>
+        {/* Footer */}
+        <footer className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-between items-center">
+            <Link
+              href="/blog"
+              className="inline-flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
+            >
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              View all posts
+            </Link>
+
+            <Link
+              href="/"
+              className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium"
+            >
+              Back to Home
+            </Link>
+          </div>
+        </footer>
+      </article>
     </div>
   );
 }
