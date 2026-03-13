@@ -182,8 +182,14 @@ export async function regenerateAllFollowUps(userId: string) {
     },
   });
 
-  for (const invoice of invoices) {
-    // Use each invoice's assigned schedule
-    await generateFollowUps(invoice.id, invoice.scheduleId || undefined);
+  // Process in parallel batches of 10 to avoid overwhelming the database
+  const BATCH_SIZE = 10;
+  for (let i = 0; i < invoices.length; i += BATCH_SIZE) {
+    const batch = invoices.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      batch.map(invoice =>
+        generateFollowUps(invoice.id, invoice.scheduleId || undefined)
+      )
+    );
   }
 }

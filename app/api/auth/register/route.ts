@@ -4,6 +4,7 @@ import { hashPassword, createSession, registerSchema } from '@/lib/auth';
 import { seedDefaultTemplatesAndSchedule } from '@/lib/seed-defaults';
 import { checkRateLimit, authRateLimit } from '@/lib/rate-limit';
 import { apiSuccess, apiError, commonErrors } from '@/lib/api-response';
+import { getClientIp } from '@/lib/request-utils';
 import { z } from 'zod';
 
 export async function POST(req: NextRequest) {
@@ -12,7 +13,7 @@ export async function POST(req: NextRequest) {
     const { email, password, name } = registerSchema.parse(body);
 
     // Rate limiting - 10 attempts per minute (prevents spam signups)
-    const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
+    const clientIP = getClientIp(req);
     const identifier = `register:${clientIP}`;
     const rateCheck = await checkRateLimit(authRateLimit, identifier);
 

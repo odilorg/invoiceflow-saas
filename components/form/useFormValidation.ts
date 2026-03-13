@@ -53,7 +53,7 @@ export function useFormValidation() {
    * Validate entire form on submit
    */
   const validateOnSubmit = useCallback(
-    <T extends Record<string, any>>(
+    <T extends Record<string, unknown>>(
       data: T,
       schema: Record<keyof T, ValidationRule[]>
     ): FormErrors => {
@@ -68,7 +68,7 @@ export function useFormValidation() {
    * Validate single field on blur
    */
   const validateOnBlur = useCallback(
-    (fieldName: string, value: any, rules: ValidationRule[]) => {
+    (fieldName: string, value: unknown, rules: ValidationRule[]) => {
       const error = validateField(value, rules);
       setErrors((prev) => {
         if (error) {

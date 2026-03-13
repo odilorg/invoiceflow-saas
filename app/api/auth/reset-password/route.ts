@@ -4,6 +4,7 @@ import { hashPassword } from '@/lib/auth';
 import { z } from 'zod';
 import crypto from 'crypto';
 import { apiSuccess, apiError, commonErrors } from '@/lib/api-response';
+import { logger } from '@/lib/logger';
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1),
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
       }),
     ]);
 
-    console.log(`[Password Reset] Password updated for user ${resetToken.user.email}`);
+    logger.warn(`[Password Reset] Password updated for user ${resetToken.user.email.replace(/(.{2}).*(@.*)/, '$1***$2')}`);
 
     return NextResponse.json(
       apiSuccess({
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.error('[RESET_PASSWORD_ERROR]', error);
+    logger.error('[RESET_PASSWORD_ERROR]', error);
     return NextResponse.json(
       commonErrors.internal(),
       { status: 500 }
