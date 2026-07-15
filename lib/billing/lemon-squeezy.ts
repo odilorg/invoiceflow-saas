@@ -40,7 +40,7 @@ export async function createCheckout(options: {
   variantId: string;
   email: string;
   name?: string;
-  customData?: Record<string, any>;
+  customData?: Record<string, string>;
 }): Promise<{ url: string; checkoutId: string }> {
   const storeId = process.env.LEMON_SQUEEZY_STORE_ID;
   if (!storeId) {
@@ -119,7 +119,7 @@ export async function createCustomerPortal(customerId: string): Promise<{ url: s
   };
 }
 
-// Verify webhook signature
+// Verify webhook signature with timing-safe comparison
 export function verifyWebhookSignature(
   payload: string,
   signature: string,
@@ -130,14 +130,25 @@ export function verifyWebhookSignature(
     .update(payload)
     .digest('hex');
 
-  return hash === signature;
+  const hashBuffer = Buffer.from(hash, 'hex');
+  const sigBuffer = Buffer.from(signature, 'hex');
+
+  if (hashBuffer.length !== sigBuffer.length) {
+    return false;
+  }
+
+  try {
+    return crypto.timingSafeEqual(hashBuffer, sigBuffer);
+  } catch {
+    return false;
+  }
 }
 
 // Parse webhook event
 export interface LemonSqueezyWebhookEvent {
   meta: {
     event_name: string;
-    custom_data?: Record<string, any>;
+    custom_data?: Record<string, string>;
   };
   data: {
     id: string;
@@ -153,7 +164,7 @@ export interface LemonSqueezyWebhookEvent {
       trial_ends_at?: string;
       user_email?: string;
       user_name?: string;
-      [key: string]: any;
+      [key: string]: string | number | boolean | null | undefined;
     };
   };
 }
@@ -167,7 +178,7 @@ export function parseWebhookEvent(payload: string): LemonSqueezyWebhookEvent {
 }
 
 // Get subscription details
-export async function getSubscription(subscriptionId: string): Promise<any> {
+export async function getSubscription(subscriptionId: string): Promise<LemonSqueezyWebhookEvent> {
   const response = await fetch(`${API_URL}/subscriptions/${subscriptionId}`, {
     headers: getHeaders(),
   });

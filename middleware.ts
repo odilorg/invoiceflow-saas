@@ -79,8 +79,12 @@ export function middleware(request: NextRequest) {
 
     // Cookie exists - forward callbackUrl to server layout via custom header
     // (in case session is expired and server layout needs to redirect)
+    // Only forward relative paths to prevent open redirect
     const response = NextResponse.next();
-    response.headers.set('x-callback-url', fullPath);
+    const isRelativePath = fullPath.startsWith('/') && !fullPath.startsWith('//');
+    if (isRelativePath) {
+      response.headers.set('x-callback-url', fullPath);
+    }
     response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');

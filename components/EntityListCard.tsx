@@ -2,6 +2,17 @@ import React, { ReactNode, useState, useRef, useEffect } from 'react';
 import Badge, { BadgeVariant } from './Badge';
 import { CARD_PAD, H2, SUBTLE, LABEL, VALUE, BTN_MIN_H, ICON_BTN } from '@/lib/ui/tokens';
 
+function getButtonStyles(variant: 'primary' | 'secondary' | 'ghost' = 'primary') {
+  switch (variant) {
+    case 'primary':
+      return 'bg-foreground text-background hover:bg-foreground/90';
+    case 'secondary':
+      return 'bg-card border border-border text-foreground hover:bg-muted';
+    case 'ghost':
+      return 'bg-muted text-foreground hover:bg-muted/80';
+  }
+}
+
 export interface EntityListCardProps {
   title: string;
   subtitle?: string;
@@ -74,19 +85,6 @@ export default function EntityListCard({
       return () => document.removeEventListener('keydown', handleEscape);
     }
   }, [menuOpen]);
-
-  const getButtonStyles = (variant: string = 'primary') => {
-    switch (variant) {
-      case 'primary':
-        return 'bg-foreground text-background hover:bg-foreground/90';
-      case 'secondary':
-        return 'bg-card border border-border text-foreground hover:bg-muted';
-      case 'ghost':
-        return 'bg-muted text-foreground hover:bg-muted/80';
-      default:
-        return 'bg-foreground text-background hover:bg-foreground/90';
-    }
-  };
 
   const visibleSecondaryActions = secondaryActions?.filter((action) => !action.hidden) || [];
   const hasMenuItems = visibleSecondaryActions.length > 0 || destructiveAction;

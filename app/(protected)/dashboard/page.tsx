@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { clientLogger } from '@/lib/logger';
-import type { Invoice, Schedule } from '@/lib/types';
+import type { Invoice, Schedule, DashboardStats, OverdueInvoice, SetupStatus } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import HelpBox from '@/components/HelpBox';
@@ -10,35 +10,9 @@ import EntityListCard from '@/components/EntityListCard';
 import { HELP_CONTENT } from '@/lib/help-content';
 import { PAGE_X, PAGE_Y, SECTION_GAP, H1, H2, SUBTLE, LABEL, BTN_MIN_H } from '@/lib/ui/tokens';
 
-interface Stats {
-  totalInvoices: number;
-  pendingInvoices: number;
-  paidInvoices: number;
-  overdueInvoices: number;
-  totalFollowUpsSent: number;
-  upcomingFollowUps: number;
-  planStatus: 'FREE' | 'STARTER' | 'PRO';
-}
-
-interface OverdueInvoice {
-  id: string;
-  invoiceNumber: string;
-  clientName: string;
-  amount: number;
-  currency: string;
-  dueDate: string;
-  daysPastDue: number;
-}
-
-interface SetupStatus {
-  hasTemplates: boolean;
-  hasActiveSchedule: boolean;
-  hasInvoices: boolean;
-}
-
 export default function DashboardPage() {
   const router = useRouter();
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [overdueInvoices, setOverdueInvoices] = useState<OverdueInvoice[]>([]);
   const [setupStatus, setSetupStatus] = useState<SetupStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,14 +21,20 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const statsRes = await fetch('/api/dashboard/stats');
+        // Fetch all data in parallel (independent requests)
+        const [statsRes, invoicesRes, templatesRes, schedulesRes] = await Promise.all([
+          fetch('/api/dashboard/stats'),
+          fetch('/api/invoices'),
+          fetch('/api/templates'),
+          fetch('/api/schedules'),
+        ]);
+
         const statsData = await statsRes.json();
         setStats(statsData);
 
         // Load overdue invoices
-        const invoicesRes = await fetch('/api/invoices');
+        const invoices = invoicesRes.ok ? await invoicesRes.json() : [];
         if (invoicesRes.ok) {
-          const invoices = await invoicesRes.json();
           const now = new Date();
           const overdue = invoices
             .filter((inv: Invoice) => inv.status === 'PENDING' && new Date(inv.dueDate) < now)
@@ -68,14 +48,8 @@ export default function DashboardPage() {
         }
 
         // Check setup status
-        const [templatesRes, schedulesRes] = await Promise.all([
-          fetch('/api/templates'),
-          fetch('/api/schedules'),
-        ]);
-
         const templates = templatesRes.ok ? await templatesRes.json() : [];
         const schedules = schedulesRes.ok ? await schedulesRes.json() : [];
-        const invoices = invoicesRes.ok ? await invoicesRes.json() : [];
 
         setSetupStatus({
           hasTemplates: templates.length > 0,

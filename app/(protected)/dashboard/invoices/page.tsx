@@ -25,25 +25,7 @@ import { validators } from '@/lib/ui/form-errors';
 import { normalizeEmail, normalizeInvoiceNumber, normalizeFormData } from '@/lib/ui/input-normalize';
 import { useToast } from '@/components/ToastProvider';
 import type { FormSelectOption } from '@/components/form';
-import type { FollowUp, Schedule } from '@/lib/types';
-
-interface Invoice {
-  id: string;
-  clientName: string;
-  clientEmail: string;
-  invoiceNumber: string;
-  amount: number;
-  currency: string;
-  dueDate: string;
-  status: 'PENDING' | 'PAID' | 'OVERDUE' | 'CANCELLED';
-  notes?: string | null;
-  scheduleId?: string | null;
-  createdAt: string;
-  followUps?: FollowUp[];
-  lastReminderSentAt?: string | null;
-  totalScheduledReminders?: number | null;
-  remindersCompleted?: boolean;
-}
+import type { Invoice, FollowUp, Schedule } from '@/lib/types';
 
 interface UsageStats {
   invoices: { used: number; limit: number | null };

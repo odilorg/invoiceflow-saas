@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import type { Prisma } from '@prisma/client';
 import { requireUser } from '@/lib/auth';
 import { withErrorHandler } from '@/lib/api-error-handler';
+import { checkRateLimit, authRateLimit } from '@/lib/rate-limit';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 
@@ -10,7 +11,7 @@ const updateProfileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   email: z.string().email().optional(),
   currentPassword: z.string().optional(),
-  newPassword: z.string().min(6).optional(),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters').optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -47,6 +48,16 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const user = await requireUser();
+
+    // Rate limit profile updates (prevents brute-force on currentPassword)
+    const rateCheck = await checkRateLimit(authRateLimit, `update-profile:${user.id}`, 'auth');
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        { error: rateCheck.error || 'Too many requests' },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const data = updateProfileSchema.parse(body);
 

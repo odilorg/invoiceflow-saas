@@ -7,9 +7,12 @@ import crypto from 'crypto';
  */
 export function getClientIp(req: NextRequest): string {
   // Check X-Forwarded-For (common with proxies)
+  // Use the LAST entry - it's set by the trusted proxy (nginx).
+  // The first entry is client-controlled and can be spoofed.
   const forwardedFor = req.headers.get('x-forwarded-for');
   if (forwardedFor) {
-    return forwardedFor.split(',')[0].trim();
+    const ips = forwardedFor.split(',').map(ip => ip.trim());
+    return ips[ips.length - 1];
   }
   
   // Check X-Real-IP (nginx)

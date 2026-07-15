@@ -1,7 +1,7 @@
 // Subscription management and access control
 
 import { prisma } from '@/lib/db';
-import { Subscription, User, PlanStatus } from '@prisma/client';
+import { Subscription, SubscriptionStatus, User, PlanStatus } from '@prisma/client';
 import { PLANS, PlanType } from './constants';
 
 export interface SubscriptionWithUser extends Subscription {
@@ -167,7 +167,7 @@ export async function upsertSubscription(data: {
   trialEndsAt?: Date | null;
 }): Promise<Subscription> {
   // Map Lemon Squeezy status to our enum
-  const statusMap: Record<string, any> = {
+  const statusMap: Record<string, SubscriptionStatus> = {
     'on_trial': 'TRIALING',
     'active': 'ACTIVE',
     'paused': 'PAUSED',

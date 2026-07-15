@@ -4,6 +4,7 @@ import { sendEmail } from '@/lib/email';
 import { MAX_FOLLOWUPS_PER_DAY_PER_INVOICE } from '@/lib/constants';
 import { timeQuery } from '@/lib/performance';
 import { verifyCronAuth } from '@/lib/request-utils';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: NextRequest) {
   const cronStartTime = new Date();
@@ -12,7 +13,7 @@ export async function POST(req: NextRequest) {
   try {
     // Verify cron secret with timing-safe comparison
     if (!verifyCronAuth(req)) {
-      console.log(`[CRON] Unauthorized request at ${new Date().toISOString()}`);
+      logger.info(`[CRON] Unauthorized request at ${new Date().toISOString()}`);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -244,7 +245,7 @@ export async function POST(req: NextRequest) {
           results.failed++;
         }
       } catch (error) {
-        console.error(`Failed to process follow-up ${followUp.id}:`, error);
+        logger.error(`Failed to process follow-up ${followUp.id}`, error);
         results.failed++;
       }
     }
@@ -267,12 +268,20 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Batch update skipped follow-ups
-    for (const skip of followUpsToSkip) {
-      await prisma.followUp.update({
-        where: { id: skip.id },
-        data: { status: 'SKIPPED', errorMessage: skip.reason },
-      });
+    // Batch update skipped follow-ups (grouped by reason for updateMany)
+    if (followUpsToSkip.length > 0) {
+      const skipGroups = new Map<string, string[]>();
+      for (const skip of followUpsToSkip) {
+        const ids = skipGroups.get(skip.reason) || [];
+        ids.push(skip.id);
+        skipGroups.set(skip.reason, ids);
+      }
+      for (const [reason, ids] of skipGroups) {
+        await prisma.followUp.updateMany({
+          where: { id: { in: ids } },
+          data: { status: 'SKIPPED', errorMessage: reason },
+        });
+      }
     }
 
     // Batch update invoice reminder timestamps
@@ -297,10 +306,10 @@ export async function POST(req: NextRequest) {
     const cronEndTime = new Date();
     const durationMs = cronEndTime.getTime() - cronStartTime.getTime();
 
-    console.log(`[CRON] Finished at ${cronEndTime.toISOString()}`);
-    console.log(`[CRON] Duration: ${durationMs}ms`);
-    console.log(`[CRON] Items processed: ${results.total_followups} (sent: ${results.sent}, skipped: ${results.skipped}, failed: ${results.failed})`);
-    console.log(`[CRON] Eligible invoices: ${results.eligible_invoices} / ${results.scanned_invoices} (${results.skipped_not_entitled} not entitled)`);
+    logger.info(`[CRON] Finished at ${cronEndTime.toISOString()}`);
+    logger.info(`[CRON] Duration: ${durationMs}ms`);
+    logger.info(`[CRON] Items processed: ${results.total_followups} (sent: ${results.sent}, skipped: ${results.skipped}, failed: ${results.failed})`);
+    logger.info(`[CRON] Eligible invoices: ${results.eligible_invoices} / ${results.scanned_invoices} (${results.skipped_not_entitled} not entitled)`);
 
     return NextResponse.json({
       success: true,
@@ -310,12 +319,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     const cronErrorTime = new Date();
-    console.error(`[CRON] Failed at ${cronErrorTime.toISOString()}:`, error);
+    logger.error(`[CRON] Failed at ${cronErrorTime.toISOString()}`, error);
     return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

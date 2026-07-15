@@ -31,12 +31,10 @@ export const logger = {
   },
 
   /**
-   * Info logs - only shown in development
+   * Info logs - shown in all environments for operational visibility
    */
   info: (message: string, options?: LoggerOptions): void => {
-    if (isDev) {
-      console.info(formatMessage('info', message, options), options?.data ?? '');
-    }
+    console.info(formatMessage('info', message, options), options?.data ?? '');
   },
 
   /**

@@ -54,6 +54,17 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Also count PENDING invoices past due date as overdue
+    // (consistent with frontend computation — no cron sets OVERDUE status)
+    const pendingOverdue = await prisma.invoice.count({
+      where: {
+        userId: user.id,
+        status: 'PENDING',
+        dueDate: { lt: new Date() },
+      },
+    });
+    overdueInvoices = Math.max(overdueInvoices, pendingOverdue);
+
     // Build followUp counts from aggregated data
     const totalFollowUpsSent = followUpStats.find(s => s.status === 'SENT')?._count.id || 0;
 
